@@ -1,2 +1,0 @@
-In shell: pipenv shell
-Out shell: exit
