@@ -6,5 +6,5 @@ class Controller():
 
 if __name__ == '__main__':
     c = Controller()
-    c.dashboard.app.run(debug=True)
+    c.dashboard.runDashboard()
     

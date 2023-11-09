@@ -11,6 +11,9 @@ class Dashboard():
             html.Div(children='Hello World')
         ])
         return app
+    
+    def runDashboard(self):
+        self.app.run(debug=True)
 
     
     
