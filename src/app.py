@@ -1,0 +1,156 @@
+# package imports
+import base64
+import dash_bootstrap_components as dbc
+from dash import Dash, html, dcc, callback, Input, Output, State
+from pathlib import Path
+
+
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP]) #, use_pages=True
+
+app.layout = html.Div([
+    html.Div(
+        children=[
+            html.A(
+                html.Div(
+                    children=html.Img(
+                        src="./assets/dashboard.png",
+                        style={"display": "inline-block", "float": "left", "height": "45px",
+                               "padding": "-6px", "margin-top": "5px", "margin-left": "10px"}
+                    ),
+                ),
+                href="https://opendatabim.com/#", target="_blank",
+            ),
+            html.H2(
+                children="Resource-Performance Analysis for Event Logs", 
+                style={'margin-left': '45px',  'margin-top': '13px', 'font-family': 'Arial',  'display': 'inline-block', 'font-weight': '500',  'font-size': '25px'}
+            ),
+            html.A(
+                id='gh-link',
+                children=[
+                    'View on GitHub'
+                ],
+                href="https://github.com/RobertJunghanns/Resource-Performance-Dashboard",
+                style={'color': 'white',
+                       'border': 'solid 1px white',
+                       'text-decoration': 'none',
+                       'font-size': '10pt',
+                       'font-family': 'sans-serif',
+                       'color': '#fff',
+                       'border': 'solid 1px #fff',
+                       'border-radius': '2px',
+                                        'padding': '2px',
+                                        'padding-top': '5px',
+                                        'padding-left': '15px',
+                                        'padding-right': '15px',
+                                        'font-weight': '100',
+                                        'position': 'relative',
+                                        'top': '15px',
+                                        'float': 'right',
+                                        'margin-right': '40px',
+                                        'margin-left': '5px',
+                                        'transition-duration': '400ms',
+                       }
+            ),
+            html.Div(
+                className="div-logo",
+                children=html.Img(
+                    className="logo", src=("./assets/github.png"),
+                    style={'height': '48px',
+                           'padding': '6px', 'margin-top': '3px'}
+                ), 
+                style={'display': 'inline-block', 'float': 'right'}
+            ),
+        ], style={"background": "#2c5c97", "color": "white", "padding-top": "15px", "padding-left": "48px", "padding-bottom": "25px", "padding-left": "24px"}
+    ),
+    dbc.Alert(id='upload-alert', duration=4000, dismissable=True, is_open=False),
+    html.Div([
+        html.Div([
+            html.Div([
+                html.Div([
+                    html.Div([
+                        html.P(children='Uploading a XES file', style={
+                            'margin-left':  '10px', }),
+                        dcc.Upload(
+                            id='upload-xes',
+                            children=html.Div([
+                                '📥 Drag and Drop or ',
+                                html.A('Select Files')
+                            ]),
+                            style={
+                                'width': '100%',
+                                'height': '60px',
+                                'lineHeight': '60px',
+                                'borderWidth': '1px',
+                                'borderStyle': 'dashed',
+                                'borderRadius': '5px',
+                                'textAlign': 'center',
+                                'margin': '10px'
+                            },
+                            # Allow multiple files to be uploaded
+                            multiple=False
+                        ),
+                    ]),
+                ], style={'width': '55%', 'display': 'inline-block'}),
+                html.Div([
+                    html.P(children='Use a ready-made dataset', style={
+                        'margin-left':  '10px', 'padding-top':  '-30px', }),
+                    dcc.Dropdown(
+                        id='hf-dropdown',
+                        options=[
+                            {'label': 'Upload files to the site',
+                                'value': 'UF'},
+                            {'label': 'Preloaded dataset House 1',
+                                        'value': 'H1'},
+                            {'label': 'Preloaded dataset House 2',
+                                        'value': 'H2'}
+                        ],
+                        value='UF',
+                        style={'height': '40px',
+                                'width': '250px',
+
+                                'margin-top':  '7px',
+                                'margin-bottom':  '20px',
+                                'font-size': '16px'}
+                    ),
+                ], style={'width': '45%',  'display': 'inline-block', "padding-left": "30px", 'vertical-align': 'top', "padding-top": "10px"}),
+            ], style={'width': '100%',   'display': 'inline-block', 'background': 'rgb(233 238 246)',
+                        'border': '2px', 'border-radius': '10px', }),
+        ], style={'width': '95%', 'display': 'inline-block', "margin-top": "10px", }),
+    ], style={'width': '50%', 'background': 'rgb(233 238 246)', "margin-top": "10px", "margin-left": "10px",
+                "padding-left": "40px", "padding-right": "40px", "padding-top": "10px", "padding-bottom": "10px", 'border': '2px', 'border-radius': '10px', 'display': 'inline-block'}),
+    
+    #dcc.Store(id='selected_XES_file_name'),
+    #dash.page_container
+])
+
+# Define the callback for the upload component
+@callback(
+    Output('upload-alert', 'children'),
+    Output('upload-alert', 'color'),
+    Output('upload-alert', 'is_open'),
+    Input('upload-xes', 'contents'),
+    State('upload-xes', 'filename')
+)
+def update_output(contents, filename):
+    if contents is not None:
+        _, content_string = contents.split(',')
+        if filename.endswith('.xes'):
+            current_file_path = Path(__file__).resolve().parent
+
+            # Define the data directory path
+            data_dir_path = current_file_path / 'data'
+
+            # Create the data directory if it doesn't exist
+            data_dir_path.mkdir(parents=True, exist_ok=True)
+
+            # Define the save_path using the data directory path
+            save_path = data_dir_path / filename
+            with open(save_path, 'wb') as f:
+                f.write(base64.b64decode(content_string))
+            return ("File uploaded successfully!", "success", True)
+        else:
+            return ("File upload failed. This type is not supported. Please try again.", "danger", True)
+               
+
+if __name__ == '__main__':
+    app.run(debug=True)
