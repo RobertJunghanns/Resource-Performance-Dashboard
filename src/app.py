@@ -114,26 +114,17 @@ app.layout = html.Div([
                         'border': '2px', 'border-radius': '10px', }),
         ], style={'width': '95%', 'display': 'inline-block', "margin-top": "10px", }),
 
-    ], style={'width': '49%', 'background': 'rgb(233 238 246)', "margin-top": "10px", "margin-left": "10px",
+    ], style={'width': '49%', 'height': '130px', 'background': 'rgb(233 238 246)', "margin-top": "10px", "margin-left": "10px",
                 "padding-left": "40px", "padding-right": "40px", "padding-top": "10px", "padding-bottom": "10px", 'border': '2px', 'border-radius': '10px', 'display': 'inline-block'}),
     html.Div([
         html.Div([
             html.P(children='Select page', style={'margin-left':  '10px', }),
             html.Div(
-                [html.Button(page['name'], id={'type': 'nav-button', 'index': page['path']}, n_clicks=0, style={
-                    'background-color': 'white',
-                    'border': '1px solid #ccc',
-                    'border-radius': '4px',
-                    'padding': '10px 15px',
-                    'margin-right': '5px',
-                    'font-size': '16px',
-                    'text-align': 'center',
-                    'cursor': 'pointer',
-                    'line-height': '1.5'})
+                [html.Button(page['name'], id={'type': 'nav-button', 'index': page['path']}, n_clicks=0)
                 for page in pages_info]
             )
         ], style={'width': '95%', 'display': 'inline-block', "margin-top": "10px", }),
-    ], style={'width': '49%', 'background': 'rgb(233 238 246)', "margin-top": "10px", "margin-left": "10px",
+    ], style={'width': '49%', 'height': '130px', 'background': 'rgb(233 238 246)', "margin-top": "10px", "margin-left": "10px",
                 "padding-left": "40px", "padding-right": "40px", "padding-top": "10px", "padding-bottom": "10px", 'border': '2px', 'border-radius': '10px', 'display': 'inline-block'}),
     #dcc.Store(id='selected_XES_file_name'),
     dash.page_container
@@ -181,10 +172,26 @@ def upload_xes(contents, filename):
 )
 def highlight_active_button(pathname):
     # Create the default style for all buttons
-    default_style = {'margin-right': '5px', 'border': '1px solid black'}
+    default_style = {'background-color': 'white',
+                    'border': '1px solid #ccc',
+                    'border-radius': '4px',
+                    'padding': '10px 15px',
+                    'margin-right': '5px',
+                    'font-size': '16px',
+                    'text-align': 'center',
+                    'cursor': 'pointer',
+                    'line-height': '1'}
 
     # Create a highlighted style for the active button
-    active_style = {'margin-right': '5px', 'border': '3px solid black', 'font-weight': 'bold'}
+    active_style = {'background-color': 'white',
+                    'border': '2px solid #333',
+                    'border-radius': '4px',
+                    'padding': '10px 15px',
+                    'margin-right': '5px',
+                    'font-size': '16px',
+                    'text-align': 'center',
+                    'cursor': 'pointer',
+                    'line-height': '1'}
 
     # Update the style for the active button based on the current pathname
     return [active_style if page['path'] == pathname else default_style for page in pages_info]    
