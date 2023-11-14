@@ -68,7 +68,7 @@ app.layout = html.Div([
             html.Div([
                 html.Div([
                     html.Div([
-                        html.P(children='Uploading a XES file', style={
+                        html.P(children='Upload XES file', style={
                             'margin-left':  '10px', }),
                         dcc.Upload(
                             id='upload-xes',
@@ -92,18 +92,11 @@ app.layout = html.Div([
                     ]),
                 ], style={'width': '55%', 'display': 'inline-block'}),
                 html.Div([
-                    html.P(children='Use a ready-made dataset', style={
-                        'margin-left':  '10px', 'padding-top':  '-30px', }),
+                    html.P(children='Select XES file', style={
+                        'margin-left':  '2px', 'padding-top':  '-100px', }),
                     dcc.Dropdown(
-                        id='hf-dropdown',
-                        options=[
-                            {'label': 'Upload files to the site',
-                                'value': 'UF'},
-                            {'label': 'Preloaded dataset House 1',
-                                        'value': 'H1'},
-                            {'label': 'Preloaded dataset House 2',
-                                        'value': 'H2'}
-                        ],
+                        id='xes-dropdown',
+                        options=[],
                         value='UF',
                         style={'height': '40px',
                                 'width': '250px',
@@ -112,45 +105,58 @@ app.layout = html.Div([
                                 'margin-bottom':  '20px',
                                 'font-size': '16px'}
                     ),
-                ], style={'width': '45%',  'display': 'inline-block', "padding-left": "30px", 'vertical-align': 'top', "padding-top": "10px"}),
+                ], style={'width': '45%',  'display': 'inline-block', "padding-left": "30px", 'vertical-align': 'top', "padding-top": "0px"}),
             ], style={'width': '100%',   'display': 'inline-block', 'background': 'rgb(233 238 246)',
                         'border': '2px', 'border-radius': '10px', }),
         ], style={'width': '95%', 'display': 'inline-block', "margin-top": "10px", }),
-    ], style={'width': '50%', 'background': 'rgb(233 238 246)', "margin-top": "10px", "margin-left": "10px",
+
+    ], style={'width': '49%', 'background': 'rgb(233 238 246)', "margin-top": "10px", "margin-left": "10px",
                 "padding-left": "40px", "padding-right": "40px", "padding-top": "10px", "padding-bottom": "10px", 'border': '2px', 'border-radius': '10px', 'display': 'inline-block'}),
-    
+    html.Div([
+        html.Div([
+            
+        ], style={'width': '95%', 'display': 'inline-block', "margin-top": "10px", }),
+    ], style={'width': '49%', 'background': 'rgb(233 238 246)', "margin-top": "10px", "margin-left": "10px",
+                "padding-left": "40px", "padding-right": "40px", "padding-top": "10px", "padding-bottom": "10px", 'border': '2px', 'border-radius': '10px', 'display': 'inline-block'}),
     #dcc.Store(id='selected_XES_file_name'),
     #dash.page_container
 ])
 
 # Define the callback for the upload component
 @callback(
-    Output('upload-alert', 'children'),
+    [Output('upload-alert', 'children'),
     Output('upload-alert', 'color'),
     Output('upload-alert', 'is_open'),
-    Input('upload-xes', 'contents'),
-    State('upload-xes', 'filename')
+    Output('xes-dropdown', 'options')],
+    [Input('upload-xes', 'contents')],
+    [State('upload-xes', 'filename')]
 )
-def update_output(contents, filename):
+def upload_xes(contents, filename):
+    current_file_path = Path(__file__).resolve().parent
+    # Define the data directory path
+    data_dir_path = current_file_path / 'data'
+    # Create the data directory if it doesn't exist
+    data_dir_path.mkdir(parents=True, exist_ok=True)
+    # Initialize dropdown options
+    dropdown_options = [{'label': file.name, 'value': file.stem} 
+                                for file in data_dir_path.glob('*.xes')]
+    
     if contents is not None:
         _, content_string = contents.split(',')
         if filename.endswith('.xes'):
-            current_file_path = Path(__file__).resolve().parent
-
-            # Define the data directory path
-            data_dir_path = current_file_path / 'data'
-
-            # Create the data directory if it doesn't exist
-            data_dir_path.mkdir(parents=True, exist_ok=True)
-
             # Define the save_path using the data directory path
             save_path = data_dir_path / filename
             with open(save_path, 'wb') as f:
                 f.write(base64.b64decode(content_string))
-            return ("File uploaded successfully!", "success", True)
+
+            # After saving, refresh the dropdown by getting all .xes files in the data directory
+            dropdown_options = [{'label': file.name, 'value': file.stem} 
+                                for file in data_dir_path.glob('*.xes')]
+
+            return ("File uploaded successfully!", "success", True, dropdown_options)
         else:
-            return ("File upload failed. This type is not supported. Please try again.", "danger", True)
-               
+            return ("File upload failed. This type is not supported. Please try again.", "danger", True, dropdown_options)
+    return ("No file uploaded.", "warning", False, dropdown_options)          
 
 if __name__ == '__main__':
     app.run(debug=True)
