@@ -1,15 +1,14 @@
 # package imports
 import base64
+import uuid
 import dash_bootstrap_components as dbc
 import dash
 from dash import Dash, html, dcc, callback, Input, Output, State, page_registry
 from pathlib import Path
 
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], )
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], use_pages=True)
-
-# Get the list of page names and their paths from the page_registry
-pages_info = [{'name': page['name'], 'path': page['path']} for page in page_registry.values()]
+from pages import resource_behavior, resource_performance_analysis
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
@@ -94,12 +93,14 @@ app.layout = html.Div([
                 children = [
                 html.P(id='p-page-select', children='Select page'),
                 html.Div(
-                    [html.Button(page['name'], id={'type': 'nav-button', 'index': page['path']}, n_clicks=0)
-                    for page in pages_info]
-                )
+                    id='div-buttons',
+                    children=[
+                        html.Button('Resource Behavior', id='button-resource-behavior', className='button-default'),
+                        html.Button('Resource-Performance Analysis', id= 'button-resource-performance-analysis', className='button-default')
+                ])
             ]),
     ]),
-    dash.page_container
+    html.Div(id='page-content', children=[])
 ])
 
 # Define the callback for the upload component
@@ -137,36 +138,38 @@ def upload_xes(contents, filename):
             return ("File upload failed. This type is not supported. Please try again.", "danger", True, dropdown_options)
     return ("No file uploaded.", "warning", False, dropdown_options)
 
-# Callback to update the style of the buttons to reflect which page is currently displayed
+# Set url based on selected page
 @app.callback(
-    Output({'type': 'nav-button', 'index': dash.ALL}, 'style'),
-    Input('url', 'pathname')
+    Output('url', 'pathname'),
+    [Input('button-resource-behavior', 'n_clicks'),
+     Input('button-resource-performance-analysis', 'n_clicks')],
 )
-def highlight_active_button(pathname):
-    # Create the default style for all buttons
-    default_style = {'background-color': 'white',
-                    'border': '1px solid #ccc',
-                    'border-radius': '4px',
-                    'padding': '10px 15px',
-                    'margin-right': '5px',
-                    'font-size': '16px',
-                    'text-align': 'center',
-                    'cursor': 'pointer',
-                    'line-height': '1'}
+def navigate(n_clicks_behaviour, n_clicks_performance):
+    ctx = dash.callback_context
 
-    # Create a highlighted style for the active button
-    active_style = {'background-color': 'white',
-                    'border': '2px solid #333',
-                    'border-radius': '4px',
-                    'padding': '10px 15px',
-                    'margin-right': '5px',
-                    'font-size': '16px',
-                    'text-align': 'center',
-                    'cursor': 'pointer',
-                    'line-height': '1'}
+    if not ctx.triggered:
+        return dash.no_update
 
-    # Update the style for the active button based on the current pathname
-    return [active_style if page['path'] == pathname else default_style for page in pages_info]    
+    button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    if button_id == 'button-resource-behavior':
+        return '/resource-behavior'
+    elif button_id == 'button-resource-performance-analysis':
+        return '/resource-performance-analysis'
+    else:
+        return dash.no_update
+    
+# Supply page-content based on url
+@app.callback(Output('page-content', 'children'),
+              [Input('url', 'pathname')])
+def display_page(pathname):
+    if pathname == '/resource-behavior':
+        return resource_behavior.layout
+    if pathname == '/resource-performance-analysis':
+        return resource_performance_analysis.layout
+    else: # if redirected to unknown link
+        return "404 Page Error! Please choose a link"
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run_server(debug=True)
+
