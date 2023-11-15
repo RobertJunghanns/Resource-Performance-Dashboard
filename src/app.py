@@ -138,7 +138,7 @@ def upload_xes(contents, filename):
             return ("File upload failed. This type is not supported. Please try again.", "danger", True, dropdown_options)
     return ("No file uploaded.", "warning", False, dropdown_options)
 
-# Set url based on selected page
+# ROUTING-1: Set url based on selected page
 @app.callback(
     Output('url', 'pathname'),
     [Input('button-resource-behavior', 'n_clicks'),
@@ -159,7 +159,7 @@ def navigate(n_clicks_behaviour, n_clicks_performance):
     else:
         return dash.no_update
     
-# Supply page-content based on url
+# ROUTING-2: Supply page-content based on url
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
 def display_page(pathname):
