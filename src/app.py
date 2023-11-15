@@ -14,117 +14,91 @@ pages_info = [{'name': page['name'], 'path': page['path']} for page in page_regi
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
     html.Div(
+        id='header',
         children=[
             html.A(
                 html.Div(
                     children=html.Img(
+                        id='img-dashboard',
                         src="./assets/images/dashboard.png",
-                        style={"display": "inline-block", "float": "left", "height": "45px",
-                               "padding": "-6px", "margin-top": "5px", "margin-left": "10px"}
                     ),
                 ),
                 href="https://opendatabim.com/#", target="_blank",
             ),
             html.H2(
+                id='header-title',
                 children="Resource-Performance Analysis for Event Logs", 
-                style={'margin-left': '45px',  'margin-top': '13px', 'font-family': 'Arial',  'display': 'inline-block', 'font-weight': '500',  'font-size': '25px'}
             ),
             html.A(
-                id='gh-link',
+                id='box-github',
                 children=[
                     'View on GitHub'
                 ],
-                href="https://github.com/RobertJunghanns/Resource-Performance-Dashboard",
-                style={'color': 'white',
-                    'border': 'solid 1px white',
-                    'text-decoration': 'none',
-                    'font-size': '10pt',
-                    'font-family': 'sans-serif',
-                    'color': '#fff',
-                    'border': 'solid 1px #fff',
-                    'border-radius': '2px',
-                    'padding': '2px',
-                    'padding-top': '5px',
-                    'padding-left': '15px',
-                    'padding-right': '15px',
-                    'font-weight': '100',
-                    'position': 'relative',
-                    'top': '15px',
-                    'float': 'right',
-                    'margin-right': '40px',
-                    'margin-left': '5px',
-                    'transition-duration': '400ms',}
+                href="https://github.com/RobertJunghanns/Resource-Performance-Dashboard"
             ),
             html.Div(
-                className="div-logo",
+                id="div-github-logo",
                 children=html.Img(
+                    id='img-github',
                     className="logo", src=("./assets/images/github.png"),
-                    style={'height': '48px',
-                           'padding': '6px', 'margin-top': '3px'}
                 ), 
-                style={'display': 'inline-block', 'float': 'right'}
             ),
-        ], style={"background": "#2c5c97", "color": "white", "padding-top": "15px", "padding-left": "48px", "padding-bottom": "25px", "padding-left": "24px"}
+        ]
     ),
     dbc.Alert(id='upload-alert', duration=4000, dismissable=True, is_open=False),
-    html.Div([
-        html.Div([
-            html.Div([
-                html.Div([
-                    html.Div([
-                        html.P(children='Upload XES file', style={
-                            'margin-left':  '10px', }),
-                        dcc.Upload(
-                            id='upload-xes',
-                            children=html.Div([
-                                '📥 Drag and Drop or ',
-                                html.A('Select Files')
-                            ]),
-                            style={
-                                'width': '100%',
-                                'height': '40px',
-                                'lineHeight': '40px',
-                                'borderWidth': '1px',
-                                'borderStyle': 'dashed',
-                                'borderRadius': '5px',
-                                'textAlign': 'center',
-                                'margin': '10px'
-                            },
-                            # Allow multiple files to be uploaded
-                            multiple=False
-                        ),
-                    ]),
-                ], style={'width': '55%', 'display': 'inline-block'}),
-                html.Div([
-                    html.P(children='Select XES file', style={
-                        'margin-left':  '2px', 'padding-top':  '-100px', }),
-                    dcc.Dropdown(
-                        id='xes-dropdown',
-                        options=[],
-                        value='UF',
-                        style={'height': '40px',
-                                'width': '250px',
-                                'margin-top':  '7px',
-                                'margin-bottom':  '20px',
-                                'font-size': '16px'}
-                    ),
-                ], style={'width': '45%',  'display': 'inline-block', "padding-left": "30px", 'vertical-align': 'top', "padding-top": "0px"}),
-            ], style={'width': '100%',   'display': 'inline-block', 'background': 'rgb(233 238 246)',
-                        'border': '2px', 'border-radius': '10px', }),
-        ], style={'width': '95%', 'display': 'inline-block', "margin-top": "10px", }),
-
-    ], style={'width': '49%', 'height': '130px', 'background': 'rgb(233 238 246)', "margin-top": "10px", "margin-left": "10px",
-                "padding-left": "40px", "padding-right": "40px", "padding-top": "10px", "padding-bottom": "10px", 'border': '2px', 'border-radius': '10px', 'display': 'inline-block'}),
-    html.Div([
-        html.Div([
-            html.P(children='Select page', style={'margin-left':  '10px', }),
+    html.Div(
+        className='div-option-box',
+        children=[
             html.Div(
-                [html.Button(page['name'], id={'type': 'nav-button', 'index': page['path']}, n_clicks=0)
-                for page in pages_info]
-            )
-        ], style={'width': '95%', 'display': 'inline-block', "margin-top": "10px", }),
-    ], style={'width': '49%', 'height': '130px', 'background': 'rgb(233 238 246)', "margin-top": "10px", "margin-left": "10px",
-                "padding-left": "40px", "padding-right": "40px", "padding-top": "10px", "padding-bottom": "10px", 'border': '2px', 'border-radius': '10px', 'display': 'inline-block'}),
+                className='div-in-optin-box',
+                children = [
+                    html.Div(
+                    id='div-xes-upload',
+                    children= [
+                        html.Div([
+                            html.P(
+                                id='p-xes-upload',
+                                children='Upload XES file', 
+                            ),
+                            dcc.Upload(
+                                id='dcc-xes-upload',
+                                children=html.Div([
+                                    '📥 Drag and Drop or ',
+                                    html.A('Select Files')
+                                ]),
+                                # Allow multiple files to be uploaded
+                                multiple=False
+                            ),
+                        ]),
+                    ]),
+                    html.Div(
+                        id='div-xes-select',
+                        children = [
+                            html.P(
+                                id='p-xes-select',
+                                children='Select XES file', 
+                            ),
+                            dcc.Dropdown(
+                                id='dropdown-xes-select',
+                                options=[],
+                                value='UF'
+                            ),
+                    ]),
+            ]),
+    ]),
+    html.Div(
+        className='div-option-box',
+        children=[
+            html.Div(
+                className='div-in-optin-box',
+                children = [
+                html.P(id='p-page-select', children='Select page'),
+                html.Div(
+                    [html.Button(page['name'], id={'type': 'nav-button', 'index': page['path']}, n_clicks=0)
+                    for page in pages_info]
+                )
+            ]),
+    ]),
     dash.page_container
 ])
 
@@ -133,9 +107,9 @@ app.layout = html.Div([
     [Output('upload-alert', 'children'),
     Output('upload-alert', 'color'),
     Output('upload-alert', 'is_open'),
-    Output('xes-dropdown', 'options')],
-    [Input('upload-xes', 'contents')],
-    [State('upload-xes', 'filename')]
+    Output('dropdown-xes-select', 'options')],
+    [Input('dcc-xes-upload', 'contents')],
+    [State('dcc-xes-upload', 'filename')]
 )
 def upload_xes(contents, filename):
     current_file_path = Path(__file__).resolve().parent
