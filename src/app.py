@@ -18,7 +18,7 @@ app.layout = html.Div([
             html.A(
                 html.Div(
                     children=html.Img(
-                        src="./assets/dashboard.png",
+                        src="./assets/images/dashboard.png",
                         style={"display": "inline-block", "float": "left", "height": "45px",
                                "padding": "-6px", "margin-top": "5px", "margin-left": "10px"}
                     ),
@@ -36,30 +36,29 @@ app.layout = html.Div([
                 ],
                 href="https://github.com/RobertJunghanns/Resource-Performance-Dashboard",
                 style={'color': 'white',
-                       'border': 'solid 1px white',
-                       'text-decoration': 'none',
-                       'font-size': '10pt',
-                       'font-family': 'sans-serif',
-                       'color': '#fff',
-                       'border': 'solid 1px #fff',
-                       'border-radius': '2px',
-                                        'padding': '2px',
-                                        'padding-top': '5px',
-                                        'padding-left': '15px',
-                                        'padding-right': '15px',
-                                        'font-weight': '100',
-                                        'position': 'relative',
-                                        'top': '15px',
-                                        'float': 'right',
-                                        'margin-right': '40px',
-                                        'margin-left': '5px',
-                                        'transition-duration': '400ms',
-                       }
+                    'border': 'solid 1px white',
+                    'text-decoration': 'none',
+                    'font-size': '10pt',
+                    'font-family': 'sans-serif',
+                    'color': '#fff',
+                    'border': 'solid 1px #fff',
+                    'border-radius': '2px',
+                    'padding': '2px',
+                    'padding-top': '5px',
+                    'padding-left': '15px',
+                    'padding-right': '15px',
+                    'font-weight': '100',
+                    'position': 'relative',
+                    'top': '15px',
+                    'float': 'right',
+                    'margin-right': '40px',
+                    'margin-left': '5px',
+                    'transition-duration': '400ms',}
             ),
             html.Div(
                 className="div-logo",
                 children=html.Img(
-                    className="logo", src=("./assets/github.png"),
+                    className="logo", src=("./assets/images/github.png"),
                     style={'height': '48px',
                            'padding': '6px', 'margin-top': '3px'}
                 ), 
@@ -126,7 +125,6 @@ app.layout = html.Div([
         ], style={'width': '95%', 'display': 'inline-block', "margin-top": "10px", }),
     ], style={'width': '49%', 'height': '130px', 'background': 'rgb(233 238 246)', "margin-top": "10px", "margin-left": "10px",
                 "padding-left": "40px", "padding-right": "40px", "padding-top": "10px", "padding-bottom": "10px", 'border': '2px', 'border-radius': '10px', 'display': 'inline-block'}),
-    #dcc.Store(id='selected_XES_file_name'),
     dash.page_container
 ])
 
