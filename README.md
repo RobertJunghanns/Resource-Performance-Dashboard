@@ -2,7 +2,7 @@
 
 ## Commands
 In shell: pipenv shell
-Start Dashboard: python src/app.py
+Start Dashboard: python src/index.py
 Out shell: exit
 Show packages: pip freeze
 Create requirements.txt: pip freeze > requirements.txt
