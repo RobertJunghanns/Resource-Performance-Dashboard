@@ -1,14 +1,17 @@
 # package imports
 import base64
-import uuid
-import dash_bootstrap_components as dbc
 import dash
-from dash import Dash, html, dcc, callback, Input, Output, State, page_registry
+import pm4py
+import pandas as pd
+import dash_bootstrap_components as dbc
+
+from dash import Dash, html, dcc, callback, Input, Output, State
+from pages import resource_behavior, resource_performance_analysis
 from pathlib import Path
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], )
+df_event_log = pd.DataFrame()
 
-from pages import resource_behavior, resource_performance_analysis
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], )
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
@@ -79,10 +82,16 @@ app.layout = html.Div([
                             ),
                             dcc.Dropdown(
                                 id='dropdown-xes-select',
-                                options=[],
-                                value='UF'
+                                options=[]
                             ),
                     ]),
+                    dcc.Loading(
+                        id='graph-loading-output',
+                        children=[],
+                        type="circle",
+                        color='#2c5c97',
+                        fullscreen=True
+                    ),
             ]),
     ]),
     html.Div(
@@ -102,6 +111,24 @@ app.layout = html.Div([
     ]),
     html.Div(id='page-content', children=[])
 ])
+
+@app.callback(
+    Output('graph-loading-output', 'children'),
+    Input('dropdown-xes-select', 'value')
+)
+def set_global_variable(selected_filename):
+    global df_event_log
+    
+    if selected_filename is not None:
+        current_file_path = Path(__file__).resolve().parent
+        file_path = str(current_file_path / 'data' / (selected_filename + '.xes'))
+
+        print(file_path)
+        df_event_log = pm4py.read_xes(file_path)
+
+        print(df_event_log.iloc[0])
+
+    return None
 
 # Define the callback for the upload component
 @callback(

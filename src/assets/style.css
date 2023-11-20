@@ -124,3 +124,12 @@ button {
 #p-page-select {
         margin-left: 10px;
 }
+#div-rbi-options {
+        display: inline-block;
+        background: #f3f3f1; 
+        width: 28%;
+        height: 100px;
+        border-radius: 10px;
+        margin-left: 10px;
+        margin-top: 10px;
+}

@@ -7,6 +7,7 @@ Out shell: exit
 Show packages: pip freeze
 Create requirements.txt: pip freeze > requirements.txt
 Install listed requirements recursivly: pip install -r requirements.txt
+Run tests from root: python -m unittest discover -s tests
 
 ## TODO's
 - build overview over uploaded Files and select option --> set dcc variable in app.py
