@@ -5,10 +5,11 @@ from app import app
 import base64
 import dash
 import pm4py
+import json
 import pandas as pd
 import dash_bootstrap_components as dbc
 
-from dash import html, dcc, Input, Output, State
+from dash import html, dcc, Input, Output, State, ALL, callback_context, no_update
 from pathlib import Path
 
 
@@ -52,7 +53,7 @@ app.layout = html.Div([
         className='div-option-box',
         children=[
             html.Div(
-                className='div-in-optin-box',
+                className='div-in-option-box',
                 children = [
                     html.Div(
                     id='div-xes-upload',
@@ -98,14 +99,16 @@ app.layout = html.Div([
         className='div-option-box',
         children=[
             html.Div(
-                className='div-in-optin-box',
+                className='div-in-option-box',
                 children = [
                 html.P(id='p-page-select', children='Select page'),
                 html.Div(
                     id='div-buttons',
                     children=[
-                        html.Button('Resource Behavior', id='button-resource-behavior', className='button-default'),
-                        html.Button('Resource-Performance Analysis', id= 'button-resource-performance-analysis', className='button-default')
+                        #html.Button('Resource Behavior', id='button-resource-behavior', className='button-default'),
+                        #html.Button('Resource-Performance Analysis', id= 'button-resource-performance-analysis', className='button-default')
+                        html.Button('Resource Behavior', id={'type': 'dynamic-button', 'index': 1}, className='button-default'),
+                        html.Button('Resource Performance Analysis', id={'type': 'dynamic-button', 'index': 2}, className='button-default'),
                 ])
             ]),
     ]),
@@ -162,37 +165,70 @@ def upload_xes(contents, filename):
             return ("File upload failed. This type is not supported. Please try again.", "danger", True, dropdown_options)
     return ("No file uploaded.", "warning", False, dropdown_options)
 
+
 # ROUTING-1: Set url based on selected page
 @app.callback(
     Output('url', 'pathname'),
-    [Input('button-resource-behavior', 'n_clicks'),
-     Input('button-resource-performance-analysis', 'n_clicks')],
+    [Input({'type': 'dynamic-button', 'index': ALL}, 'n_clicks')],
 )
-def navigate(n_clicks_behaviour, n_clicks_performance):
-    ctx = dash.callback_context
+def navigate(*args):
+    ctx = callback_context
 
     if not ctx.triggered:
-        return dash.no_update
+        return no_update
 
+    # Determine which button was clicked
     button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    button_id = json.loads(button_id)
 
-    if button_id == 'button-resource-behavior':
-        return '/resource-behavior'
-    elif button_id == 'button-resource-performance-analysis':
-        return '/resource-performance-analysis'
-    else:
-        return dash.no_update
-    
+    url_map = {
+        1: '/resource-behavior',
+        2: '/resource-performance-analysis',
+    }
+
+    return url_map.get(button_id['index'], no_update)
+
 # ROUTING-2: Supply page-content based on url
-@app.callback(Output('page-content', 'children'),
-              [Input('url', 'pathname')])
+@app.callback(
+    Output('page-content', 'children'),
+    [Input('url', 'pathname')]
+)
 def display_page(pathname):
     if pathname == '/resource-behavior':
         return resource_behavior.layout
     if pathname == '/resource-performance-analysis':
         return resource_performance_analysis.layout
     else: # if redirected to unknown link
-        return "404 Page Error! Please choose a link"
+        return "Select a page to start analysing the XES file!"
+
+# ROUTING-3: Change button style based on selected page
+@app.callback(
+    [Output({'type': 'dynamic-button', 'index': ALL}, 'className')],
+    [Input({'type': 'dynamic-button', 'index': ALL}, 'n_clicks')],
+    [State({'type': 'dynamic-button', 'index': ALL}, 'className')],
+)
+def update_button_classes(n_clicks, *args):
+    ctx = dash.callback_context
+
+    if not ctx.triggered:
+        # No buttons have been clicked yet
+        return dash.no_update
+
+    button_id_triggered = ctx.triggered[0]['prop_id'].split('.')[0]
+    button_id_triggered = json.loads(button_id_triggered)
+
+    button_states = ctx.states
+    class_list = []
+
+    for i in range(len(button_states)):
+        key = {'type': 'dynamic-button', 'index': i+1}
+        
+        if key == button_id_triggered:
+            class_list.append('button-default button-selected')
+        else:
+            class_list.append('button-default')
+
+    return [class_list]
 
 if __name__ == '__main__':
     app.run_server(debug=True)

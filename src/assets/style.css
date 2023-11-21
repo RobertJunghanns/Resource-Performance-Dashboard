@@ -1,4 +1,4 @@
-button {
+.button-default {
         height: 40px;
         background-color: white;
         border: 1px solid #ccc;
@@ -27,7 +27,7 @@ button {
         border-radius: 10px; 
         display: inline-block 
 }
-.div-in-optin-box{
+.div-in-option-box{
         width: 95%;
         display: inline-block; 
         background: rgb(233 238 246);
@@ -37,6 +37,23 @@ button {
 }
 .div-option-col{
         width: 45%;
+}
+.div-sidebar-options {
+        display: inline-block;
+        background: #f3f3f1; 
+        width: 28%;
+        height: 500px;
+        border-radius: 10px;
+        margin-left: 10px;
+        margin-top: 10px;
+}
+.div-in-sidebar-options {
+        margin: 20px;
+}
+.p-option-col {
+        margin-left: 5px;
+        margin-top: 15px;
+        margin-bottom: 3px;
 }
 #header {
         background: #2c5c97; 
@@ -127,12 +144,4 @@ button {
 #p-page-select {
         margin-left: 10px;
 }
-#div-rbi-options {
-        display: inline-block;
-        background: #f3f3f1; 
-        width: 28%;
-        height: 100px;
-        border-radius: 10px;
-        margin-left: 10px;
-        margin-top: 10px;
-}
+
