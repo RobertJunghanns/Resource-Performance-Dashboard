@@ -36,20 +36,23 @@
         margin-top: 10px;
 }
 .div-option-col{
-        display: inline-block;
         width: 45%;
+        margin: 15px;
 }
 .div-sidebar-options {
         display: inline-block;
         background: #f3f3f1; 
         width: 28%;
-        height: 500px;
         border-radius: 10px;
         margin-left: 10px;
         margin-top: 10px;
 }
 .div-in-sidebar-options {
         margin: 20px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        height: 100%;
 }
 .p-option-col {
         margin-left: 5px;
@@ -65,7 +68,7 @@
         margin-bottom: 5px;
         cursor: pointer;
         border-radius: 5px;
-        background-color: #f8f8f8;
+        background-color: white;
 }
 .checklist-button-box > label {
         display: flex; 
@@ -162,9 +165,37 @@
 #p-page-select {
         margin-left: 10px;
 }
-
-#div-checklist-rbi {
-        vertical-align: top;
-        margin-left: 30px;
+#div-option-col-left{
+        align-self: flex-start;
+        margin-top: 0;
 }
+#div-option-col-right {
+        align-self: flex-start;
+        margin-top: 0;
+}
+#button-generate{
+        align-self: flex-end;
+        margin: 15px;
+        margin-top: -68px;
+        width: 45%;
+
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 10px 15px;
+        font-size: 16px;
+        text-align: center;
+        cursor: pointer;
+        line-height: 1;  
+}
+#div-div-sidebar-options{
+        display: flex;
+        flex-direction: column;
+}
+#div-div-div-sidebar-options{
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+}
+
 
