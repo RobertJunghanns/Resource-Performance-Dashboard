@@ -6,7 +6,6 @@ import base64
 import dash
 import pm4py
 import json
-import pandas as pd
 import dash_bootstrap_components as dbc
 
 from dash import html, dcc, Input, Output, State, ALL, callback_context, no_update

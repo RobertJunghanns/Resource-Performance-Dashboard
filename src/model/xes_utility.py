@@ -19,5 +19,19 @@ def df_to_json(df):
 # Convert JSON string back to DataFrame
 def json_to_df(json_str):
     df = pd.read_json(json_str, orient='split')
-    df['time:timestamp'] = pd.to_datetime(df['time:timestamp'], utc=True)
+
+    # Convert iso date strings to timestap
+    for column in df.columns:
+        if df[column].dtype == 'object':
+            try:
+                # Attempt to parse the column as a datetime
+                df[column] = pd.to_datetime(df[column], utc=True, errors='raise')
+            except (ValueError, TypeError):
+                # If parsing fails, we assume it's not a datetime column and move on
+                continue
+    
+    # Ensure datatype of org:resource / undo impicit convertion of pandas
+    if 'org:resource' in df.columns:
+        df['org:resource'] = df['org:resource'].astype(str)
+
     return df
