@@ -69,8 +69,9 @@
 }
 .checklist-button-box > label {
         display: flex; 
-        align-items: center; 
-        margin-bottom: 5px; 
+        align-items: center;
+        margin-top: 3px; 
+        margin-bottom: 3px; 
 }
 #header {
         background: #2c5c97; 

@@ -69,7 +69,6 @@ app.layout = html.Div([
                                     '📥 Drag and Drop or ',
                                     html.A('Select Files')
                                 ]),
-                                # Allow multiple files to be uploaded
                                 multiple=False
                             ),
                         ]),
@@ -105,8 +104,6 @@ app.layout = html.Div([
                 html.Div(
                     id='div-buttons',
                     children=[
-                        #html.Button('Resource Behavior', id='button-resource-behavior', className='button-default'),
-                        #html.Button('Resource-Performance Analysis', id= 'button-resource-performance-analysis', className='button-default')
                         html.Button('Resource Behavior', id={'type': 'dynamic-button', 'index': 1}, className='button-default'),
                         html.Button('Resource Performance Analysis', id={'type': 'dynamic-button', 'index': 2}, className='button-default'),
                 ])

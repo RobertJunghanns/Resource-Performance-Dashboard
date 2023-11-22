@@ -107,11 +107,8 @@ def update_resource_options(json_event_log):
         sorted_resources = sorted(unique_resources)
         options = [{'label': resource, 'value': resource} for resource in sorted_resources]
         
-        earliest_timestamp = get_earliest_timestamp(df_event_log).replace('Z', '+00:00')
-        latest_timestamp = get_latest_timestamp(df_event_log).replace('Z', '+00:00')
-
-        earliest_dt = dt.fromisoformat(earliest_timestamp).date()
-        latest_dt = dt.fromisoformat(latest_timestamp).date()
+        earliest_dt = get_earliest_timestamp(df_event_log)
+        latest_dt = get_latest_timestamp(df_event_log)
 
         return [options, earliest_dt, latest_dt, earliest_dt, earliest_dt, earliest_dt, latest_dt, latest_dt, latest_dt]
     else:

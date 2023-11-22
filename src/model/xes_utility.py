@@ -18,4 +18,6 @@ def df_to_json(df):
 
 # Convert JSON string back to DataFrame
 def json_to_df(json_str):
-    return pd.read_json(json_str, orient='split')
+    df = pd.read_json(json_str, orient='split')
+    df['time:timestamp'] = pd.to_datetime(df['time:timestamp'], utc=True)
+    return df

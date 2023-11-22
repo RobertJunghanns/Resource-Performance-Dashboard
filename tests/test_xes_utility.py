@@ -18,7 +18,7 @@ class TestXESUtilityFunctions(unittest.TestCase):
 
     def test_earliest_timestamp(self):
         earliest = get_earliest_timestamp(self.event_log)
-        expected_timestamp = pd.Timestamp('2010-10-04 22:00:00+00:00') 
+        expected_timestamp = pd.Timestamp('2010-10-04 22:00:00+00:00')
 
         self.assertEqual(earliest, expected_timestamp)
     
