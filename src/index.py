@@ -15,6 +15,7 @@ from pathlib import Path
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
     dcc.Store(id='json_event_log'),
+    #dcc.Store(id='json_filtered_event_log'),
     html.Div(
         id='header',
         children=[
