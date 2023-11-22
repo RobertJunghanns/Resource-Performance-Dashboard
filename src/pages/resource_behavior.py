@@ -61,9 +61,26 @@ layout = html.Div([
                             ),
                     ]),
                     html.Div(
+                        id='div-checklist-rbi',
                         className='div-option-col',
                         children = [
-
+                            html.P(
+                                className='p-option-col',
+                                children='Resource Behavior Indicators', 
+                            ),
+                           dcc.Checklist(
+                                id='checklist-rbi',
+                                className='checklist-button-box',
+                                options=[
+                                    {'label': 'Option 1', 'value': 'OPT1'},
+                                    {'label': 'Option 2', 'value': 'OPT2'},
+                                    {'label': 'Option 3', 'value': 'OPT3'},
+                                ],
+                                value=[],
+                                inputStyle={"margin-right": "5px"},  # Add margin to the right of the checkbox
+                                labelStyle={"display": "inline"},  # Make the label inline with the checkbox
+                                #labelStyle={'display': 'block'}
+                            )
                     ])
                 ]
             ),
