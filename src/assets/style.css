@@ -124,6 +124,14 @@
         margin-left: 5px;
         transition-duration: 400ms;
 }
+#page-resource{
+        display: flex;
+        flex-direction: row;
+}
+#time-series-chart{
+        display: inline-block;
+        width: 72%;
+}
 #div-github-logo {
         float: right;
 }

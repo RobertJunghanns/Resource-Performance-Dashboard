@@ -39,10 +39,7 @@ def align_date_to_period(date, period, next_period=False):
 
     return aligned_date
 
-def generate_full_time_intervals(start_date_str, end_date_str, period):
-    start_date = dt.fromisoformat(start_date_str)
-    end_date = dt.fromisoformat(end_date_str)
-
+def generate_time_period_intervals(start_date, end_date, period):
     intervals = []
     current_start = start_date
 
@@ -64,6 +61,34 @@ def generate_full_time_intervals(start_date_str, end_date_str, period):
         intervals.pop()
 
     return intervals
+
+def generate_until_end_period_intervals(start_date, end_date, period):
+    intervals = []
+    current_start = start_date
+
+    while current_start < end_date:
+        current_end = align_date_to_period(current_start, period, next_period=True)
+
+        if current_end > end_date:
+            current_end = end_date
+
+        intervals.append((start_date, current_end, current_start)) #allways start from start_date
+        current_start = current_end
+
+    return intervals
+
+def get_period_name(date, period):
+    if period == 'day':
+        return date.strftime("%b. %d, %Y")
+    elif period == 'week':
+        week_num = date.isocalendar()[1]
+        return f"Week {week_num}, {date.year}"
+    elif period == 'month':
+        return date.strftime("%b. %Y")
+    elif period == 'year':
+        return date.strftime("%Y")
+    else:
+        raise ValueError("Invalid period. Choose from 'day', 'week', 'month', 'year'.")
 
 # Convert DataFrame to a JSON string
 def df_to_json(df):

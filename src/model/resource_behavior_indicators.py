@@ -1,14 +1,24 @@
-from pandas import Timestamp
-import pm4py
+import pandas as pd
+from pandasql import sqldf
 
-def rbi_distinct_activities(t_start: Timestamp, t_end: Timestamp, resource_id: str) -> float:
-    """
-    Calculate distinct activities.
+pysqldf = lambda q: sqldf(q, globals())
 
-    :param t_start: Start time as a pandas Timestamp object.
-    :param t_end: End time as a pandas Timestamp object.
-    :param resource_id: The ID of the resource.
-    :return: The calculated RBI value.
-    """
-    # Implementation goes here
-    pass
+def rbi_distinct_activities(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, resource_id: str) -> int:
+    # Filter the event log for the given resource and time period
+    filtered_log = event_log[
+        (event_log['org:resource'] == resource_id) &
+        (event_log['time:timestamp'] >= t_start) &
+        (event_log['time:timestamp'] <= t_end)
+    
+    
+    sql_query = f"""
+    SELECT COUNT(DISTINCT [concept:name]) as distinct_activities_count
+    FROM event_log
+    WHERE [org:resource] = '{resource_id}' 
+    AND [time:timestamp] BETWEEN '{t_start}' AND '{t_end}'
+    """]
+    
+    # Count the number of distinct activities
+    distinct_activities_count = filtered_log['concept:name'].nunique()
+    
+    return distinct_activities_count

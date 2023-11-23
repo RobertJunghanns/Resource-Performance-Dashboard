@@ -1,11 +1,14 @@
 from app import app
-import pm4py
+import plotly.graph_objs as go
+import pandas as pd
 from dash import html, State, Input, Output, dcc, no_update
 from datetime import datetime as dt
-from model.xes_utility import get_unique_resources, get_earliest_timestamp, get_latest_timestamp, generate_full_time_intervals, json_to_df, df_to_json
+from model.xes_utility import get_unique_resources, get_earliest_timestamp, get_latest_timestamp, get_period_name, generate_time_period_intervals, generate_until_end_period_intervals, json_to_df, df_to_json
+from model.resource_behavior_indicators import rbi_distinct_activities
 
-
-layout = html.Div([
+layout = html.Div(
+    id='page-resource',
+    children = [
     html.Div(
         className='div-sidebar-options',
         children = [
@@ -21,7 +24,7 @@ layout = html.Div([
                             children = [
                                 html.P(
                                     className='p-option-col',
-                                    children='Resource', 
+                                    children='Resource:', 
                                 ),
                                 dcc.Dropdown(
                                     id='dropdown-resource-select',
@@ -29,7 +32,7 @@ layout = html.Div([
                                 ),
                                 html.P(
                                     className='p-option-col',
-                                    children='Time period', 
+                                    children='Time period:', 
                                 ),
                                 dcc.Dropdown(
                                     id='dropdown-time-select',
@@ -43,27 +46,39 @@ layout = html.Div([
                                 ),
                                 html.P(
                                     className='p-option-col',
-                                    children='Date from', 
+                                    children='Backwards scope::', 
+                                ),
+                                dcc.Dropdown(
+                                    id='dropdown-scope-select',
+                                    options=[
+                                        {'label': 'ONLY time period', 'value': 'in_period'},
+                                        {'label': 'UNTIL end of time period', 'value': 'until_period'},
+                                    ],
+                                    value='in_period'
+                                ),
+                                html.P(
+                                    className='p-option-col',
+                                    children='Date from:', 
                                 ),
                                 dcc.DatePickerSingle(
                                     id='date-from',
                                     className='date-select',
-                                    min_date_allowed=dt(1995, 8, 5),
-                                    max_date_allowed=dt(2023, 9, 19),
-                                    initial_visible_month=dt(2023, 8, 5),
-                                    date=dt(2023, 8, 25, 23, 59, 59)
+                                    min_date_allowed=pd.Timestamp('1995-08-05'),
+                                    max_date_allowed=pd.Timestamp('2023-11-30'),
+                                    initial_visible_month=pd.Timestamp('2023-11-30'),
+                                    date=pd.Timestamp('2023-11-30')
                                 ),
                                 html.P(
                                     className='p-option-col',
-                                    children='Date up to', 
+                                    children='Date up to:', 
                                 ),
                                 dcc.DatePickerSingle(
                                     id='date-to',
                                     className='date-select',
-                                    min_date_allowed=dt(1995, 8, 5),
-                                    max_date_allowed=dt(2023, 9, 19),
-                                    initial_visible_month=dt(2023, 8, 5),
-                                    date=dt(2023, 8, 25, 23, 59, 59)
+                                    min_date_allowed=pd.Timestamp('1995-08-05'),
+                                    max_date_allowed=pd.Timestamp('2023-11-30'),
+                                    initial_visible_month=pd.Timestamp('2023-11-30'),
+                                    date=pd.Timestamp('2023-11-30')
                                 ),
                             ]),
                             html.Div(
@@ -72,30 +87,24 @@ layout = html.Div([
                                 children = [
                                     html.P(
                                         className='p-option-col',
-                                        children='Resource Behavior Indicators', 
+                                        children='Resource Behavior Indicator:', 
                                     ),
-                                dcc.Checklist(
-                                        id='checklist-rbi',
-                                        className='checklist-button-box',
+                                    dcc.Dropdown(
+                                        id='dropdown-rbi-select',
                                         options=[
-                                            {'label': 'Option 1', 'value': 'OPT1'},
-                                            {'label': 'Option 2', 'value': 'OPT2'},
-                                            {'label': 'Option 3', 'value': 'OPT3'},
+                                            {'label': 'Distinct activities', 'value': 'rbi_distinct_activities'},
                                         ],
-                                        value=[],
-                                        inputStyle={"margin-right": "5px"},
-                                        labelStyle={"display": "inline"}
-                                    ),  
+                                        value='month'
+                                    ),
                             ]),
                     ]),
                     html.Button(
-                        'Generate Time Series Diagrams',
+                        'Generate Time Series Diagram',
                         id='button-generate',
-                    )  
-                    
-            ]),
-    ]),
-    html.Div(id='placeholder')
+                    )   
+                ]),
+        ]),
+        dcc.Graph(id="time-series-chart"),
 ])
 
 @app.callback(
@@ -124,33 +133,66 @@ def update_resource_options(json_event_log):
     else:
         # Return an empty list if no file is selected
         return [no_update] * 9
-    
-# @app.callback(
-#     Output('json_filtered_event_log', 'data'),
-#     [Input('date-from', 'date'), 
-#      Input('date-to', 'date')],
-#     [State('json_event_log', 'data')]
-# )
-# def filter_event_log(start_date_str, end_date_str, event_log_json):
-#      # Convert datetime strings to the string format expected by PM4Py
-#     start_date = dt.fromisoformat(start_date_str)
-#     end_date = dt.fromisoformat(end_date_str)
-#     start_date_formatted = start_date.strftime("%Y-%m-%d %H:%M:%S")
-#     end_date_formatted = end_date.strftime("%Y-%m-%d %H:%M:%S")
-
-#     event_log_df = json_to_df(event_log_json)
-#     filtered_log = pm4py.filter_time_range(event_log_df, start_date_formatted, end_date_formatted, mode='traces_contained')
-#     filtered_event_log_json = df_to_json(filtered_log)
-    
-#     return filtered_event_log_json
 
 @app.callback(
-    Output('placeholder', 'children'),
-    [Input('date-from', 'date'), 
-     Input('date-to', 'date'),
-     Input('dropdown-time-select', 'value')]
+    Output('time-series-chart', 'figure'),
+    Input('button-generate', 'n_clicks'),
+    [State('json_event_log', 'data'),
+     State('dropdown-rbi-select', 'value'),
+     State('dropdown-resource-select', 'value'),
+     State('date-from', 'date'), 
+     State('date-to', 'date'),
+     State('dropdown-time-select', 'value'),
+     State('dropdown-scope-select', 'value')]
 )
-def filter_event_log(start_date_str, end_date_str, period):
-    time_intervals = generate_full_time_intervals(start_date_str, end_date_str, period)
-    #print(time_intervals)
-    return None
+def get_rbi_time_series(n_clicks, event_log_json, rbi, resource, start_date_str, end_date_str, period, scope):
+    if all(variable is not None and variable for variable in [event_log_json, rbi, resource, start_date_str, end_date_str, period, scope]):
+        # convert date strings
+        start_date = pd.to_datetime(start_date_str)
+        end_date = pd.to_datetime(end_date_str)
+
+        if start_date.tzinfo is None:
+            start_date = start_date.tz_localize('UTC')
+        if end_date.tzinfo is None:
+            end_date = end_date.tz_localize('UTC')
+        # generate intervals
+        if scope == 'in_period': 
+            time_intervals = generate_time_period_intervals(start_date, end_date, period)
+        elif scope == 'until_period':
+            time_intervals = generate_until_end_period_intervals(start_date, end_date, period)
+
+        event_log_df = json_to_df(event_log_json)
+        rbi_time_series_names = []
+        rbi_time_series_values = []
+        for interval in time_intervals:
+            if scope=='in_period':
+                rbi_time_series_names.append(get_period_name(interval[0], period))
+            elif scope == 'until_period':
+                rbi_time_series_names.append(get_period_name(interval[2], period))
+
+            if rbi == 'rbi_distinct_activities':
+                rbi_time_series_values.append(rbi_distinct_activities(event_log_df, interval[0], interval[1], resource))
+
+        fig = go.Figure([go.Scatter(x=rbi_time_series_names, y=rbi_time_series_values)])
+
+        fig.update_layout(
+            xaxis_title="Time",
+            yaxis_title="RBI Value",
+            title="RBI Time Series"
+        )
+                
+        return fig
+    
+    return go.Figure(layout={
+                'xaxis': {'visible': False},
+                'yaxis': {'visible': False},
+                'annotations': [{
+                    'text': 'Select options to generate diagram',
+                    'xref': 'paper',
+                    'yref': 'paper',
+                    'showarrow': False,
+                    'font': {
+                        'size': 16
+                    }
+                }]
+            })
