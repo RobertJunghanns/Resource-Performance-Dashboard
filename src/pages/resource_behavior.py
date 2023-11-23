@@ -187,7 +187,7 @@ def get_rbi_time_series(n_clicks, event_log_json, rbi, resource, start_date_str,
                 'xaxis': {'visible': False},
                 'yaxis': {'visible': False},
                 'annotations': [{
-                    'text': 'Select options to generate diagram',
+                    'text': 'Select options and press "Generate Time Series Diagram".',
                     'xref': 'paper',
                     'yref': 'paper',
                     'showarrow': False,
