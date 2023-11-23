@@ -4,7 +4,7 @@ import pandas as pd
 from dash import html, State, Input, Output, dcc, no_update
 from datetime import datetime as dt
 from model.xes_utility import get_unique_resources, get_earliest_timestamp, get_latest_timestamp, get_period_name, generate_time_period_intervals, generate_until_end_period_intervals, json_to_df, df_to_json
-from model.resource_behavior_indicators import rbi_distinct_activities
+from model.resource_behavior_indicators import rbi_distinct_activities, sql_to_rbi
 
 layout = html.Div(
     id='page-resource',
@@ -46,7 +46,7 @@ layout = html.Div(
                                 ),
                                 html.P(
                                     className='p-option-col',
-                                    children='Backwards scope::', 
+                                    children='Backwards scope:', 
                                 ),
                                 dcc.Dropdown(
                                     id='dropdown-scope-select',
@@ -92,10 +92,24 @@ layout = html.Div(
                                     dcc.Dropdown(
                                         id='dropdown-rbi-select',
                                         options=[
+                                            {'label': 'Custom RBI (SQL)', 'value': 'rbi_sql'},
                                             {'label': 'Distinct activities', 'value': 'rbi_distinct_activities'},
                                         ],
                                         value='month'
                                     ),
+                                    html.Div(id='dynamic-additional-input-fields', children=[
+                                        html.Div([
+                                            html.P('SQL query:', className='p-option-col'),
+                                            dcc.Textarea(
+                                                id='input_sql_query',
+                                                placeholder="Enter SQL query. Example:\nSELECT COUNT(DISTINCT [concept:name])\nFROM event_log",
+                                            ),
+                                        ], id='sql-input-container', style={'display': 'none'}),  # Initially hidden
+
+                                        # Add more input field containers here and set their display to 'none'
+                                        # ...
+
+                                    ]),
                             ]),
                     ]),
                     html.Button(
@@ -104,7 +118,12 @@ layout = html.Div(
                     )   
                 ]),
         ]),
-        dcc.Graph(id="time-series-chart"),
+        #dcc.Graph(id='time-series-chart')
+        dcc.Loading(
+            id="loading-chart",
+            children=[dcc.Graph(id='time-series-chart')],
+            type="circle", 
+        ),
 ])
 
 @app.callback(
@@ -143,9 +162,24 @@ def update_resource_options(json_event_log):
      State('date-from', 'date'), 
      State('date-to', 'date'),
      State('dropdown-time-select', 'value'),
-     State('dropdown-scope-select', 'value')]
+     State('dropdown-scope-select', 'value'),
+     State('input_sql_query', 'value')]
 )
-def get_rbi_time_series(n_clicks, event_log_json, rbi, resource, start_date_str, end_date_str, period, scope):
+def get_rbi_time_series(n_clicks, event_log_json, rbi, resource, start_date_str, end_date_str, period, scope, sql_query):
+    no_figure = go.Figure(layout={
+                'xaxis': {'visible': False},
+                'yaxis': {'visible': False},
+                'annotations': [{
+                    'text': 'Select options and press "Generate Time Series Diagram".',
+                    'xref': 'paper',
+                    'yref': 'paper',
+                    'showarrow': False,
+                    'font': {
+                        'size': 16
+                    }
+                }]
+            })
+    
     if all(variable is not None and variable for variable in [event_log_json, rbi, resource, start_date_str, end_date_str, period, scope]):
         # convert date strings
         start_date = pd.to_datetime(start_date_str)
@@ -172,6 +206,14 @@ def get_rbi_time_series(n_clicks, event_log_json, rbi, resource, start_date_str,
 
             if rbi == 'rbi_distinct_activities':
                 rbi_time_series_values.append(rbi_distinct_activities(event_log_df, interval[0], interval[1], resource))
+            elif rbi == 'rbi_sql':
+                try:
+                    rbi_time_series_values.append(sql_to_rbi(sql_query, event_log_df, interval[0], interval[1], resource))
+                except:
+                    print('SQL failed')
+                    return no_figure
+            else:
+                return no_figure
 
         fig = go.Figure([go.Scatter(x=rbi_time_series_names, y=rbi_time_series_values)])
 
@@ -183,16 +225,22 @@ def get_rbi_time_series(n_clicks, event_log_json, rbi, resource, start_date_str,
                 
         return fig
     
-    return go.Figure(layout={
-                'xaxis': {'visible': False},
-                'yaxis': {'visible': False},
-                'annotations': [{
-                    'text': 'Select options and press "Generate Time Series Diagram".',
-                    'xref': 'paper',
-                    'yref': 'paper',
-                    'showarrow': False,
-                    'font': {
-                        'size': 16
-                    }
-                }]
-            })
+    return no_figure
+    
+# Define the callback to toggle the visibility of input fields
+@app.callback(
+    [Output('sql-input-container', 'style'),
+     # Add more Outputs for other input containers here
+     # ...
+    ],
+    Input('dropdown-rbi-select', 'value')
+)
+def toggle_input_fields_visibility(selected_rbi):
+    # Start with all input containers hidden
+    inputs_visibility = [{'display': 'none'}] * 1 # set to number of input containers
+
+    if selected_rbi == 'rbi_sql':
+        inputs_visibility[0] = {'display': 'block'} 
+    #elif selected_rbi == 'rbi_distinct_activities':
+        
+    return inputs_visibility
