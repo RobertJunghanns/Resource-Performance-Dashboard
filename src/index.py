@@ -15,7 +15,6 @@ from pathlib import Path
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
     dcc.Store(id='json_event_log'),
-    #dcc.Store(id='json_filtered_event_log'),
     html.Div(
         id='header',
         children=[
@@ -48,7 +47,7 @@ app.layout = html.Div([
             ),
         ]
     ),
-    dbc.Alert(id='upload-alert', duration=4000, dismissable=True, is_open=False),
+    dbc.Alert(id='upload-alert',className='alert', duration=4000, dismissable=True, is_open=False),
     html.Div(
         className='div-option-box',
         children=[
@@ -61,7 +60,7 @@ app.layout = html.Div([
                         html.Div([
                             html.P(
                                 id='p-xes-upload',
-                                children='Upload XES file', 
+                                children='Upload XES file:', 
                             ),
                             dcc.Upload(
                                 id='dcc-xes-upload',
@@ -78,7 +77,7 @@ app.layout = html.Div([
                         children = [
                             html.P(
                                 id='p-xes-select',
-                                children='Select XES file', 
+                                children='Select XES file:', 
                             ),
                             dcc.Dropdown(
                                 id='dropdown-xes-select',
@@ -100,7 +99,7 @@ app.layout = html.Div([
             html.Div(
                 className='div-in-option-box',
                 children = [
-                html.P(id='p-page-select', children='Select page'),
+                html.P(id='p-page-select', children='Select page:'),
                 html.Div(
                     id='div-buttons',
                     children=[
