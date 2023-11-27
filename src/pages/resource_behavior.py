@@ -1,10 +1,11 @@
 from app import app
+import pm4py
 import plotly.graph_objs as go
 import pandas as pd
 from dash import html, State, Input, Output, dcc, no_update
 import dash_bootstrap_components as dbc
 from model.xes_utility import get_unique_resources, get_earliest_timestamp, get_latest_timestamp, get_period_name, generate_time_period_intervals, generate_until_end_period_intervals, json_to_df, df_to_json
-from model.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions
+from model.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_distinct_activities_pika
 
 layout = html.Div([
     dbc.Alert(id='sql-alert', className='alert', duration=40000, color="warning", dismissable=True, is_open=False),
@@ -144,14 +145,15 @@ layout = html.Div([
      Output('date-to', 'max_date_allowed'),
      Output('date-to', 'initial_visible_month'),
      Output('date-to', 'date'),],
-    Input('json_event_log', 'data')
+    Input('json_event_log', 'data'),
+    State('dtypes_event_log', 'data')
 )
-def update_resource_options(json_event_log):
+def update_resource_options(json_event_log, dtypes):
     if json_event_log:
-        df_event_log = json_to_df(json_event_log)
+        df_event_log = json_to_df(json_event_log, dtypes)
         unique_resources = get_unique_resources(df_event_log)
         sorted_resources = sorted(unique_resources)
-        options = [{'label': resource, 'value': resource} for resource in sorted_resources]
+        options = [{'label': resource, 'value': str(resource)} for resource in sorted_resources]
         
         earliest_dt = get_earliest_timestamp(df_event_log)
         latest_dt = get_latest_timestamp(df_event_log)
@@ -167,6 +169,7 @@ def update_resource_options(json_event_log):
     Output('sql-alert', 'is_open'),
     Input('button-generate', 'n_clicks'),
     [State('json_event_log', 'data'),
+     State('dtypes_event_log', 'data'),
      State('dropdown-rbi-select', 'value'),
      State('dropdown-resource-select', 'value'),
      State('date-from', 'date'), 
@@ -176,7 +179,7 @@ def update_resource_options(json_event_log):
      State('input-sql-query', 'value'),
      State('input-concept-name', 'value')]
 )
-def get_rbi_time_series(n_clicks, event_log_json, rbi, resource, start_date_str, end_date_str, period, scope, sql_query, concept_name):
+def get_rbi_time_series(n_clicks, event_log_json, dtypes, rbi, resource, start_date_str, end_date_str, period, scope, sql_query, concept_name):
     no_figure = go.Figure(layout={
                 'xaxis': {'visible': False},
                 'yaxis': {'visible': False},
@@ -206,7 +209,10 @@ def get_rbi_time_series(n_clicks, event_log_json, rbi, resource, start_date_str,
         elif scope == 'until_period':
             time_intervals = generate_until_end_period_intervals(start_date, end_date, period)
 
-        event_log_df = json_to_df(event_log_json)
+        event_log_df = json_to_df(event_log_json, dtypes)
+        if not rbi == 'rbi_sql':
+            event_log_xes = pm4py.convert_to_event_log(event_log_df)
+
         rbi_time_series_names = []
         rbi_time_series_values = []
         for interval in time_intervals:
@@ -215,14 +221,13 @@ def get_rbi_time_series(n_clicks, event_log_json, rbi, resource, start_date_str,
             elif scope == 'until_period':
                 rbi_time_series_names.append(get_period_name(interval[2], period))
 
-
             if rbi == 'rbi_sql':
                 try:
                     rbi_time_series_values.append(sql_to_rbi(sql_query, event_log_df, interval[0], interval[1], resource))
                 except Exception as error:
                     return no_figure, 'SQL failed:\n' + str(error), True  
             elif rbi == 'rbi_distinct_activities':
-                rbi_time_series_values.append(rbi_distinct_activities(event_log_df, interval[0], interval[1], resource))
+                rbi_time_series_values.append(rbi_distinct_activities_pika(event_log_df, interval[0], interval[1], resource))
             elif rbi == 'rbi_activity_frequency':
                 rbi_time_series_values.append(rbi_activity_fequency(event_log_df, interval[0], interval[1], resource, concept_name))
             elif rbi == 'rbi_activity_completions':

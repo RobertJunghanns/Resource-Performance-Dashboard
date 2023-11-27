@@ -1,5 +1,9 @@
 import pandas as pd
 from pandasql import sqldf
+from pm4py.algo.organizational_mining.resource_profiles import algorithm
+from pm4py.objects.log.obj import EventLog
+from pathlib import Path
+import pm4py
 
 def pysqldf(q, local_vars):
     return sqldf(q, local_vars)
@@ -20,6 +24,14 @@ def sql_to_rbi(sql_query: str, event_log: pd.DataFrame, t_start: pd.Timestamp, t
         distinct_activities_count = 0
 
     return distinct_activities_count
+
+def rbi_distinct_activities_pika(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, resource_id: str) -> float:
+    #current_file_path = Path(__file__).resolve().parent.parent
+    #file_path = str(current_file_path / 'data' / ('BPIC15_1_1' + '.xes'))
+    #df_event_log = pm4py.read_xes(file_path)
+    print(algorithm.activity_completions(event_log, "2010-11-01 00:00:00", "2015-06-01 00:00:00", "560872"))
+    return algorithm.activity_completions(event_log, "2010-11-01 00:00:00", "2015-06-01 00:00:00", resource_id)
+    #return algorithm.distinct_activities(event_log, t_start, t_end, resource_id)
 
 def rbi_distinct_activities(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, resource_id: str) -> float:
     return sql_to_rbi(

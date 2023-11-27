@@ -92,10 +92,13 @@ def get_period_name(date, period):
 
 # Convert DataFrame to a JSON string
 def df_to_json(df):
-    return df.to_json(date_format='iso', orient='split')
+    df_json = df.reset_index().to_json(date_format='iso', orient='split')
+    data_types = df.dtypes.apply(lambda x: x.name).to_dict()
+    
+    return df_json, data_types
 
 # Convert JSON string back to DataFrame
-def json_to_df(json_str):
+def json_to_df(json_str, data_types):
     # Convert the string of JSON to a file-like object
     str_io = StringIO(json_str)
     df = pd.read_json(str_io, orient='split')
@@ -111,7 +114,11 @@ def json_to_df(json_str):
             continue
     
     # Ensure datatype of org:resource / undo impicit convertion of pandas
-    if 'org:resource' in df.columns:
-        df['org:resource'] = df['org:resource'].astype(str)
+    # if 'org:resource' in df.columns:
+    #     df['org:resource'] = df['org:resource'].astype(str)
+
+    #Ensure datatype / undo impicit convertion of pandas
+    for column, dtype in data_types.items():
+        df[column] = df[column].astype(dtype)
 
     return df

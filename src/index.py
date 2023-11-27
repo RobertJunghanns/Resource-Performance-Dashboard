@@ -1,5 +1,5 @@
 from pages import resource_behavior, resource_performance_analysis
-from model.xes_utility import df_to_json
+from model.xes_utility import df_to_json, json_to_df
 from app import app
 
 import base64
@@ -7,14 +7,17 @@ import dash
 import pm4py
 import json
 import dash_bootstrap_components as dbc
+import pandas as pd
 
 from dash import html, dcc, Input, Output, State, ALL, callback_context, no_update
 from pathlib import Path
 
 
+
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
     dcc.Store(id='json_event_log'),
+    dcc.Store(id='dtypes_event_log'),
     html.Div(
         id='header',
         children=[
@@ -113,6 +116,7 @@ app.layout = html.Div([
 
 @app.callback(
     [Output('json_event_log', 'data'),
+     Output('dtypes_event_log', 'data'),
      Output('graph-loading-output', 'children')],
     Input('dropdown-xes-select', 'value')
 )
@@ -121,10 +125,13 @@ def set_global_variable(selected_filename):
         current_file_path = Path(__file__).resolve().parent
         file_path = str(current_file_path / 'data' / (selected_filename + '.xes'))
         df_event_log = pm4py.read_xes(file_path)
-        json_event_log = df_to_json(df_event_log)
-        return json_event_log, None
+
+        json_event_log, data_types = df_to_json(df_event_log)
+
+
+        return json_event_log, data_types, None
     else:
-        return None, None
+        return None, None, None
 
 # Define the callback for the upload component
 @app.callback(
