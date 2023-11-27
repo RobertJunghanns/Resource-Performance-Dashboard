@@ -1,6 +1,7 @@
 from pages import resource_behavior, resource_performance_analysis
 from model.xes_utility import df_to_json, json_to_df
 from app import app
+from model.pickle_utility import save_as_pickle
 
 import base64
 import dash
@@ -16,8 +17,7 @@ from pathlib import Path
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
-    dcc.Store(id='json_event_log'),
-    dcc.Store(id='dtypes_event_log'),
+    dcc.Store(id='pickle_df_name'),
     html.Div(
         id='header',
         children=[
@@ -115,8 +115,7 @@ app.layout = html.Div([
 ])
 
 @app.callback(
-    [Output('json_event_log', 'data'),
-     Output('dtypes_event_log', 'data'),
+    [Output('pickle_df_name', 'data'),
      Output('graph-loading-output', 'children')],
     Input('dropdown-xes-select', 'value')
 )
@@ -126,12 +125,11 @@ def set_global_variable(selected_filename):
         file_path = str(current_file_path / 'data' / (selected_filename + '.xes'))
         df_event_log = pm4py.read_xes(file_path)
 
-        json_event_log, data_types = df_to_json(df_event_log)
+        save_as_pickle(df_event_log, selected_filename)
 
-
-        return json_event_log, data_types, None
+        return selected_filename, None
     else:
-        return None, None, None
+        return None, None
 
 # Define the callback for the upload component
 @app.callback(

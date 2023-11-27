@@ -4,8 +4,9 @@ import plotly.graph_objs as go
 import pandas as pd
 from dash import html, State, Input, Output, dcc, no_update
 import dash_bootstrap_components as dbc
-from model.xes_utility import get_unique_resources, get_earliest_timestamp, get_latest_timestamp, get_period_name, generate_time_period_intervals, generate_until_end_period_intervals, json_to_df, df_to_json
-from model.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_distinct_activities_pika
+from model.pickle_utility import load_from_pickle
+from model.xes_utility import get_unique_resources, get_earliest_timestamp, get_latest_timestamp, get_period_name, generate_time_period_intervals, generate_until_end_period_intervals
+from model.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_case_completions, rbi_fraction_case_completions, rbi_average_workload, rbi_multitasking, rbi_average_duration_activity, rbi_average_case_duration, rbi_interaction_two_resources, rbi_social_position
 
 layout = html.Div([
     dbc.Alert(id='sql-alert', className='alert', duration=40000, color="warning", dismissable=True, is_open=False),
@@ -99,6 +100,14 @@ layout = html.Div([
                                                 {'label': 'Distinct activities', 'value': 'rbi_distinct_activities'},
                                                 {'label': 'Activity frequency', 'value': 'rbi_activity_frequency'},
                                                 {'label': 'Activity completions', 'value': 'rbi_activity_completions'},
+                                                {'label': 'Case completions', 'value': 'rbi_case_completions'},
+                                                {'label': 'Fraction case completion', 'value': 'rbi_fraction_case_completion'},
+                                                {'label': 'Average workload', 'value': 'rbi_average_workload'},
+                                                {'label': 'Mulitasking', 'value': 'rbi_multitasking'},
+                                                {'label': 'Average duration activity', 'value': 'rbi_average_duration_activity'},
+                                                {'label': 'Average case duration', 'value': 'rbi_average_duration_case'},
+                                                {'label': 'Interaction two resources', 'value': 'rbi_interaction_two_resources'},
+                                                {'label': 'Social position', 'value': 'rbi_social_position'},
                                             ],
                                             value='month'
                                         ),
@@ -109,15 +118,15 @@ layout = html.Div([
                                                     id='input-sql-query',
                                                     placeholder="Enter SQL query. Example for activity frequency:\nSELECT CAST(count.activity AS FLOAT) / CAST(count.all_activities AS FLOAT)\n   FROM (\n      SELECT\n         (SELECT COUNT([concept:name])\n         FROM event_log\n         WHERE [org:resource] = 'resource_id'\n         AND [concept:name] = '09_AH_I_010')\n         AS activity,\n         (SELECT COUNT([concept:name])\n         FROM event_log\n         WHERE [org:resource] = 'resource_id')\n         AS all_activities\n   ) AS count",
                                                 ),
-                                            ], id='sql-input-container', style={'display': 'none'}),  # Initially hidden
+                                            ], id='sql-input-container', style={'display': 'none'}),
                                             html.Div([
                                                 html.P('Activity name:', className='p-option-col'),
                                                 dcc.Input(id='input-concept-name', type='text', placeholder=' Enter concept:name...'),
-                                            ], id='concept-name-input-container', style={'display': 'none'}),  # Initially hidden
-
-                                            # Add more input field containers here and set their display to 'none'
-                                            # ...
-
+                                            ], id='concept-name-input-container', style={'display': 'none'}), 
+                                            html.Div([
+                                                html.P('Interaction resource id:', className='p-option-col'),
+                                                dcc.Input(id='input-resource-name', type='text', placeholder=' Enter org:resource...'),
+                                            ], id='resource-id-input-container', style={'display': 'none'}),
                                         ]),
                                 ]),
                         ]),
@@ -145,12 +154,11 @@ layout = html.Div([
      Output('date-to', 'max_date_allowed'),
      Output('date-to', 'initial_visible_month'),
      Output('date-to', 'date'),],
-    Input('json_event_log', 'data'),
-    State('dtypes_event_log', 'data')
+    Input('pickle_df_name', 'data')
 )
-def update_resource_options(json_event_log, dtypes):
-    if json_event_log:
-        df_event_log = json_to_df(json_event_log, dtypes)
+def update_resource_options(pickle_df_name):
+    if pickle_df_name:
+        df_event_log = load_from_pickle(pickle_df_name)
         unique_resources = get_unique_resources(df_event_log)
         sorted_resources = sorted(unique_resources)
         options = [{'label': resource, 'value': str(resource)} for resource in sorted_resources]
@@ -168,8 +176,7 @@ def update_resource_options(json_event_log, dtypes):
     Output('sql-alert', 'children'),
     Output('sql-alert', 'is_open'),
     Input('button-generate', 'n_clicks'),
-    [State('json_event_log', 'data'),
-     State('dtypes_event_log', 'data'),
+    [State('pickle_df_name', 'data'),
      State('dropdown-rbi-select', 'value'),
      State('dropdown-resource-select', 'value'),
      State('date-from', 'date'), 
@@ -177,9 +184,10 @@ def update_resource_options(json_event_log, dtypes):
      State('dropdown-time-select', 'value'),
      State('dropdown-scope-select', 'value'),
      State('input-sql-query', 'value'),
-     State('input-concept-name', 'value')]
+     State('input-concept-name', 'value'),
+     State('input-resource-name', 'value')]
 )
-def get_rbi_time_series(n_clicks, event_log_json, dtypes, rbi, resource, start_date_str, end_date_str, period, scope, sql_query, concept_name):
+def get_rbi_time_series(n_clicks, pickle_df_name, rbi, resource, start_date_str, end_date_str, period, scope, sql_query, concept_name, interaction_resource):
     no_figure = go.Figure(layout={
                 'xaxis': {'visible': False},
                 'yaxis': {'visible': False},
@@ -194,7 +202,9 @@ def get_rbi_time_series(n_clicks, event_log_json, dtypes, rbi, resource, start_d
                 }]
             })
     
-    if all(variable is not None and variable for variable in [event_log_json, rbi, resource, start_date_str, end_date_str, period, scope]):
+    df_event_log = load_from_pickle(pickle_df_name)
+    
+    if all(variable is not None and variable for variable in [rbi, resource, start_date_str, end_date_str, period, scope]):
         # convert date strings
         start_date = pd.to_datetime(start_date_str)
         end_date = pd.to_datetime(end_date_str)
@@ -209,10 +219,6 @@ def get_rbi_time_series(n_clicks, event_log_json, dtypes, rbi, resource, start_d
         elif scope == 'until_period':
             time_intervals = generate_until_end_period_intervals(start_date, end_date, period)
 
-        event_log_df = json_to_df(event_log_json, dtypes)
-        if not rbi == 'rbi_sql':
-            event_log_xes = pm4py.convert_to_event_log(event_log_df)
-
         rbi_time_series_names = []
         rbi_time_series_values = []
         for interval in time_intervals:
@@ -223,15 +229,31 @@ def get_rbi_time_series(n_clicks, event_log_json, dtypes, rbi, resource, start_d
 
             if rbi == 'rbi_sql':
                 try:
-                    rbi_time_series_values.append(sql_to_rbi(sql_query, event_log_df, interval[0], interval[1], resource))
+                    rbi_time_series_values.append(sql_to_rbi(sql_query, df_event_log, interval[0], interval[1], resource))
                 except Exception as error:
                     return no_figure, 'SQL failed:\n' + str(error), True  
             elif rbi == 'rbi_distinct_activities':
-                rbi_time_series_values.append(rbi_distinct_activities_pika(event_log_df, interval[0], interval[1], resource))
+                rbi_time_series_values.append(rbi_distinct_activities(df_event_log, interval[0], interval[1], resource))
             elif rbi == 'rbi_activity_frequency':
-                rbi_time_series_values.append(rbi_activity_fequency(event_log_df, interval[0], interval[1], resource, concept_name))
+                rbi_time_series_values.append(rbi_activity_fequency(df_event_log, interval[0], interval[1], resource, concept_name))
             elif rbi == 'rbi_activity_completions':
-                rbi_time_series_values.append(rbi_activity_completions(event_log_df, interval[0], interval[1], resource))
+                rbi_time_series_values.append(rbi_activity_completions(df_event_log, interval[0], interval[1], resource))
+            elif rbi == 'rbi_case_completions':
+                rbi_time_series_values.append(rbi_case_completions(df_event_log, interval[0], interval[1], resource))
+            elif rbi == 'rbi_fraction_case_completion':
+                rbi_time_series_values.append(rbi_fraction_case_completions(df_event_log, interval[0], interval[1], resource))
+            elif rbi == 'rbi_average_workload':
+                rbi_time_series_values.append(rbi_average_workload(df_event_log, interval[0], interval[1], resource))
+            elif rbi == 'rbi_multitasking':
+                rbi_time_series_values.append(rbi_multitasking(df_event_log, interval[0], interval[1], resource))
+            elif rbi == 'rbi_average_duration_activity':
+                rbi_time_series_values.append(rbi_average_duration_activity(df_event_log, interval[0], interval[1], resource, concept_name))
+            elif rbi == 'rbi_average_duration_case':
+                rbi_time_series_values.append(rbi_average_case_duration(df_event_log, interval[0], interval[1], resource))
+            elif rbi == 'rbi_interaction_two_resources':
+                rbi_time_series_values.append(rbi_interaction_two_resources(df_event_log, interval[0], interval[1], resource, interaction_resource))
+            elif rbi == 'rbi_social_position':
+                rbi_time_series_values.append(rbi_social_position(df_event_log, interval[0], interval[1], resource))
             else:
                 return no_figure, no_update, no_update
             
@@ -251,16 +273,17 @@ def get_rbi_time_series(n_clicks, event_log_json, dtypes, rbi, resource, start_d
 @app.callback(
     [Output('sql-input-container', 'style'),
      Output('concept-name-input-container', 'style'),
-     # Add more Outputs for other input containers here
-    ],
+     Output('resource-id-input-container', 'style')],
     Input('dropdown-rbi-select', 'value')
 )
 def toggle_input_fields_visibility(selected_rbi):
-    inputs_visibility = [{'display': 'none'}] * 2 # set to number of input containers
+    inputs_visibility = [{'display': 'none'}] * 3 # set to number of input containers
 
     if selected_rbi == 'rbi_sql':
         inputs_visibility[0] = {'display': 'block'} 
-    elif selected_rbi == 'rbi_activity_frequency':
+    elif selected_rbi == 'rbi_activity_frequency' or selected_rbi =='rbi_average_duration_activity':
         inputs_visibility[1] = {'display': 'block'}
+    elif selected_rbi == 'rbi_interaction_two_resources':
+        inputs_visibility[2] = {'display': 'block'}
 
     return inputs_visibility
