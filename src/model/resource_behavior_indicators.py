@@ -1,9 +1,7 @@
 import pandas as pd
 from pandasql import sqldf
 from pm4py.algo.organizational_mining.resource_profiles import algorithm
-from pm4py.objects.log.obj import EventLog
-from pathlib import Path
-import pm4py
+import statistics
 
 def pysqldf(q, local_vars):
     return sqldf(q, local_vars)
@@ -53,7 +51,10 @@ def rbi_average_duration_activity(event_log: pd.DataFrame, t_start: pd.Timestamp
     return algorithm.average_duration_activity(event_log, t_start, t_end, resource_id, concept_name)
 
 def rbi_average_case_duration(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, resource_id: str) -> float:
-    return algorithm.average_case_duration(event_log, t_start, t_end, resource_id)
+    try:
+        return algorithm.average_case_duration(event_log, t_start, t_end, resource_id)
+    except statistics.StatisticsError:
+        return None
 
 def rbi_interaction_two_resources(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, resource_id: str, interaction_resource_id: str) -> float:
     return algorithm.interaction_two_resources(event_log, t_start, t_end, resource_id, interaction_resource_id)

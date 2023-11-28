@@ -266,7 +266,6 @@ def get_rbi_time_series(n_clicks, pickle_df_name, rbi, resource, start_date_str,
         )
                 
         return fig, no_update, no_update
-    
     return no_figure, no_update, no_update
     
 # toggle the visibility of input fields
