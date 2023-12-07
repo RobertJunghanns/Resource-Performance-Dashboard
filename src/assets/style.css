@@ -42,6 +42,22 @@
         width: 45%;
         margin: 15px;
 }
+.div-rp-sidebar{
+        display: flex;
+        flex-direction: column;
+        width: 35%;   
+}
+.div-div-rp-sidebar{
+        display: inline-block;
+        background: #f3f3f1;
+        width: 100%;
+        border-radius: 10px;
+        margin-left: 10px;
+        margin-top: 10px;
+        padding-left: 10px;
+        padding-right: 10px;
+        padding-bottom: 10px;
+}
 .div-sidebar-options {
         display: inline-block;
         background: #f3f3f1; 
@@ -49,6 +65,16 @@
         border-radius: 10px;
         margin-left: 10px;
         margin-top: 10px;
+}
+.div-div-sidebar-options{
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 10px;
+}
+.div-div-div-sidebar-options{
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
 }
 .div-in-sidebar-options {
         margin: 20px;
@@ -200,15 +226,6 @@
         text-align: center;
         cursor: pointer;
         line-height: 1;  
-}
-#div-div-sidebar-options{
-        display: flex;
-        flex-direction: column;
-}
-#div-div-div-sidebar-options{
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
 }
 #input-sql-query{
         width: 100%;

@@ -1,5 +1,4 @@
 from app import app
-import pm4py
 import plotly.graph_objs as go
 import pandas as pd
 from dash import html, State, Input, Output, dcc, no_update
@@ -17,10 +16,10 @@ layout = html.Div([
             className='div-sidebar-options',
             children = [
                 html.Div(
-                    id='div-div-sidebar-options',
+                    className='div-div-sidebar-options',
                     children = [
                         html.Div(
-                            id='div-div-div-sidebar-options',
+                            className='div-div-div-sidebar-options',
                             children = [
                                 html.Div(
                                 id='div-option-col-left',
