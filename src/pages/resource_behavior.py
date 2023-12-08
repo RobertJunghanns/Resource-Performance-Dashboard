@@ -107,8 +107,7 @@ layout = html.Div([
                                                 {'label': 'Average case duration', 'value': 'rbi_average_duration_case'},
                                                 {'label': 'Interaction two resources', 'value': 'rbi_interaction_two_resources'},
                                                 {'label': 'Social position', 'value': 'rbi_social_position'},
-                                            ],
-                                            value='month'
+                                            ]
                                         ),
                                         html.Div(id='dynamic-additional-input-fields', children=[
                                             html.Div([

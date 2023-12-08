@@ -48,7 +48,6 @@
         width: 35%;   
 }
 .div-div-rp-sidebar{
-        display: inline-block;
         background: #f3f3f1;
         width: 100%;
         border-radius: 10px;
@@ -57,6 +56,14 @@
         padding-left: 10px;
         padding-right: 10px;
         padding-bottom: 10px;
+}
+.flex-row{
+        display: flex;
+        flex-direction: row;  
+}
+.flex-col{
+        display: flex;
+        flex-direction: column;  
 }
 .div-sidebar-options {
         display: inline-block;
@@ -105,6 +112,10 @@
         margin-top: 3px; 
         margin-bottom: 3px; 
 }
+.div-time-selection {
+        width: 50%;
+        margin-left: 10px;
+}
 #header {
         background: #2c5c97; 
         color: white; 
@@ -131,6 +142,31 @@
         height: 48px;
         padding: 6px; 
         margin-top: 3px
+}
+#img-sample {
+        margin-top: 10px;
+        height: 55px;
+}
+#img-rbi {
+        margin-top: 15px;
+        height: 55px;
+}
+#img-down-arrow {
+        margin-top: 5px;
+        margin-bottom: -10px;
+        height: 35px;
+}
+#img-performance{
+        margin-top: 15px;
+        margin-left: 5px;
+        margin-right: 5px;
+        height: 45px;
+}
+#img-calendar{
+        margin-top: 15px;
+        margin-left: 5px;
+        margin-right: 5px;
+        height: 45px;
 }
 #box-github {
         color: white;
@@ -241,6 +277,24 @@
         background-color: white;
         border: 1px solid #ccc;
         border-radius: 4px;
+}
+#select-rbi-iv{
+        width: 100%;
+}
+#select-arrow{
+        margin: 12px;
+        width: 100%;
+        text-align: center;
+}
+#div-second-date{
+        margin-left: 10px;
+}
+.div-selection{
+        width: 100%;
+        margin-left: 10px;
+}
+.div-logo{
+        margin: auto;
 }
 
 
