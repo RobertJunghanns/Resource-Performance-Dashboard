@@ -227,7 +227,7 @@ def get_rbi_time_series(n_clicks, pickle_df_name, rbi, resource, start_date_str,
 
             if rbi == 'rbi_sql':
                 try:
-                    rbi_time_series_values.append(sql_to_rbi(sql_query, df_event_log, interval[0], interval[1], resource))
+                    rbi_time_series_values.append(sql_to_rbi(df_event_log, sql_query, resource, interval[0], interval[1]))
                 except Exception as error:
                     return no_figure, 'SQL failed:\n' + str(error), True  
             elif rbi == 'rbi_distinct_activities':

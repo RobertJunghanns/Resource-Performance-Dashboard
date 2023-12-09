@@ -1,6 +1,6 @@
 from app import app
 import pandas as pd
-from dash import html, State, Input, Output, dcc, no_update
+from dash import html, Input, Output, dcc, no_update
 
 # Define the page layout
 layout = html.Div([
@@ -167,8 +167,36 @@ layout = html.Div([
                                     className='p-option-col',
                                     children='Backwards scope:',
                                 ),
+                                dcc.Dropdown(
+                                    id='dropdown-backwards-scope',
+                                    options=[
+                                        
+                                    ]
+                                ),
                         ])
                 ])
             ]),
     ])
 ])
+
+@app.callback(
+    [Output('dropdown-backwards-scope', 'options')],
+    Input('dropdown-sampling-strategy', 'value')
+)
+def update_resource_options(sampling_strategy):
+    if sampling_strategy == 'activity_level':
+        options = [
+            {'label': 'Activity scope', 'value': 'activity'},
+            {'label': 'Individual scope', 'value': 'individual'},
+            {'label': 'Total scope', 'value': 'total'},
+        ]
+    elif sampling_strategy == 'case_level':
+        options = [
+            {'label': 'Case scope', 'value': 'case'},
+            {'label': 'Individual scope', 'value': 'individual'},
+            {'label': 'Total scope', 'value': 'total'},
+        ]
+    else:
+        options = no_update
+
+    return [options]

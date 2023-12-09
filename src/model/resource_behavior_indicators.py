@@ -6,7 +6,7 @@ import statistics
 def pysqldf(q, local_vars):
     return sqldf(q, local_vars)
 
-def sql_to_rbi(sql_query: str, event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, resource_id: str) -> float:
+def sql_to_rbi(event_log: pd.DataFrame, sql_query: str, resource_id: str, t_start: pd.Timestamp, t_end: pd.Timestamp) -> float:
 
     event_log = event_log[
         (event_log['time:timestamp'] >= t_start) &

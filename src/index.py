@@ -1,5 +1,5 @@
 from pages import resource_behavior, resource_performance_analysis
-from model.xes_utility import df_to_json, json_to_df
+from model.xes_utility import get_trace
 from app import app
 from model.pickle_utility import save_as_pickle
 
@@ -124,6 +124,9 @@ def set_global_variable(selected_filename):
         current_file_path = Path(__file__).resolve().parent
         file_path = str(current_file_path / 'data' / (selected_filename + '.xes'))
         df_event_log = pm4py.read_xes(file_path)
+
+        print(df_event_log)
+        print(get_trace(df_event_log, '173688'))
 
         save_as_pickle(df_event_log, selected_filename)
 
