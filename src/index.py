@@ -1,5 +1,5 @@
 from pages import resource_behavior, resource_performance_analysis
-from model.xes_utility import get_trace
+from model.case_level_sampling import get_trace, add_activity_durations_to_trace, group_equal_timestamp_events
 from app import app
 from model.pickle_utility import save_as_pickle
 
@@ -125,8 +125,10 @@ def set_global_variable(selected_filename):
         file_path = str(current_file_path / 'data' / (selected_filename + '.xes'))
         df_event_log = pm4py.read_xes(file_path)
 
-        print(df_event_log)
         print(get_trace(df_event_log, '173688'))
+        print(group_equal_timestamp_events(get_trace(df_event_log, '173688')))
+        print(add_activity_durations_to_trace(group_equal_timestamp_events(get_trace(df_event_log, '173688'))))
+        #print(get_trace(df_event_log, '173703'))
 
         save_as_pickle(df_event_log, selected_filename)
 
