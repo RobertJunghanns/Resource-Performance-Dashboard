@@ -66,7 +66,7 @@ def add_activity_durations_to_trace(trace: pd.DataFrame) -> pd.DataFrame:
                                     (trace['lifecycle:transition'] == 'START') & 
                                     (trace['time:timestamp'] < row['time:timestamp'])]
             if not start_event.empty:
-                start_time = start_event.iloc[-1]['time:timestamp']  # Get the last START event's timestamp
+                start_time = start_event.iloc[-1]['time:timestamp']
 
             # Option 2: Use the previous COMPLETE event's timestamp
             else:
@@ -74,10 +74,10 @@ def add_activity_durations_to_trace(trace: pd.DataFrame) -> pd.DataFrame:
                             (trace['lifecycle:transition'] == 'COMPLETE')].tail(1)
                 if not prev_complete_event.empty:
                     start_time = prev_complete_event.iloc[0]['time:timestamp']
+                # If it's the first event of the trace, duration is 0
                 else:
-                    start_time = row['time:timestamp']  # If it's the first event of the trace, duration is 0
+                    start_time = row['time:timestamp']  
 
-            # Calculate and set the duration
             trace.at[index, 'duration'] = row['time:timestamp'] - start_time
 
     return trace

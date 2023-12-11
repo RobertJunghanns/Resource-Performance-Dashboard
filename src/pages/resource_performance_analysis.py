@@ -127,53 +127,58 @@ layout = html.Div([
                                 id='img-calendar',
                                 className="", src=("./assets/images/calendar.png"),
                             ), 
-                        ), 
+                        ),
                         html.Div(
-                            className='div-time-selection flex-row',
+                            className='flex-col',
                             children=[
-                                html.Div([
-                                    html.P(
-                                        className='p-option-col',
-                                        children='Date from:',
-                                    ),
-                                    dcc.DatePickerSingle(
-                                        id='date-from-rp',
-                                        min_date_allowed=pd.Timestamp('1995-08-05'),
-                                        max_date_allowed=pd.Timestamp('2023-11-30'),
-                                        initial_visible_month=pd.Timestamp('2023-11-30'),
-                                        date=pd.Timestamp('2023-11-30')
-                                    ),
+                                html.Div(
+                                    className='div-time-selection flex-row',
+                                    children=[
+                                        html.Div([
+                                            html.P(
+                                                className='p-option-col',
+                                                children='Date from:',
+                                            ),
+                                            dcc.DatePickerSingle(
+                                                id='date-from-rp',
+                                                min_date_allowed=pd.Timestamp('1995-08-05'),
+                                                max_date_allowed=pd.Timestamp('2023-11-30'),
+                                                initial_visible_month=pd.Timestamp('2023-11-30'),
+                                                date=pd.Timestamp('2023-11-30')
+                                            ),
+                                        ]),
+                                        html.Div(
+                                            id='div-second-date',
+                                            children=[
+                                                html.P(
+                                                    className='p-option-col',
+                                                    children='Date up to:',
+                                                ),
+                                                dcc.DatePickerSingle(
+                                                    id='date-to-rp',
+                                                    min_date_allowed=pd.Timestamp('1995-08-05'),
+                                                    max_date_allowed=pd.Timestamp('2023-11-30'),
+                                                    initial_visible_month=pd.Timestamp('2023-11-30'),
+                                                    date=pd.Timestamp('2023-11-30')
+                                                ),
+                                        ]),
                                 ]),
                                 html.Div(
-                                    id='div-second-date',
+                                    className='div-time-selection',
                                     children=[
                                         html.P(
                                             className='p-option-col',
-                                            children='Date up to:',
+                                            children='Backwards scope:',
                                         ),
-                                        dcc.DatePickerSingle(
-                                            id='date-to-rp',
-                                            min_date_allowed=pd.Timestamp('1995-08-05'),
-                                            max_date_allowed=pd.Timestamp('2023-11-30'),
-                                            initial_visible_month=pd.Timestamp('2023-11-30'),
-                                            date=pd.Timestamp('2023-11-30')
+                                        dcc.Dropdown(
+                                            id='dropdown-backwards-scope',
+                                            options=[
+                                                
+                                            ]
                                         ),
-                                ]),
-                        ]),
-                        html.Div(
-                            className='div-time-selection',
-                            children=[
-                                html.P(
-                                    className='p-option-col',
-                                    children='Backwards scope:',
-                                ),
-                                dcc.Dropdown(
-                                    id='dropdown-backwards-scope',
-                                    options=[
-                                        
-                                    ]
-                                ),
-                        ])
+                                ])
+                            ]
+                        ),
                 ])
             ]),
     ])

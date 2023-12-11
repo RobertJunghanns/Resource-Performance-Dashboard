@@ -112,10 +112,6 @@
         margin-top: 3px; 
         margin-bottom: 3px; 
 }
-.div-time-selection {
-        width: 50%;
-        margin-left: 10px;
-}
 #header {
         background: #2c5c97; 
         color: white; 
@@ -289,12 +285,18 @@
 #div-second-date{
         margin-left: 15px;
 }
+#dropdown-backwards-scope{
+        width: 100%;
+}
 .div-selection{
         width: 100%;
         margin-left: 10px;
 }
+.div-time-selection{
+        margin-left: 10px;
+}
 .div-logo{
-        margin: auto;
+        margin-top: 10px;
 }
 
 
