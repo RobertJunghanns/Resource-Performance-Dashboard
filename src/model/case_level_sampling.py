@@ -144,12 +144,12 @@ def get_dependent_variable_case(event_log: pd.DataFrame, case_id: str, performan
 def sample_regression_data(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, scope: ScopeCase, rbi_function: Callable, performance_function: Callable, additional_rbi_arguments: List[Any] = None, additional_performance_arguments: List[Any] = None, individual_scope = pd.Timedelta(0)):
     case_ids = get_caseids_in_time_frame(event_log, t_start, t_end)
 
-    x = np.array([])
-    y = np.array([])
+    rbi_values = np.array([])
+    perf_values = np.array([])
     
     for case_id in case_ids:
-        x.append(get_independent_variable_case(event_log, case_id, scope, rbi_function, *additional_rbi_arguments, individual_scope=individual_scope)) 
-        y.append(get_dependent_variable_case(event_log, case_id, performance_function, *additional_performance_arguments))
+        rbi_values.append(get_independent_variable_case(event_log, case_id, scope, rbi_function, *additional_rbi_arguments, individual_scope=individual_scope)) 
+        perf_values.append(get_dependent_variable_case(event_log, case_id, performance_function, *additional_performance_arguments))
 
-    return x, y
+    return rbi_values, perf_values
         

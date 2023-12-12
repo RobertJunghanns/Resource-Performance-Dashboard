@@ -1,10 +1,15 @@
-from app import app
 import pandas as pd
-from dash import html, Input, Output, dcc, no_update
+
+from app import app
+from dash import html, Input, Output, State, dcc, no_update
+
+from model.pickle_utility import load_from_pickle
+from model.xes_utility import get_unique_resources, get_earliest_timestamp, get_latest_timestamp
 
 # Define the page layout
 layout = html.Div([
     html.Div(
+        className='flex-row',
         id='page-resource-performance',
         children = [
             html.Div(
@@ -180,10 +185,135 @@ layout = html.Div([
                                 ])
                             ]
                         ),
+                        html.Div(
+                            className='div-center-button',
+                            children=[
+                                html.Button(
+                                    'Add Resource-Performance Relationship',
+                                    id='button-add-relationship'
+                                ) 
+                        ])
                 ])
             ]),
+            html.Div(
+                id='div-relationship-panels',
+                className='flex-row',
+                children=[
+                    html.Div(
+                        className='div-rbi-relationship-panel flex-col',
+                        children=[
+                            dcc.Markdown(
+                                className='',
+                                children='**SS:** Case level Sampling',
+                            ),
+                            dcc.Markdown(
+                                className='',
+                                children='**IV: Fraction case completion**',
+                            ),
+                            dcc.Markdown(
+                                className='',
+                                children='**DV: Case duration**',
+                            ),
+                            dcc.Markdown(
+                                className='',
+                                children='**Date:** 11/30/2023 - 11/30/2023',
+                            ),
+                            dcc.Markdown(
+                                className='',
+                                children='**BS:** Individual Scope',
+                            ),
+                            dcc.Graph(id='graph-0'),
+                            # px.scatter(
+                            #     df, x='total_bill', y='tip', opacity=0.65,
+                            #     trendline='ols', trendline_color_override='darkblue'
+                            # )
+                            # model = LinearRegression()
+                            # model.fit(X_train, y_train)
+
+                            # x_range = np.linspace(X.min(), X.max(), 100)
+                            # y_range = model.predict(x_range.reshape(-1, 1))
+
+
+                            # fig = go.Figure([
+                            #     go.Scatter(x=X_train.squeeze(), y=y_train, name='train', mode='markers'),
+                            #     go.Scatter(x=X_test.squeeze(), y=y_test, name='test', mode='markers'),
+                            #     go.Scatter(x=x_range, y=y_range, name='prediction')
+                            # ])
+                            dcc.Markdown(
+                                className='',
+                                children='**R-squared:** 0.287',
+                            ),
+                            dcc.Markdown(
+                                className='',
+                                children='**p-value:** 0.187',
+                            ),
+                            dcc.Markdown(
+                                className='',
+                                children='**t-statistics:** 0.187',
+                            ),
+                    ]),
+            ])
     ])
 ])
+
+
+@app.callback(
+    Output('div-relationship-panels', 'children'),
+    Input('button-add-relationship', 'n_clicks'),
+    [State('pickle_df_name', 'data'),
+     State('dropdown-sampling-strategy', 'value'),
+     State('dropdown-iv-select', 'value'),
+     State('dropdown-dv-select', 'value'),
+     
+     ]
+)
+def update_panels(n_clicks, pickle_df_name, sampling_strategy, ):
+
+    df_event_log = load_from_pickle(pickle_df_name)
+    #sample
+    #get dv/iv
+    #create figure
+    #check number of panels
+    #get children
+    #if number < x append else delete lowest id and append (in the front)
+    
+    return html.Div(
+                className='div-rbi-relationship-panel flex-col',
+                children=[
+                    dcc.Markdown(
+                        className='',
+                        children='**SS:** Case level Sampling',
+                    ),
+                    dcc.Markdown(
+                        className='',
+                        children='**IV: Fraction case completion**',
+                    ),
+                    dcc.Markdown(
+                        className='',
+                        children='**DV: Case duration**',
+                    ),
+                    dcc.Markdown(
+                        className='',
+                        children='**Date:** 11/30/2023 - 11/30/2023',
+                    ),
+                    dcc.Markdown(
+                        className='',
+                        children='**BS:** Individual Scope',
+                    ),
+                    dcc.Graph(id='graph-0'),
+                    dcc.Markdown(
+                        className='',
+                        children='**R-squared:** 0.287',
+                    ),
+                    dcc.Markdown(
+                        className='',
+                        children='**p-value:** 0.187',
+                    ),
+                    dcc.Markdown(
+                        className='',
+                        children='**t-statistics:** 0.187',
+                    ),
+            ]),
 
 @app.callback(
     [Output('dropdown-backwards-scope', 'options')],
@@ -206,3 +336,26 @@ def update_resource_options(sampling_strategy):
         options = no_update
 
     return [options]
+
+@app.callback(
+    [Output('date-from-rp', 'min_date_allowed'),
+     Output('date-from-rp', 'max_date_allowed'),
+     Output('date-from-rp', 'initial_visible_month'),
+     Output('date-from-rp', 'date'),
+     Output('date-to-rp', 'min_date_allowed'),
+     Output('date-to-rp', 'max_date_allowed'),
+     Output('date-to-rp', 'initial_visible_month'),
+     Output('date-to-rp', 'date'),],
+    Input('pickle_df_name', 'data')
+)
+def update_resource_options(pickle_df_name):
+    if pickle_df_name:
+        df_event_log = load_from_pickle(pickle_df_name)
+        
+        earliest_dt = get_earliest_timestamp(df_event_log)
+        latest_dt = get_latest_timestamp(df_event_log)
+
+        return [earliest_dt, latest_dt, earliest_dt, earliest_dt, earliest_dt, latest_dt, latest_dt, latest_dt]
+    else:
+        # Return an empty list if no file is selected
+        return [no_update] * 8
