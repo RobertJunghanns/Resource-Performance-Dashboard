@@ -1,28 +1,38 @@
 import pandas as pd
+import numpy as np
 
-# E_{T}
+from enum import Enum
+from typing import Callable, List, Any
+from model.xes_utility import get_earliest_timestamp, get_latest_timestamp
+
+class ScopeCase(Enum):
+    CASE = 1
+    INDIVIDUAL = 2
+    TOTAL = 3
+
+# E_{T}(t_{1},t_{2})
 def get_events_in_time_frame(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp) -> pd.DataFrame:
     return event_log[
         (event_log['time:timestamp'] >= t_start) &
         (event_log['time:timestamp'] < t_end)
     ]
 
-# E_{¬T}
+# E_{¬T}(t_{1},t_{2})
 def get_events_not_in_time_frame(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp) -> pd.DataFrame:
     return event_log[
         (event_log['time:timestamp'] < t_start) |
         (event_log['time:timestamp'] >= t_end)
     ]
 
-# C_{T} = ids of fully contained cases
-def get_caseids_in_time_frame(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp) -> [str]:
+# C_{T}(t_{1},t_{2}) = ids of fully contained cases
+def get_caseids_in_time_frame(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp) -> np.array:
     events_in_time_frame = get_events_in_time_frame(event_log, t_start, t_end)
     events_not_in_time_frame = get_events_not_in_time_frame(event_log, t_start, t_end)
 
     cases_ids_in_time_frame = set(events_in_time_frame['case:concept:name'])
     cases_ids_not_in_time_frame = set(events_not_in_time_frame['case:concept:name'])
 
-    return cases_ids_in_time_frame - cases_ids_not_in_time_frame
+    return np.array(cases_ids_in_time_frame - cases_ids_not_in_time_frame)
 
 
 def get_trace(event_log: pd.DataFrame, case_id: str) -> pd.DataFrame:
@@ -46,7 +56,7 @@ def group_equal_timestamp_events(trace: pd.DataFrame) -> pd.DataFrame:
             # create new grouped event, if nessesary
             if len(concept_names_with_start) < len(group):
                 aggregated_name = ' + '.join(list(set(group['concept:name'].unique()) - set(concept_names_with_start)))
-                aggregated_event = group.iloc[0]  # Take the first row as base for aggregated event
+                aggregated_event = group.iloc[0].copy()  # Take the first row as base for aggregated event
                 aggregated_event['concept:name'] = aggregated_name
                 trace = pd.concat([trace, pd.DataFrame([aggregated_event])], ignore_index=True)
         else:
@@ -82,4 +92,64 @@ def add_activity_durations_to_trace(trace: pd.DataFrame) -> pd.DataFrame:
 
     return trace
 
+def prepare_trace(trace: pd.DataFrame) -> pd.DataFrame:
+    trace_grouped = group_equal_timestamp_events(trace)
+    trace_grouped_duration = add_activity_durations_to_trace(trace_grouped)
+    trace_grouped_duration_complete = trace_grouped_duration[trace_grouped_duration['lifecycle:transition'] == 'COMPLETE']
+    trace_grouped_duration_complete_cleaned = trace_grouped_duration_complete.dropna(subset=['org:resource'])
+    return trace_grouped_duration_complete_cleaned
+
+# R_{C}(c)
+def get_participating_resources(trace: pd.DataFrame) -> np.ndarray:
+    return trace['org:resource'].dropna().unique()
+
+# PS(c,r)
+def participation_share(trace_prepared: pd.DataFrame, resource_id: str) -> float:
+    duration_sum = trace_prepared['duration'].sum()
+    resource_duration_sum = trace_prepared[trace_prepared['org:resource'] == resource_id]['duration'].sum()
+
+    return resource_duration_sum/duration_sum
+
+# IV(c)
+def get_independent_variable_case(event_log: pd.DataFrame, case_id: str, scope: ScopeCase, rbi_function: Callable, *args, individual_scope = pd.Timedelta(0)):    
+    trace = get_trace(event_log, case_id)
+    trace_prepared = prepare_trace(trace)
+
+    t2 = get_latest_timestamp(trace)
+    if scope == ScopeCase.CASE:
+        t1 = get_earliest_timestamp(trace)
+    elif scope == ScopeCase.INDIVIDUAL:
+        t1 = get_earliest_timestamp(trace) - individual_scope
+    elif scope == ScopeCase.TOTAL:
+        t1 = get_earliest_timestamp(event_log)   
+    print('t1', t1, 't2', t2)
+
+    weighted_avg = 0
+
+    resource_ids = get_participating_resources(trace)
+    for resource_id in resource_ids:
+        ps = participation_share(trace_prepared, resource_id)
+        rbi_value = rbi_function(event_log, t1, t2, resource_id, *args)
+
+        weighted_avg += rbi_value * ps
+
+    return weighted_avg
+
+# DV(c)
+def get_dependent_variable_case(event_log: pd.DataFrame, case_id: str, performance_function: Callable, *args):
+    trace = get_trace(event_log, case_id)
+    return performance_function(trace, *args)
+
+# [(IV, DV)] for all c element C_{T}(t_{1},t_{2})
+def sample_regression_data(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, scope: ScopeCase, rbi_function: Callable, performance_function: Callable, additional_rbi_arguments: List[Any] = None, additional_performance_arguments: List[Any] = None, individual_scope = pd.Timedelta(0)):
+    case_ids = get_caseids_in_time_frame(event_log, t_start, t_end)
+
+    x = np.array([])
+    y = np.array([])
     
+    for case_id in case_ids:
+        x.append(get_independent_variable_case(event_log, case_id, scope, rbi_function, *additional_rbi_arguments, individual_scope=individual_scope)) 
+        y.append(get_dependent_variable_case(event_log, case_id, performance_function, *additional_performance_arguments))
+
+    return x, y
+        

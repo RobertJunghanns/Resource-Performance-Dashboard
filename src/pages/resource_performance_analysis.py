@@ -108,9 +108,10 @@ layout = html.Div([
                                             children='Dependent Variable (Performance Metric):', 
                                         ),
                                         dcc.Dropdown(
-                                            id='dropdown-iv-select',
+                                            id='dropdown-dv-select',
                                             options=[
                                                 {'label': 'Custom Performance Metric (SQL)', 'value': 'perf_sql'},
+                                                {'label': 'Case duration', 'value': 'perf_case_duration'},
                                             ]
                                         ),
                                 ])

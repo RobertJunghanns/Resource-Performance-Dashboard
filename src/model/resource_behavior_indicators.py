@@ -15,13 +15,12 @@ def sql_to_rbi(event_log: pd.DataFrame, sql_query: str, resource_id: str, t_star
 
     sql_query = sql_query.replace('resource_id', resource_id)
 
-    result = pysqldf(sql_query, {'event_log': event_log})
-    distinct_activities_count = result.iloc[0, 0]
+    result = pysqldf(sql_query, {'event_log': event_log}).iloc[0, 0]
 
-    if not distinct_activities_count: 
-        distinct_activities_count = 0
+    if not result:
+        result = 0
 
-    return distinct_activities_count
+    return result
 
 def rbi_distinct_activities(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, resource_id: str) -> float:
     return algorithm.activity_completions(event_log, t_start, t_end, resource_id)
