@@ -127,11 +127,11 @@ def set_global_variable(selected_filename):
         file_path = str(current_file_path / 'data' / (selected_filename + '.xes'))
         df_event_log = pm4py.read_xes(file_path)
 
-        print(get_trace(df_event_log, '202418'))
-        print(group_equal_timestamp_events(get_trace(df_event_log, '202418')))
-        print(add_activity_durations_to_trace(group_equal_timestamp_events(get_trace(df_event_log, '202418'))))
-        print(get_independent_variable_case(df_event_log, '202418', ScopeCase.INDIVIDUAL, rbi_activity_fequency, 'W_Nabellen offertes', individual_scope=pd.Timedelta(days=2)))
-        print(get_dependent_variable_case(df_event_log, '202418',case_duration))
+        #print(get_trace(df_event_log, '202418'))
+        #print(group_equal_timestamp_events(get_trace(df_event_log, '202418')))
+        #print(add_activity_durations_to_trace(group_equal_timestamp_events(get_trace(df_event_log, '202418'))))
+        #print(get_independent_variable_case(df_event_log, '202418', ScopeCase.INDIVIDUAL, rbi_activity_fequency, 'W_Nabellen offertes', individual_scope=pd.Timedelta(days=2)))
+        #print(get_dependent_variable_case(df_event_log, '202418',case_duration))
         #print(get_trace(df_event_log, '173703'))
 
         save_as_pickle(df_event_log, selected_filename)

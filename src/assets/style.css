@@ -276,7 +276,7 @@
         flex-direction: column;
         justify-content: flex-end;
 }
-#input-sql-query{
+.sql-input{
         width: 100%;
         height: 235px;
         font-size: 10px;
@@ -284,7 +284,14 @@
         border: 1px solid #ccc;
         border-radius: 4px;
 }
-#input-concept-name{
+.input-concept-name{
+        width: 100%;
+        height: 35px;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+}
+.input-resource-name{
         width: 100%;
         height: 35px;
         background-color: white;

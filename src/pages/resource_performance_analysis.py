@@ -1,10 +1,16 @@
 import pandas as pd
+import numpy as np
 
 from app import app
 from dash import html, Input, Output, State, dcc, no_update
+import plotly.express as px
 
 from model.pickle_utility import load_from_pickle
-from model.xes_utility import get_unique_resources, get_earliest_timestamp, get_latest_timestamp
+from model.xes_utility import get_earliest_timestamp, get_latest_timestamp
+from model.case_level_sampling import ScopeCase, sample_regression_data_case
+from model.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_case_completions, rbi_fraction_case_completions, rbi_average_workload, rbi_multitasking, rbi_average_duration_activity, rbi_average_case_duration, rbi_interaction_two_resources, rbi_social_position
+from model.process_performance_measures import sql_to_performance_metric, case_duration
+from model.regression_analysis import fit_regression
 
 # Define the page layout
 layout = html.Div([
@@ -80,6 +86,24 @@ layout = html.Div([
                                                 {'label': 'Social position', 'value': 'rbi_social_position'},
                                             ]
                                         ),
+                                        html.Div([
+                                            html.Div([
+                                                html.P('SQL query:', className='p-option-col'),
+                                                dcc.Textarea(
+                                                    id='input-iv-sql-query-rp',
+                                                    className='sql-input',
+                                                    placeholder="Enter SQL query. Example for activity frequency:\nSELECT CAST(count.activity AS FLOAT) / CAST(count.all_activities AS FLOAT)\n   FROM (\n      SELECT\n         (SELECT COUNT([concept:name])\n         FROM event_log\n         WHERE [org:resource] = 'resource_id'\n         AND [concept:name] = '09_AH_I_010')\n         AS activity,\n         (SELECT COUNT([concept:name])\n         FROM event_log\n         WHERE [org:resource] = 'resource_id')\n         AS all_activities\n   ) AS count",
+                                                ),
+                                            ], id='sql-input-iv-container-rp', style={'display': 'none'}),
+                                            html.Div([
+                                                html.P('Activity name:', className='p-option-col'),
+                                                dcc.Input(id='input-concept-name-rp', className='input-concept-name', type='text', placeholder=' Enter concept:name...'),
+                                            ], id='concept-name-input-container-rp', style={'display': 'none'}), 
+                                            html.Div([
+                                                html.P('Interaction resource id:', className='p-option-col'),
+                                                dcc.Input(id='input-resource-name-rp', className='input-resource-name', type='text', placeholder=' Enter org:resource...'),
+                                            ], id='resource-id-input-container-rp', style={'display': 'none'}),
+                                        ]),
                                 ])
                             ]
                         ),
@@ -119,6 +143,16 @@ layout = html.Div([
                                                 {'label': 'Case duration', 'value': 'perf_case_duration'},
                                             ]
                                         ),
+                                        html.Div([
+                                            html.Div([
+                                                html.P('SQL query:', className='p-option-col'),
+                                                dcc.Textarea(
+                                                    id='input-dv-sql-query-rp',
+                                                    className='sql-input',
+                                                    placeholder="Enter SQL query.",                                               
+                                                ),
+                                            ], id='sql-input-dv-container-rp', style={'display': 'none'}),
+                                        ]),
                                 ])
                             ]
                         )
@@ -262,58 +296,124 @@ layout = html.Div([
     Input('button-add-relationship', 'n_clicks'),
     [State('pickle_df_name', 'data'),
      State('dropdown-sampling-strategy', 'value'),
+     State('dropdown-sampling-strategy', 'label'),
      State('dropdown-iv-select', 'value'),
+     State('dropdown-iv-select', 'label'),
      State('dropdown-dv-select', 'value'),
-     
-     ]
+     State('dropdown-dv-select', 'label'),
+     State('date-from-rp', 'date'),
+     State('date-to-rp', 'date'),
+     State('dropdown-backwards-scope', 'value'),
+     State('dropdown-backwards-scope', 'label'),
+     State('input-iv-sql-query-rp', 'value'),
+     State('input-concept-name-rp', 'value'),
+     State('input-resource-name-rp', 'value'),
+     State('input-dv-sql-query-rp', 'value')] #input-iv-sql-query-rp, input-concept-name-rp, input-resource-name-rp, input-dv-sql-query-rp
 )
-def update_panels(n_clicks, pickle_df_name, sampling_strategy, ):
+def update_panels(n_clicks, pickle_df_name, sampling_strategy_value, sampling_strategy_label, independent_variable_value, independent_variable_label, dependent_variable_value, dependent_variable_label, date_from, date_to, backwards_scope_value, backwards_scope_label, iv_sql, iv_concept_name, iv_resource_name, dv_sql):
 
     df_event_log = load_from_pickle(pickle_df_name)
-    #sample
-    #get dv/iv
-    #create figure
-    #check number of panels
-    #get children
-    #if number < x append else delete lowest id and append (in the front)
+    additional_rbi_arguments = []
+    additional_performance_arguments = []
+
+    if independent_variable_value == 'rbi_sql':
+        rbi_function = sql_to_rbi
+        additional_rbi_arguments = [iv_sql]
+    elif independent_variable_value == 'rbi_distinct_activities':
+        rbi_function = rbi_distinct_activities
+    elif independent_variable_value == 'rbi_activity_frequency':
+        rbi_function = rbi_activity_fequency
+        additional_rbi_arguments = [iv_concept_name]
+    elif independent_variable_value == 'rbi_activity_completions':
+        rbi_function = rbi_activity_fequency
+    elif independent_variable_value == 'rbi_case_completions':
+        rbi_function = rbi_activity_completions
+    elif independent_variable_value == 'rbi_fraction_case_completion':
+        rbi_function = rbi_fraction_case_completions
+    elif independent_variable_value == 'rbi_average_workload':
+        rbi_function = rbi_average_workload
+    elif independent_variable_value == 'rbi_multitasking':
+        rbi_function = rbi_multitasking
+    elif independent_variable_value == 'rbi_average_duration_activity':
+        rbi_function = rbi_average_duration_activity
+    elif independent_variable_value == 'rbi_average_duration_case':
+        rbi_function = rbi_average_case_duration
+    elif independent_variable_value == 'rbi_interaction_two_resources':
+        rbi_function = rbi_interaction_two_resources
+        additional_rbi_arguments = [iv_resource_name]
+    elif independent_variable_value == 'rbi_social_position':
+        rbi_function = rbi_social_position
     
-    return html.Div(
+    if dependent_variable_value == 'perf_sql':
+        performance_function = sql_to_performance_metric
+        additional_performance_arguments = [dv_sql]
+    elif dependent_variable_value == 'perf_case_duration':
+        performance_function = case_duration
+    
+    if backwards_scope_value == 'case':
+        backwards_scope = ScopeCase.CASE
+    elif backwards_scope_value == 'individual':
+        backwards_scope = ScopeCase.INDIVIDUAL
+    elif backwards_scope_value == 'total':
+        backwards_scope = ScopeCase.TOTAL
+
+    if sampling_strategy_value == 'case_level':
+        rbi_values, perf_values = sample_regression_data_case(df_event_log, date_from, date_to, backwards_scope, rbi_function, performance_function, *additional_rbi_arguments, *additional_performance_arguments) #, individual_scope
+    # elif sampling_strategy_value == 'activity_level':
+    #     sample_regression_data_case(df_event_log, date_from, date_to, backwards_scope, )
+    else:
+        return no_update 
+    
+    _, _, r_squared, rpi_p_value, rpi_t_stat = fit_regression(rbi_values, perf_values)
+
+    #x_range = np.linspace(rbi_values.min(), rbi_values.max(), 100)
+    #y_range = slope * x_range + intercept
+
+    fig = px.scatter(x=rbi_values, y=perf_values, trendline="ols")
+
+    new_panel = html.Div(
                 className='div-rbi-relationship-panel flex-col',
                 children=[
                     dcc.Markdown(
                         className='',
-                        children='**SS:** Case level Sampling',
+                        children='**SS:** ' + sampling_strategy_label,
                     ),
                     dcc.Markdown(
                         className='',
-                        children='**IV: Fraction case completion**',
+                        children='**IV:** ' + independent_variable_label,
                     ),
                     dcc.Markdown(
                         className='',
-                        children='**DV: Case duration**',
+                        children='**DV:** ' + dependent_variable_label,
                     ),
                     dcc.Markdown(
                         className='',
-                        children='**Date:** 11/30/2023 - 11/30/2023',
+                        children='**Date:** ' + f"{date_from.strftime('%m/%d/%Y')} - {date_to.strftime('%m/%d/%Y')}",
                     ),
                     dcc.Markdown(
                         className='',
-                        children='**BS:** Individual Scope',
+                        children='**BS:** ' + backwards_scope_label,
                     ),
                     dcc.Graph(id='graph-0'),
                     dcc.Markdown(
                         className='',
-                        children='**R-squared:** 0.287',
+                        children='**R-squared:** ' + str(r_squared),
                     ),
                     dcc.Markdown(
                         className='',
-                        children='**p-value:** 0.187',
+                        children='**p-value:** ' + str(rpi_p_value),
                     ),
                     dcc.Markdown(
                         className='',
-                        children='**t-statistics:** 0.187',
+                        children='**t-statistics:** ' + str(rpi_t_stat),
                     ),
-            ]),
+            ])
+   
+    #check number of panels
+    #get children
+    #if number < x append else delete lowest id and append (in the front)
+    
+    return new_panel
 
 @app.callback(
     [Output('dropdown-backwards-scope', 'options')],
@@ -359,3 +459,35 @@ def update_resource_options(pickle_df_name):
     else:
         # Return an empty list if no file is selected
         return [no_update] * 8
+
+# toggle the visibility of iv input fields  
+@app.callback(
+    [Output('sql-input-iv-container-rp', 'style'),
+     Output('concept-name-input-container-rp', 'style'),
+     Output('resource-id-input-container-rp', 'style')],
+    Input('dropdown-iv-select', 'value')
+)
+def toggle_rbi_input_fields_visibility(selected_rbi):
+    inputs_visibility = [{'display': 'none'}] * 3 # set to number of input containers
+
+    if selected_rbi == 'rbi_sql':
+        inputs_visibility[0] = {'display': 'block'} 
+    elif selected_rbi == 'rbi_activity_frequency' or selected_rbi =='rbi_average_duration_activity':
+        inputs_visibility[1] = {'display': 'block'}
+    elif selected_rbi == 'rbi_interaction_two_resources':
+        inputs_visibility[2] = {'display': 'block'}
+    
+    return inputs_visibility
+
+# toggle the visibility of iv input fields  
+@app.callback(
+    [Output('sql-input-dv-container-rp', 'style')],
+    Input('dropdown-dv-select', 'value')
+)
+def toggle_perf_input_fields_visibility(selected_perf):
+    inputs_visibility = [{'display': 'none'}] * 1 # set to number of input containers
+
+    if selected_perf == 'perf_sql':
+        inputs_visibility[0] = {'display': 'block'} 
+    
+    return inputs_visibility

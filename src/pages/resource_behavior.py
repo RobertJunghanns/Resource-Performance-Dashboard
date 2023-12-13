@@ -114,16 +114,17 @@ layout = html.Div([
                                                 html.P('SQL query:', className='p-option-col'),
                                                 dcc.Textarea(
                                                     id='input-sql-query',
+                                                    className='sql-input',
                                                     placeholder="Enter SQL query. Example for activity frequency:\nSELECT CAST(count.activity AS FLOAT) / CAST(count.all_activities AS FLOAT)\n   FROM (\n      SELECT\n         (SELECT COUNT([concept:name])\n         FROM event_log\n         WHERE [org:resource] = 'resource_id'\n         AND [concept:name] = '09_AH_I_010')\n         AS activity,\n         (SELECT COUNT([concept:name])\n         FROM event_log\n         WHERE [org:resource] = 'resource_id')\n         AS all_activities\n   ) AS count",
                                                 ),
                                             ], id='sql-input-container', style={'display': 'none'}),
                                             html.Div([
                                                 html.P('Activity name:', className='p-option-col'),
-                                                dcc.Input(id='input-concept-name', type='text', placeholder=' Enter concept:name...'),
+                                                dcc.Input(id='input-concept-name', className='input-concept-name', type='text', placeholder=' Enter concept:name...'),
                                             ], id='concept-name-input-container', style={'display': 'none'}), 
                                             html.Div([
                                                 html.P('Interaction resource id:', className='p-option-col'),
-                                                dcc.Input(id='input-resource-name', type='text', placeholder=' Enter org:resource...'),
+                                                dcc.Input(id='input-resource-name', className='input-resource-name', type='text', placeholder=' Enter org:resource...'),
                                             ], id='resource-id-input-container', style={'display': 'none'}),
                                         ]),
                                 ]),
@@ -227,7 +228,7 @@ def get_rbi_time_series(n_clicks, pickle_df_name, rbi, resource, start_date_str,
 
             if rbi == 'rbi_sql':
                 try:
-                    rbi_time_series_values.append(sql_to_rbi(df_event_log, sql_query, resource, interval[0], interval[1]))
+                    rbi_time_series_values.append(sql_to_rbi(df_event_log, interval[0], interval[1], resource, sql_query))
                 except Exception as error:
                     return no_figure, 'SQL failed:\n' + str(error), True  
             elif rbi == 'rbi_distinct_activities':

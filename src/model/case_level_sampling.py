@@ -4,6 +4,7 @@ import numpy as np
 from enum import Enum
 from typing import Callable, List, Any
 from model.xes_utility import get_earliest_timestamp, get_latest_timestamp
+from model.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_case_completions, rbi_fraction_case_completions, rbi_average_workload, rbi_multitasking, rbi_average_duration_activity, rbi_average_case_duration, rbi_interaction_two_resources, rbi_social_position
 
 class ScopeCase(Enum):
     CASE = 1
@@ -32,7 +33,7 @@ def get_caseids_in_time_frame(event_log: pd.DataFrame, t_start: pd.Timestamp, t_
     cases_ids_in_time_frame = set(events_in_time_frame['case:concept:name'])
     cases_ids_not_in_time_frame = set(events_not_in_time_frame['case:concept:name'])
 
-    return np.array(cases_ids_in_time_frame - cases_ids_not_in_time_frame)
+    return np.array(list(cases_ids_in_time_frame - cases_ids_not_in_time_frame))
 
 
 def get_trace(event_log: pd.DataFrame, case_id: str) -> pd.DataFrame:
@@ -121,8 +122,9 @@ def get_independent_variable_case(event_log: pd.DataFrame, case_id: str, scope: 
     elif scope == ScopeCase.INDIVIDUAL:
         t1 = get_earliest_timestamp(trace) - individual_scope
     elif scope == ScopeCase.TOTAL:
-        t1 = get_earliest_timestamp(event_log)   
-    print('t1', t1, 't2', t2)
+        t1 = get_earliest_timestamp(event_log)  
+    else:
+        t1 = get_earliest_timestamp(trace)
 
     weighted_avg = 0
 
@@ -141,15 +143,16 @@ def get_dependent_variable_case(event_log: pd.DataFrame, case_id: str, performan
     return performance_function(trace, *args)
 
 # [(IV, DV)] for all c element C_{T}(t_{1},t_{2})
-def sample_regression_data(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, scope: ScopeCase, rbi_function: Callable, performance_function: Callable, additional_rbi_arguments: List[Any] = None, additional_performance_arguments: List[Any] = None, individual_scope = pd.Timedelta(0)):
+def sample_regression_data_case(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, scope: ScopeCase, rbi_function: Callable, performance_function: Callable, additional_rbi_arguments: List[Any] = [], additional_performance_arguments: List[Any] = [], individual_scope = pd.Timedelta(0)):
     case_ids = get_caseids_in_time_frame(event_log, t_start, t_end)
 
     rbi_values = np.array([])
     perf_values = np.array([])
     
     for case_id in case_ids:
-        rbi_values.append(get_independent_variable_case(event_log, case_id, scope, rbi_function, *additional_rbi_arguments, individual_scope=individual_scope)) 
-        perf_values.append(get_dependent_variable_case(event_log, case_id, performance_function, *additional_performance_arguments))
+        print(case_id)
+        rbi_values = np.append(rbi_values, get_independent_variable_case(event_log, case_id, scope, rbi_function, *additional_rbi_arguments, individual_scope=individual_scope))
+        perf_values = np.append(perf_values, get_dependent_variable_case(event_log, case_id, performance_function, *additional_performance_arguments))
 
     return rbi_values, perf_values
         
