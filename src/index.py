@@ -1,9 +1,9 @@
 from pages import resource_behavior, resource_performance_analysis
-from model.case_level_sampling import get_trace, add_activity_durations_to_trace, group_equal_timestamp_events, get_independent_variable_case, get_dependent_variable_case, ScopeCase
-from model.resource_behavior_indicators import rbi_average_workload, rbi_distinct_activities, rbi_activity_fequency
-from model.process_performance_measures import case_duration
+from src.model.sampling.case_level_sampling import get_trace, add_activity_durations_to_trace, group_equal_timestamp_events, get_independent_variable_case, get_dependent_variable_case, ScopeCase
+from model.measures.resource_behavior_indicators import rbi_average_workload, rbi_distinct_activities, rbi_activity_fequency
+from src.model.measures.process_performance_measures import case_duration
 from app import app
-from model.pickle_utility import save_as_pickle
+from src.model.utility.pickle_utility import save_as_pickle
 
 import base64
 import dash
@@ -127,9 +127,10 @@ def set_global_variable(selected_filename):
         file_path = str(current_file_path / 'data' / (selected_filename + '.xes'))
         df_event_log = pm4py.read_xes(file_path)
 
-        #print(get_trace(df_event_log, '202418'))
+        #print(get_trace(df_event_log, '5295312')[['org:resource', ]])
         #print(group_equal_timestamp_events(get_trace(df_event_log, '202418')))
-        #print(add_activity_durations_to_trace(group_equal_timestamp_events(get_trace(df_event_log, '202418'))))
+        #pd.set_option('display.max_columns', None)
+        #print(add_activity_durations_to_trace(group_equal_timestamp_events(get_trace(df_event_log, '5295312'))))
         #print(get_independent_variable_case(df_event_log, '202418', ScopeCase.INDIVIDUAL, rbi_activity_fequency, 'W_Nabellen offertes', individual_scope=pd.Timedelta(days=2)))
         #print(get_dependent_variable_case(df_event_log, '202418',case_duration))
         #print(get_trace(df_event_log, '173703'))

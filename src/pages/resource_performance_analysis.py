@@ -5,11 +5,12 @@ from app import app
 from dash import html, Input, Output, State, dcc, no_update
 import plotly.express as px
 
-from model.pickle_utility import load_from_pickle
-from model.xes_utility import get_earliest_timestamp, get_latest_timestamp
-from model.case_level_sampling import ScopeCase, sample_regression_data_case
-from model.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_case_completions, rbi_fraction_case_completions, rbi_average_workload, rbi_multitasking, rbi_average_duration_activity, rbi_average_case_duration, rbi_interaction_two_resources, rbi_social_position
-from model.process_performance_measures import sql_to_performance_metric, case_duration
+from model.utility.pickle_utility import load_from_pickle
+from model.utility.xes_utility import get_earliest_timestamp, get_latest_timestamp
+from model.sampling.case_level_sampling import ScopeCase, sample_regression_data_case
+from model.sampling.activity_level_sampling import ScopeActivity
+from model.measures.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_case_completions, rbi_fraction_case_completions, rbi_average_workload, rbi_multitasking, rbi_average_duration_activity, rbi_average_case_duration, rbi_interaction_two_resources, rbi_social_position
+from model.measures.process_performance_measures import sql_to_performance_metric, case_duration
 from model.regression_analysis import fit_regression
 
 # Define the page layout
@@ -296,66 +297,67 @@ layout = html.Div([
     Input('button-add-relationship', 'n_clicks'),
     [State('pickle_df_name', 'data'),
      State('dropdown-sampling-strategy', 'value'),
-     State('dropdown-sampling-strategy', 'label'),
      State('dropdown-iv-select', 'value'),
-     State('dropdown-iv-select', 'label'),
      State('dropdown-dv-select', 'value'),
-     State('dropdown-dv-select', 'label'),
      State('date-from-rp', 'date'),
      State('date-to-rp', 'date'),
      State('dropdown-backwards-scope', 'value'),
-     State('dropdown-backwards-scope', 'label'),
      State('input-iv-sql-query-rp', 'value'),
      State('input-concept-name-rp', 'value'),
      State('input-resource-name-rp', 'value'),
-     State('input-dv-sql-query-rp', 'value')] #input-iv-sql-query-rp, input-concept-name-rp, input-resource-name-rp, input-dv-sql-query-rp
+     State('input-dv-sql-query-rp', 'value')]
 )
-def update_panels(n_clicks, pickle_df_name, sampling_strategy_value, sampling_strategy_label, independent_variable_value, independent_variable_label, dependent_variable_value, dependent_variable_label, date_from, date_to, backwards_scope_value, backwards_scope_label, iv_sql, iv_concept_name, iv_resource_name, dv_sql):
-
+def update_panels(n_clicks, pickle_df_name, sampling_strategy_value, independent_variable_value, dependent_variable_value, date_from_str, date_to_str, backwards_scope_value, iv_sql, iv_concept_name, iv_resource_name, dv_sql):
+    
+    
     df_event_log = load_from_pickle(pickle_df_name)
-    additional_rbi_arguments = []
-    additional_performance_arguments = []
+    date_from = pd.to_datetime(date_from_str)
+    date_to = pd.to_datetime(date_to_str)
 
-    if independent_variable_value == 'rbi_sql':
-        rbi_function = sql_to_rbi
-        additional_rbi_arguments = [iv_sql]
-    elif independent_variable_value == 'rbi_distinct_activities':
-        rbi_function = rbi_distinct_activities
-    elif independent_variable_value == 'rbi_activity_frequency':
-        rbi_function = rbi_activity_fequency
-        additional_rbi_arguments = [iv_concept_name]
-    elif independent_variable_value == 'rbi_activity_completions':
-        rbi_function = rbi_activity_fequency
-    elif independent_variable_value == 'rbi_case_completions':
-        rbi_function = rbi_activity_completions
-    elif independent_variable_value == 'rbi_fraction_case_completion':
-        rbi_function = rbi_fraction_case_completions
-    elif independent_variable_value == 'rbi_average_workload':
-        rbi_function = rbi_average_workload
-    elif independent_variable_value == 'rbi_multitasking':
-        rbi_function = rbi_multitasking
-    elif independent_variable_value == 'rbi_average_duration_activity':
-        rbi_function = rbi_average_duration_activity
-    elif independent_variable_value == 'rbi_average_duration_case':
-        rbi_function = rbi_average_case_duration
-    elif independent_variable_value == 'rbi_interaction_two_resources':
-        rbi_function = rbi_interaction_two_resources
-        additional_rbi_arguments = [iv_resource_name]
-    elif independent_variable_value == 'rbi_social_position':
-        rbi_function = rbi_social_position
+    rbi_function_mapping = {
+        'rbi_sql': (sql_to_rbi, [iv_sql], 'Custom RBI (SQL)'),
+        'rbi_distinct_activities': (rbi_distinct_activities, [], 'Distinct activities'),
+        'rbi_activity_frequency': (rbi_activity_fequency, [iv_concept_name], 'Activity frequency'),
+        'rbi_activity_completions': (rbi_activity_completions, [], 'Activity completions'),
+        'rbi_case_completions': (rbi_activity_completions, [], 'Case completions'),
+        'rbi_fraction_case_completion': (rbi_fraction_case_completions, [], 'Fraction case completion'),
+        'rbi_average_workload': (rbi_average_workload, [], 'Average workload'),
+        'rbi_multitasking': (rbi_multitasking, [], 'Multitasking'),
+        'rbi_average_duration_activity': (rbi_average_duration_activity, [], 'Average duration activity'),
+        'rbi_average_duration_case': (rbi_average_case_duration, [], 'Average case duration'),
+        'rbi_interaction_two_resources': (rbi_interaction_two_resources, [iv_resource_name], 'Interaction two resources'),
+        'rbi_social_position': (rbi_social_position, [], 'Social position')
+    }
+    rbi_function, additional_rbi_arguments, rbi_label = rbi_function_mapping.get(independent_variable_value, (None, [], ''))
     
-    if dependent_variable_value == 'perf_sql':
-        performance_function = sql_to_performance_metric
-        additional_performance_arguments = [dv_sql]
-    elif dependent_variable_value == 'perf_case_duration':
-        performance_function = case_duration
+    performance_function_mapping = {
+        'perf_sql': (sql_to_performance_metric, [dv_sql], 'Custom Performance Metric (SQL)'),
+        'perf_case_duration': (case_duration, [], 'Case duration')
+    }
+    performance_function, additional_performance_arguments, performance_label = performance_function_mapping.get(dependent_variable_value, (None, [], ''))
+
+    sampling_strategy_mapping = {
+        'activity_level': 'Activity level sampling',
+        'case_level': 'Case level sampling'
+    }
+    sampling_strategy_label = sampling_strategy_mapping.get(sampling_strategy_value, '')
     
-    if backwards_scope_value == 'case':
-        backwards_scope = ScopeCase.CASE
-    elif backwards_scope_value == 'individual':
-        backwards_scope = ScopeCase.INDIVIDUAL
-    elif backwards_scope_value == 'total':
-        backwards_scope = ScopeCase.TOTAL
+    scope_mapping = {
+        'activity_level': {
+            'activity': (ScopeActivity.ACTIVITY, 'Activity scope'),
+            'individual': (ScopeActivity.INDIVIDUAL, 'Individual scope'),
+            'total': (ScopeActivity.TOTAL, 'Total scope')
+        },
+        'case_level': {
+            'case': (ScopeCase.CASE, 'Case scope'),
+            'individual': (ScopeCase.INDIVIDUAL, 'Individual scope'),
+            'total': (ScopeCase.TOTAL, 'Total scope')
+        }
+    }
+    print(sampling_strategy_value)
+    print(scope_mapping.get(sampling_strategy_value, {}))
+    print(scope_mapping.get(sampling_strategy_value, {}).get(backwards_scope_value, (ScopeActivity.TOTAL, 'Total scope')))
+    backwards_scope, backwards_scope_label = scope_mapping.get(sampling_strategy_value, {}).get(backwards_scope_value, (ScopeActivity.TOTAL, 'Total scope'))
 
     if sampling_strategy_value == 'case_level':
         rbi_values, perf_values = sample_regression_data_case(df_event_log, date_from, date_to, backwards_scope, rbi_function, performance_function, *additional_rbi_arguments, *additional_performance_arguments) #, individual_scope
@@ -380,11 +382,11 @@ def update_panels(n_clicks, pickle_df_name, sampling_strategy_value, sampling_st
                     ),
                     dcc.Markdown(
                         className='',
-                        children='**IV:** ' + independent_variable_label,
+                        children='**IV:** ' + rbi_label,
                     ),
                     dcc.Markdown(
                         className='',
-                        children='**DV:** ' + dependent_variable_label,
+                        children='**DV:** ' + performance_label,
                     ),
                     dcc.Markdown(
                         className='',
@@ -394,7 +396,7 @@ def update_panels(n_clicks, pickle_df_name, sampling_strategy_value, sampling_st
                         className='',
                         children='**BS:** ' + backwards_scope_label,
                     ),
-                    dcc.Graph(id='graph-0'),
+                    dcc.Graph(id='graph-0', figure=fig),
                     dcc.Markdown(
                         className='',
                         children='**R-squared:** ' + str(r_squared),

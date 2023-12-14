@@ -2,6 +2,8 @@ import numpy as np
 import statsmodels.api as sm 
 
 def fit_regression(rbi_values: np.array, perf_values: np.array):
+    print(rbi_values)
+    print(perf_values)
     rbi_values = sm.add_constant(rbi_values)
     model = sm.OLS(perf_values, rbi_values)
     results = model.fit()
