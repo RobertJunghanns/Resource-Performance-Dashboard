@@ -1,6 +1,9 @@
 .alert{
         margin-top: 10px;
 }
+.margin-top{
+        margin-top: 10px;
+}
 .button-default {
         height: 40px;
         background-color: white;
@@ -323,17 +326,24 @@
         margin-top: 10px;
 }
 .div-rbi-relationship-panel{
-        /* background: #f3f3f1; */
         border: 2px solid #ccc;
         border-radius: 10px;
         margin-left: 10px;
         margin-top: 10px;
         margin-bottom: 10px;
-        padding-left: 10px;
-        padding-right: 10px;
+        padding: 10px;
 }
 .div-rbi-relationship-panel p{
         margin-bottom: 0.3em;
+}
+.width-95{
+        width: 95%;
+}
+.width-45{
+        width: 45%;
+}
+.width-30{
+        width: 30%;
 }
 #div-relationship-panels{
         width: 65%;

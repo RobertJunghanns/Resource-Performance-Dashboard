@@ -12,7 +12,6 @@ class ScopeCase(Enum):
 
 # E_{T}(t_{1},t_{2})
 def get_events_in_time_frame(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp) -> pd.DataFrame:
-    print('get_events_in_time_frame', event_log)
     return event_log[
         (event_log['time:timestamp'] >= t_start) &
         (event_log['time:timestamp'] < t_end)

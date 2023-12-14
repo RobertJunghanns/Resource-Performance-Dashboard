@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
+import uuid
+import json
 
 from app import app
-from dash import html, Input, Output, State, dcc, no_update
+from dash import html, Input, Output, State, dcc, no_update, ALL, callback_context
 import plotly.express as px
 
 from model.utility.pickle_utility import load_from_pickle
@@ -12,6 +14,8 @@ from model.sampling.activity_level_sampling import ScopeActivity
 from model.measures.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_case_completions, rbi_fraction_case_completions, rbi_average_workload, rbi_multitasking, rbi_average_duration_activity, rbi_average_case_duration, rbi_interaction_two_resources, rbi_social_position
 from model.measures.process_performance_measures import sql_to_performance_metric, case_duration
 from model.regression_analysis import fit_regression
+
+panel_id=0
 
 # Define the page layout
 layout = html.Div([
@@ -233,69 +237,18 @@ layout = html.Div([
             html.Div(
                 id='div-relationship-panels',
                 className='flex-row',
-                children=[
-                    html.Div(
-                        className='div-rbi-relationship-panel flex-col',
-                        children=[
-                            dcc.Markdown(
-                                className='',
-                                children='**SS:** Case level Sampling',
-                            ),
-                            dcc.Markdown(
-                                className='',
-                                children='**IV: Fraction case completion**',
-                            ),
-                            dcc.Markdown(
-                                className='',
-                                children='**DV: Case duration**',
-                            ),
-                            dcc.Markdown(
-                                className='',
-                                children='**Date:** 11/30/2023 - 11/30/2023',
-                            ),
-                            dcc.Markdown(
-                                className='',
-                                children='**BS:** Individual Scope',
-                            ),
-                            dcc.Graph(id='graph-0'),
-                            # px.scatter(
-                            #     df, x='total_bill', y='tip', opacity=0.65,
-                            #     trendline='ols', trendline_color_override='darkblue'
-                            # )
-                            # model = LinearRegression()
-                            # model.fit(X_train, y_train)
-
-                            # x_range = np.linspace(X.min(), X.max(), 100)
-                            # y_range = model.predict(x_range.reshape(-1, 1))
-
-
-                            # fig = go.Figure([
-                            #     go.Scatter(x=X_train.squeeze(), y=y_train, name='train', mode='markers'),
-                            #     go.Scatter(x=X_test.squeeze(), y=y_test, name='test', mode='markers'),
-                            #     go.Scatter(x=x_range, y=y_range, name='prediction')
-                            # ])
-                            dcc.Markdown(
-                                className='',
-                                children='**R-squared:** 0.287',
-                            ),
-                            dcc.Markdown(
-                                className='',
-                                children='**p-value:** 0.187',
-                            ),
-                            dcc.Markdown(
-                                className='',
-                                children='**t-statistics:** 0.187',
-                            ),
-                    ]),
-            ])
+                children=[]
+            )
     ])
 ])
 
 
 @app.callback(
-    Output('div-relationship-panels', 'children'),
+    Output('div-relationship-panels', 'children', allow_duplicate=True),
     Input('button-add-relationship', 'n_clicks'),
-    [State('pickle_df_name', 'data'),
+    [State('div-relationship-panels', 'children'),
+     State('pickle_df_name', 'data'),
+     State('dropdown-xes-select', 'value'),
      State('dropdown-sampling-strategy', 'value'),
      State('dropdown-iv-select', 'value'),
      State('dropdown-dv-select', 'value'),
@@ -305,9 +258,10 @@ layout = html.Div([
      State('input-iv-sql-query-rp', 'value'),
      State('input-concept-name-rp', 'value'),
      State('input-resource-name-rp', 'value'),
-     State('input-dv-sql-query-rp', 'value')]
+     State('input-dv-sql-query-rp', 'value')],
+     prevent_initial_call=True
 )
-def update_panels(n_clicks, pickle_df_name, sampling_strategy_value, independent_variable_value, dependent_variable_value, date_from_str, date_to_str, backwards_scope_value, iv_sql, iv_concept_name, iv_resource_name, dv_sql):
+def update_panels(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sampling_strategy_value, independent_variable_value, dependent_variable_value, date_from_str, date_to_str, backwards_scope_value, iv_sql, iv_concept_name, iv_resource_name, dv_sql):
     
     
     df_event_log = load_from_pickle(pickle_df_name)
@@ -332,7 +286,7 @@ def update_panels(n_clicks, pickle_df_name, sampling_strategy_value, independent
     
     performance_function_mapping = {
         'perf_sql': (sql_to_performance_metric, [dv_sql], 'Custom Performance Metric (SQL)'),
-        'perf_case_duration': (case_duration, [], 'Case duration')
+        'perf_case_duration': (case_duration, [], 'Case duration (min)')
     }
     performance_function, additional_performance_arguments, performance_label = performance_function_mapping.get(dependent_variable_value, (None, [], ''))
 
@@ -354,13 +308,10 @@ def update_panels(n_clicks, pickle_df_name, sampling_strategy_value, independent
             'total': (ScopeCase.TOTAL, 'Total scope')
         }
     }
-    print(sampling_strategy_value)
-    print(scope_mapping.get(sampling_strategy_value, {}))
-    print(scope_mapping.get(sampling_strategy_value, {}).get(backwards_scope_value, (ScopeActivity.TOTAL, 'Total scope')))
     backwards_scope, backwards_scope_label = scope_mapping.get(sampling_strategy_value, {}).get(backwards_scope_value, (ScopeActivity.TOTAL, 'Total scope'))
 
     if sampling_strategy_value == 'case_level':
-        rbi_values, perf_values = sample_regression_data_case(df_event_log, date_from, date_to, backwards_scope, rbi_function, performance_function, *additional_rbi_arguments, *additional_performance_arguments) #, individual_scope
+        rbi_values, perf_values = sample_regression_data_case(df_event_log, date_from, date_to, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments) #, individual_scope
     # elif sampling_strategy_value == 'activity_level':
     #     sample_regression_data_case(df_event_log, date_from, date_to, backwards_scope, )
     else:
@@ -368,14 +319,20 @@ def update_panels(n_clicks, pickle_df_name, sampling_strategy_value, independent
     
     _, _, r_squared, rpi_p_value, rpi_t_stat = fit_regression(rbi_values, perf_values)
 
-    #x_range = np.linspace(rbi_values.min(), rbi_values.max(), 100)
-    #y_range = slope * x_range + intercept
-
     fig = px.scatter(x=rbi_values, y=perf_values, trendline="ols")
+    fig.update_layout(margin=dict(l=30, r=30, t=50, b=70))
+    fig.update_xaxes(title_text=rbi_label)
+    fig.update_yaxes(title_text=performance_label)
+
+    new_panel_id = str(uuid.uuid4())
 
     new_panel = html.Div(
-                className='div-rbi-relationship-panel flex-col',
+                id = new_panel_id,
                 children=[
+                    dcc.Markdown(
+                        className='',
+                        children='**File:** ' + xes_select_value + '.xes',
+                    ),
                     dcc.Markdown(
                         className='',
                         children='**SS:** ' + sampling_strategy_label,
@@ -396,7 +353,7 @@ def update_panels(n_clicks, pickle_df_name, sampling_strategy_value, independent
                         className='',
                         children='**BS:** ' + backwards_scope_label,
                     ),
-                    dcc.Graph(id='graph-0', figure=fig),
+                    dcc.Graph(figure=fig),
                     dcc.Markdown(
                         className='',
                         children='**R-squared:** ' + str(r_squared),
@@ -409,14 +366,26 @@ def update_panels(n_clicks, pickle_df_name, sampling_strategy_value, independent
                         className='',
                         children='**t-statistics:** ' + str(rpi_t_stat),
                     ),
+                    html.Button('Delete', id={'type': 'delete-button', 'id': new_panel_id}, className='button-default margin-top', n_clicks=0)
             ])
-   
-    #check number of panels
-    #get children
-    #if number < x append else delete lowest id and append (in the front)
-    
-    return new_panel
+    if len(old_panel_children) == 0:
+        new_panel = html.Div(className='div-rbi-relationship-panel width-95 flex-col', id=new_panel.id, children=new_panel.children)
+        new_panel_children = [new_panel]
+        return new_panel_children
+    elif len(old_panel_children) == 1:
+        new_panel = html.Div(className='div-rbi-relationship-panel width-45 flex-col', id=new_panel.id, children=new_panel.children)
+        old_panel_child = html.Div(className='div-rbi-relationship-panel width-45 flex-col', id=old_panel_children[0]['props']['id'], children=old_panel_children[0]['props']['children'])
+        new_panel_children = [new_panel] + [old_panel_child]
+        return new_panel_children
+    elif len(old_panel_children) >= 2:
+        new_panel = html.Div(className='div-rbi-relationship-panel width-30 flex-col', id=new_panel.id, children=new_panel.children)
+        new_panel_children = [new_panel]
+        for old_panel_child in old_panel_children:
+            old_panel_child = html.Div(className='div-rbi-relationship-panel width-30 flex-col', id=old_panel_child['props']['id'], children=old_panel_child['props']['children'])
+            new_panel_children += [old_panel_child]
+        return new_panel_children[:3]
 
+    
 @app.callback(
     [Output('dropdown-backwards-scope', 'options')],
     Input('dropdown-sampling-strategy', 'value')
@@ -493,3 +462,46 @@ def toggle_perf_input_fields_visibility(selected_perf):
         inputs_visibility[0] = {'display': 'block'} 
     
     return inputs_visibility
+
+# delete a rp-panel
+@app.callback(
+    Output('div-relationship-panels', 'children', allow_duplicate=True),
+    [Input({'type': 'delete-button', 'id': ALL}, 'n_clicks')],
+    [State('div-relationship-panels', 'children')],
+    prevent_initial_call=True
+)
+def delete_panel(n_clicks, panels):
+    ctx = callback_context
+
+    if not ctx.triggered:
+        return no_update
+
+    # Determine which button was clicked
+    button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    delete_id = json.loads(button_id)['id']
+
+    # Check if the button was actually clicked
+    if not any(click > 0 for click in n_clicks):
+        return no_update
+
+    # Remove the corresponding panel
+    rest_panels = [panel for panel in panels if 'props' in panel and 'id' in panel['props'] and panel['props']['id'] != delete_id]
+
+    if len(rest_panels) == 0:
+        return rest_panels
+    elif len(rest_panels) == 1:
+        className_str = 'div-rbi-relationship-panel width-95 flex-col'
+    elif len(rest_panels) == 2:
+        className_str = 'div-rbi-relationship-panel width-45 flex-col'
+    elif len(rest_panels) == 3:
+        className_str = 'div-rbi-relationship-panel width-30 flex-col'
+    
+    sized_panel_children = []
+    for panel in rest_panels:
+        sized_panel_child = html.Div(className=className_str, id=panel['props']['id'], children=panel['props']['children'])
+        sized_panel_children += [sized_panel_child]
+
+    if len(sized_panel_children) > 3:
+        return sized_panel_children[:3]
+
+    return sized_panel_children

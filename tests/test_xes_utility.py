@@ -1,7 +1,7 @@
 import unittest
 import pm4py
 import pandas as pd
-from src.model.xes_utility import get_earliest_timestamp, get_latest_timestamp, get_unique_resources, df_to_json, json_to_df
+from src.model.utility.xes_utility import get_earliest_timestamp, get_latest_timestamp, get_unique_resources, df_to_json, json_to_df
 import warnings
 
 
