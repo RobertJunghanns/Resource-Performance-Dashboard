@@ -1,5 +1,3 @@
-
-import pandas as pd
 import dash_bootstrap_components as dbc
 from dash import Dash
 

@@ -49,12 +49,6 @@ def rbi_multitasking(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.T
 def rbi_average_duration_activity(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, resource_id: str, concept_name: str) -> float:
     return algorithm.average_duration_activity(event_log, t_start, t_end, resource_id, concept_name)
 
-def rbi_average_case_duration(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, resource_id: str) -> float:
-    try:
-        return algorithm.average_case_duration(event_log, t_start, t_end, resource_id)
-    except statistics.StatisticsError:
-        return None
-
 def rbi_interaction_two_resources(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, resource_id: str, interaction_resource_id: str) -> float:
     return algorithm.interaction_two_resources(event_log, t_start, t_end, resource_id, interaction_resource_id)
 

@@ -149,7 +149,6 @@ def sample_regression_data_case(event_log: pd.DataFrame, t_start: pd.Timestamp, 
     perf_values = np.array([])
     
     for case_id in case_ids:
-        print(case_id)
         rbi_values = np.append(rbi_values, get_independent_variable_case(event_log, case_id, scope, rbi_function, *additional_rbi_arguments, individual_scope=individual_scope))
         perf_values = np.append(perf_values, get_dependent_variable_case(event_log, case_id, performance_function, *additional_performance_arguments))
 

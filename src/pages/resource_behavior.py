@@ -5,7 +5,7 @@ from dash import html, State, Input, Output, dcc, no_update
 import dash_bootstrap_components as dbc
 from model.utility.pickle_utility import load_from_pickle
 from model.utility.xes_utility import get_unique_resources, get_earliest_timestamp, get_latest_timestamp, get_period_name, generate_time_period_intervals, generate_until_end_period_intervals
-from model.measures.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_case_completions, rbi_fraction_case_completions, rbi_average_workload, rbi_multitasking, rbi_average_duration_activity, rbi_average_case_duration, rbi_interaction_two_resources, rbi_social_position
+from model.measures.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_case_completions, rbi_fraction_case_completions, rbi_average_workload, rbi_multitasking, rbi_average_duration_activity, rbi_interaction_two_resources, rbi_social_position
 
 layout = html.Div([
     dbc.Alert(id='sql-alert', className='alert', duration=40000, color="warning", dismissable=True, is_open=False),
@@ -104,7 +104,6 @@ layout = html.Div([
                                                 {'label': 'Average workload', 'value': 'rbi_average_workload'},
                                                 {'label': 'Mulitasking', 'value': 'rbi_multitasking'},
                                                 {'label': 'Average duration activity', 'value': 'rbi_average_duration_activity'},
-                                                {'label': 'Average case duration', 'value': 'rbi_average_duration_case'},
                                                 {'label': 'Interaction two resources', 'value': 'rbi_interaction_two_resources'},
                                                 {'label': 'Social position', 'value': 'rbi_social_position'},
                                             ]
@@ -247,8 +246,6 @@ def get_rbi_time_series(n_clicks, pickle_df_name, rbi, resource, start_date_str,
                 rbi_time_series_values.append(rbi_multitasking(df_event_log, interval[0], interval[1], resource))
             elif rbi == 'rbi_average_duration_activity':
                 rbi_time_series_values.append(rbi_average_duration_activity(df_event_log, interval[0], interval[1], resource, concept_name))
-            elif rbi == 'rbi_average_duration_case':
-                rbi_time_series_values.append(rbi_average_case_duration(df_event_log, interval[0], interval[1], resource))
             elif rbi == 'rbi_interaction_two_resources':
                 rbi_time_series_values.append(rbi_interaction_two_resources(df_event_log, interval[0], interval[1], resource, interaction_resource))
             elif rbi == 'rbi_social_position':
