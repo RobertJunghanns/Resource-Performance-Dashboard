@@ -2,9 +2,11 @@ import pandas as pd
 import numpy as np
 import uuid
 import json
+import datetime
 
 from app import app
 from dash import html, Input, Output, State, dcc, no_update, ALL, callback_context
+import dash_mantine_components as dmc
 import plotly.express as px
 import dash_bootstrap_components as dbc
 
@@ -192,6 +194,13 @@ layout = html.Div([
                                                 initial_visible_month=pd.Timestamp('2023-11-30'),
                                                 date=pd.Timestamp('2023-11-30')
                                             ),
+                                            dmc.TimeInput(
+                                                id='time-from-rp',
+                                                className='margin-top-5',
+                                                format="24",
+                                                withSeconds=True,
+                                                value=datetime.datetime.combine(datetime.date.today(), datetime.time.min)
+                                            ),
                                         ]),
                                         html.Div(
                                             id='div-second-date',
@@ -206,6 +215,13 @@ layout = html.Div([
                                                     max_date_allowed=pd.Timestamp('2023-11-30'),
                                                     initial_visible_month=pd.Timestamp('2023-11-30'),
                                                     date=pd.Timestamp('2023-11-30')
+                                                ),
+                                                dmc.TimeInput(
+                                                    id='time-to-rp',
+                                                    className='margin-top-5',
+                                                    format="24",
+                                                    withSeconds=True,
+                                                    value=datetime.datetime.combine(datetime.date.today(), datetime.time.min)
                                                 ),
                                         ]),
                                 ]),
@@ -266,7 +282,9 @@ layout = html.Div([
      State('dropdown-iv-select', 'value'),
      State('dropdown-dv-select', 'value'),
      State('date-from-rp', 'date'),
+     State('time-from-rp', 'value'),
      State('date-to-rp', 'date'),
+     State('time-to-rp', 'value'),
      State('dropdown-backwards-scope', 'value'),
      State('input-individual-backwards-scope-rp', 'value'),
      State('input-iv-sql-query-rp', 'value'),
@@ -275,14 +293,19 @@ layout = html.Div([
      State('input-dv-sql-query-rp', 'value')], 
      prevent_initial_call=True
 )
-def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sampling_strategy_value, independent_variable_value, dependent_variable_value, date_from_str, date_to_str, backwards_scope_value, backwards_scope_individual, iv_sql, iv_concept_name, iv_resource_name, dv_sql):
+def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sampling_strategy_value, independent_variable_value, dependent_variable_value, date_from_str, time_from_str, date_to_str, time_to_str, backwards_scope_value, backwards_scope_individual, iv_sql, iv_concept_name, iv_resource_name, dv_sql):
     
     if xes_select_value is None or xes_select_value == '':
         return no_update, no_update
     
+    
     df_event_log = load_from_pickle(pickle_df_name)
-    date_from = pd.to_datetime(date_from_str)
-    date_to = pd.to_datetime(date_to_str)
+    
+    timestamp_from_str = date_from_str + 'T' + time_from_str.split('T')[1] + '+00:00'
+    timestamp_to_str = date_to_str + 'T' + time_to_str.split('T')[1] + '+00:00'
+
+    date_from = pd.Timestamp(timestamp_from_str)
+    date_to = pd.Timestamp(timestamp_to_str)
 
     rbi_function_mapping = {
         'rbi_sql': (sql_to_rbi, [iv_sql], 'Custom RBI (SQL)'),
@@ -474,23 +497,34 @@ def update_resource_options(sampling_strategy):
      Output('date-from-rp', 'max_date_allowed'),
      Output('date-from-rp', 'initial_visible_month'),
      Output('date-from-rp', 'date'),
+     Output('time-from-rp', 'value'),
      Output('date-to-rp', 'min_date_allowed'),
      Output('date-to-rp', 'max_date_allowed'),
      Output('date-to-rp', 'initial_visible_month'),
-     Output('date-to-rp', 'date'),],
+     Output('date-to-rp', 'date'),
+     Output('time-to-rp', 'value')],
     Input('pickle_df_name', 'data')
 )
 def update_resource_options(pickle_df_name):
     if pickle_df_name:
         df_event_log = load_from_pickle(pickle_df_name)
         
-        earliest_dt = get_earliest_timestamp(df_event_log)
-        latest_dt = get_latest_timestamp(df_event_log)
+        earliest_timestamp = get_earliest_timestamp(df_event_log)
+        latest_timestamp = get_latest_timestamp(df_event_log)
 
-        return [earliest_dt, latest_dt, earliest_dt, earliest_dt, earliest_dt, latest_dt, latest_dt, latest_dt]
+        earliest_date = earliest_timestamp.date()
+        latest_date = latest_timestamp.date()
+
+        earliest_time = earliest_timestamp.time()
+        latest_time = latest_timestamp.time()
+
+        earliest_datetime = datetime.datetime.combine(earliest_date, earliest_time)
+        latest_datetime = datetime.datetime.combine(latest_date, latest_time)
+
+        return [earliest_date, latest_date, earliest_date, earliest_date, earliest_datetime, earliest_date, latest_date, latest_date, latest_date, latest_datetime]
     else:
         # Return an empty list if no file is selected
-        return [no_update] * 8
+        return [no_update] * 10
 
 # toggle the visibility of iv input fields  
 @app.callback(

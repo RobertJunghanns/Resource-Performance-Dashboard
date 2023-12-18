@@ -142,6 +142,7 @@ layout = html.Div([
     ])
 ])
 
+# Initialize possible options dependent on XES file
 @app.callback(
     [Output('dropdown-resource-select', 'options'),
      Output('date-from', 'min_date_allowed'),
@@ -162,6 +163,7 @@ def update_resource_options(pickle_df_name):
         options = [{'label': resource, 'value': str(resource)} for resource in sorted_resources]
         
         earliest_dt = get_earliest_timestamp(df_event_log)
+        print(earliest_dt)
         latest_dt = get_latest_timestamp(df_event_log)
 
         return [options, earliest_dt, latest_dt, earliest_dt, earliest_dt, earliest_dt, latest_dt, latest_dt, latest_dt]
@@ -169,6 +171,7 @@ def update_resource_options(pickle_df_name):
         # Return an empty list if no file is selected
         return [no_update] * 9
 
+# sample and display time series
 @app.callback(
     Output('time-series-chart', 'figure'),
     Output('sql-alert', 'children'),

@@ -4,6 +4,9 @@
 .margin-top{
         margin-top: 10px;
 }
+.margin-top-5{
+        margin-top: 5px;
+}
 .button-default {
         height: 40px;
         background-color: white;
@@ -356,5 +359,4 @@
         align-items: center;
         justify-content: center;
 }
-
 
