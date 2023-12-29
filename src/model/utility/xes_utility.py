@@ -15,6 +15,12 @@ def get_unique_resources(event_log: pd.DataFrame) -> set:
     unique_resources = set(event_log['org:resource'].dropna())
     return unique_resources
 
+def count_unique_cases(df, case_id_column='case:concept:name'):
+    if case_id_column in df.columns:
+        return df[case_id_column].nunique()
+    else:
+        raise ValueError(f"Column '{case_id_column}' not found in DataFrame")
+
 def align_date_to_period(date, period, next_period=False):
     if period == 'day':
         aligned_date = date.replace(hour=0, minute=0, second=0, microsecond=0)

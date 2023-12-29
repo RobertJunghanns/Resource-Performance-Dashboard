@@ -34,6 +34,14 @@ def get_caseids_in_time_frame(event_log: pd.DataFrame, t_start: pd.Timestamp, t_
 
     return np.array(list(cases_ids_in_time_frame - cases_ids_not_in_time_frame))
 
+# get a lower number of ids to reduce case sampling time
+def get_n_case_ids(case_ids, n_cases, seed=999):
+    np.random.seed(seed)
+    if len(case_ids) > n_cases:
+        return np.random.choice(case_ids, size=n_cases, replace=False)
+    else:
+        return case_ids
+
 
 def get_trace(event_log: pd.DataFrame, case_id: str) -> pd.DataFrame:
     trace = event_log.loc[event_log['case:concept:name'] == case_id]
@@ -142,8 +150,9 @@ def get_dependent_variable_case(event_log: pd.DataFrame, case_id: str, performan
     return performance_function(trace, *args)
 
 # [(IV, DV)] for all c element C_{T}(t_{1},t_{2})
-def sample_regression_data_case(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, scope: ScopeCase, rbi_function: Callable, performance_function: Callable, additional_rbi_arguments: List[Any] = [], additional_performance_arguments: List[Any] = [], individual_scope = pd.Timedelta(0)):
+def sample_regression_data_case(event_log: pd.DataFrame, case_limit: int, seed: int, t_start: pd.Timestamp, t_end: pd.Timestamp, scope: ScopeCase, rbi_function: Callable, performance_function: Callable, additional_rbi_arguments: List[Any] = [], additional_performance_arguments: List[Any] = [], individual_scope = pd.Timedelta(0)):
     case_ids = get_caseids_in_time_frame(event_log, t_start, t_end)
+    case_ids = get_n_case_ids(case_ids, case_limit, seed)
 
     rbi_values = np.array([])
     perf_values = np.array([])

@@ -8,10 +8,9 @@ from app import app
 from dash import html, Input, Output, State, dcc, no_update, ALL, callback_context
 import dash_mantine_components as dmc
 import plotly.express as px
-import dash_bootstrap_components as dbc
 
 from model.utility.pickle_utility import load_from_pickle
-from model.utility.xes_utility import get_earliest_timestamp, get_latest_timestamp
+from model.utility.xes_utility import get_earliest_timestamp, get_latest_timestamp, count_unique_cases
 from model.sampling.case_level_sampling import ScopeCase, sample_regression_data_case
 from model.sampling.activity_level_sampling import ScopeActivity
 from model.measures.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_case_completions, rbi_fraction_case_completions, rbi_average_workload, rbi_multitasking, rbi_average_duration_activity, rbi_interaction_two_resources, rbi_social_position
@@ -54,6 +53,30 @@ layout = html.Div([
                                     ],
                                     value='case_level'
                                 ),
+                                html.Div(
+                                    className='flex-row',
+                                    children = [
+                                        html.Div(
+                                            [
+                                                html.P(
+                                                    className='p-option-col',
+                                                    children='Max. number of cases:'
+                                                ),
+                                                dcc.Input(id='case-num-limit', className='input-concept-name', type='number', placeholder=' Maximum number of cases')
+                                            ],
+                                            className='margin-right width-66',
+                                        ),
+                                        html.Div(
+                                            [
+                                                html.P(
+                                                    className='p-option-col',
+                                                    children='Seed:'
+                                                ),
+                                                dcc.Input(id='sampling-seed', className='input-concept-name', type='number', value=999)
+                                            ],
+                                            className='width-33'
+                                        )
+                                ])
                         ])
                 ]),
                 html.Div(
@@ -279,6 +302,8 @@ layout = html.Div([
      State('pickle_df_name', 'data'),
      State('dropdown-xes-select', 'value'),
      State('dropdown-sampling-strategy', 'value'),
+     State('case-num-limit', 'value'),
+     State('sampling-seed', 'value'),
      State('dropdown-iv-select', 'value'),
      State('dropdown-dv-select', 'value'),
      State('date-from-rp', 'date'),
@@ -293,7 +318,7 @@ layout = html.Div([
      State('input-dv-sql-query-rp', 'value')], 
      prevent_initial_call=True
 )
-def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sampling_strategy_value, independent_variable_value, dependent_variable_value, date_from_str, time_from_str, date_to_str, time_to_str, backwards_scope_value, backwards_scope_individual, iv_sql, iv_concept_name, iv_resource_name, dv_sql):
+def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sampling_strategy_value, case_limit_value, seed_value, independent_variable_value, dependent_variable_value, date_from_str, time_from_str, date_to_str, time_to_str, backwards_scope_value, backwards_scope_individual, iv_sql, iv_concept_name, iv_resource_name, dv_sql):
     
     if xes_select_value is None or xes_select_value == '':
         return no_update, no_update
@@ -353,7 +378,7 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
         individual_scope_value = pd.Timedelta(minutes=backwards_scope_individual)
 
     if sampling_strategy_value == 'case_level':
-        rbi_values, perf_values = sample_regression_data_case(df_event_log, date_from, date_to, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments, individual_scope=individual_scope_value)
+        rbi_values, perf_values = sample_regression_data_case(df_event_log, case_limit_value, seed_value, date_from, date_to, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments, individual_scope=individual_scope_value)
     # elif sampling_strategy_value == 'activity_level':
     #     sample_regression_data_case(df_event_log, date_from, date_to, backwards_scope, )
     else:
@@ -381,6 +406,10 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
                     ),
                     dcc.Markdown(
                         className='',
+                        children='**Max:** ' + str(case_limit_value) + ' (Seed: ' + str(seed_value) + ')',
+                    ),
+                    dcc.Markdown(
+                        className='',
                         children='**IV:** ' + rbi_label,
                     ),
                     dcc.Markdown(
@@ -398,15 +427,15 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
                     dcc.Graph(figure=fig),
                     dcc.Markdown(
                         className='',
-                        children='**R-squared:** ' + str(r_squared),
+                        children='**R-squared:** ' + str(round(r_squared, 8)),
                     ),
                     dcc.Markdown(
                         className='',
-                        children='**p-value:** ' + str(rpi_p_value),
+                        children='**p-value:** ' + str(format(rpi_p_value, '.8e')),
                     ),
                     dcc.Markdown(
                         className='',
-                        children='**t-statistics:** ' + str(rpi_t_stat),
+                        children='**t-statistics:** ' + str(round(rpi_t_stat, 8)),
                     ),
                     html.Button('Delete', id={'type': 'delete-button', 'id': new_panel_id}, className='button-default margin-top', n_clicks=0)
             ])
@@ -492,6 +521,7 @@ def update_resource_options(sampling_strategy):
 
     return [options]
 
+# set values based on XES file
 @app.callback(
     [Output('date-from-rp', 'min_date_allowed'),
      Output('date-from-rp', 'max_date_allowed'),
@@ -502,7 +532,8 @@ def update_resource_options(sampling_strategy):
      Output('date-to-rp', 'max_date_allowed'),
      Output('date-to-rp', 'initial_visible_month'),
      Output('date-to-rp', 'date'),
-     Output('time-to-rp', 'value')],
+     Output('time-to-rp', 'value'),
+     Output('case-num-limit', 'value')],
     Input('pickle_df_name', 'data')
 )
 def update_resource_options(pickle_df_name):
@@ -521,10 +552,12 @@ def update_resource_options(pickle_df_name):
         earliest_datetime = datetime.datetime.combine(earliest_date, earliest_time)
         latest_datetime = datetime.datetime.combine(latest_date, latest_time)
 
-        return [earliest_date, latest_date, earliest_date, earliest_date, earliest_datetime, earliest_date, latest_date, latest_date, latest_date, latest_datetime]
+        case_count = count_unique_cases(df_event_log)
+
+        return [earliest_date, latest_date, earliest_date, earliest_date, earliest_datetime, earliest_date, latest_date, latest_date, latest_date, latest_datetime, case_count]
     else:
         # Return an empty list if no file is selected
-        return [no_update] * 10
+        return [no_update] * 11
 
 # toggle the visibility of iv input fields  
 @app.callback(
