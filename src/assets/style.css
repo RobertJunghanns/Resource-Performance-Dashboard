@@ -348,14 +348,29 @@
 .div-rbi-relationship-panel p{
         margin-bottom: 0.3em;
 }
+.width-100{
+        width: 100%;
+}
 .width-95{
         width: 95%;
 }
 .width-66{
         width: 66%;
 }
+.width-64{
+        width: 64%;
+}
+.width-60{
+        width: 60%;
+}
+.width-50{
+        width: 50%;
+}
 .width-45{
         width: 45%;
+}
+.width-40{
+        width: 40%;
 }
 .width-33{
         width: 33%;

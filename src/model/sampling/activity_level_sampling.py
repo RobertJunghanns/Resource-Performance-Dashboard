@@ -10,8 +10,11 @@ class ScopeActivity(Enum):
     INDIVIDUAL = 2
     TOTAL = 3
 
+
+# E_{TA}(t_{1}, t_{2}, [a, v])
 def get_included_events(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, event_attribute: str = None, event_attribute_value = None):
     event_log = event_log[
+        (event_log['lifecycle:transition'].isin(['complete', 'COMPLETE'])) &
         (event_log['time:timestamp'] >= t_start) &
         (event_log['time:timestamp'] < t_end)
     ]
@@ -21,30 +24,27 @@ def get_included_events(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: p
     
     return event_log
 
-# Prepare all cases in timeframe with duration of completed event
-
-# IV(c)
-def get_independent_variable_activity(event_log: pd.DataFrame, case_id: str, scope: ScopeActivity, rbi_function: Callable, *args, individual_scope = pd.Timedelta(0)):    
-    trace = get_trace(event_log, case_id)
-    trace_prepared = prepare_trace(trace)
-
-    t2 = get_latest_timestamp(trace)
-    if scope == ScopeCase.CASE:
-        t1 = get_earliest_timestamp(trace)
-    elif scope == ScopeCase.INDIVIDUAL:
-        t1 = get_earliest_timestamp(trace) - individual_scope
-    elif scope == ScopeCase.TOTAL:
-        t1 = get_earliest_timestamp(event_log)  
+# get a lower number of activities to reduce case sampling time
+def get_n_events(event_log, n_events, seed=999):
+    if len(event_log) > n_events:
+        return event_log.sample(n=n_events, random_state=seed)
     else:
-        t1 = get_earliest_timestamp(trace)
+        return event_log
 
-    weighted_avg = 0
+# [(IV, DV)] for all c element C_{T}(t_{1},t_{2})
+def sample_regression_data_activity(event_log: pd.DataFrame, activity_limit: int, seed: int, t_start: pd.Timestamp, t_end: pd.Timestamp, scope: ScopeActivity): #, rbi_function: Callable, performance_function: Callable, additional_rbi_arguments: List[Any] = [], additional_performance_arguments: List[Any] = [], individual_scope = pd.Timedelta(0)
+    included_events = get_included_events(event_log, t_start, t_end)
+    included_events = get_n_events(included_events, activity_limit, seed)
 
-    resource_ids = get_participating_resources(trace)
-    for resource_id in resource_ids:
-        ps = participation_share(trace_prepared, resource_id)
-        rbi_value = rbi_function(event_log, t1, t2, resource_id, *args)
+    pd.set_option('display.max_columns', None)
 
-        weighted_avg += rbi_value * ps
+    print(included_events)
 
-    return weighted_avg
+    rbi_values = np.array([])
+    perf_values = np.array([])
+    
+    # for index, event in included_events.iterrows():
+    #     rbi_values = np.append(rbi_values, get_independent_variable_case(event_log, case_id, scope, rbi_function, *additional_rbi_arguments, individual_scope=individual_scope))
+    #     perf_values = np.append(perf_values, get_dependent_variable_case(event_log, case_id, performance_function, *additional_performance_arguments))
+
+    return rbi_values, perf_values

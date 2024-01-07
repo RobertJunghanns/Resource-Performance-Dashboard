@@ -10,9 +10,9 @@ import dash_mantine_components as dmc
 import plotly.express as px
 
 from model.utility.pickle_utility import load_from_pickle
-from model.utility.xes_utility import get_earliest_timestamp, get_latest_timestamp, count_unique_cases
+from model.utility.xes_utility import get_earliest_timestamp, get_latest_timestamp, get_column_names, count_unique_cases, count_completed_events
 from model.sampling.case_level_sampling import ScopeCase, sample_regression_data_case
-from model.sampling.activity_level_sampling import ScopeActivity
+from model.sampling.activity_level_sampling import ScopeActivity, sample_regression_data_activity
 from model.measures.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_case_completions, rbi_fraction_case_completions, rbi_average_workload, rbi_multitasking, rbi_average_duration_activity, rbi_interaction_two_resources, rbi_social_position
 from model.measures.case_performance_measures import sql_to_case_performance_metric, case_duration
 from model.regression_analysis import fit_regression
@@ -48,11 +48,43 @@ layout = html.Div([
                                 dcc.Dropdown(
                                     id='dropdown-sampling-strategy',
                                     options=[
-                                        #{'label': 'Activity level sampling', 'value': 'activity_level'},
                                         {'label': 'Case level sampling', 'value': 'case_level'},
+                                        {'label': 'Activity level sampling', 'value': 'activity_level'},
                                     ],
                                     value='case_level'
                                 ),
+                                html.Div(
+                                    className='flex-row width-100',
+                                    children = [
+                                         html.Div(
+                                            [
+                                                html.P(
+                                                    className='p-option-col',
+                                                    children='Filter attribute:'
+                                                ),
+                                                dcc.Dropdown(
+                                                    id='dropdown-filter-attribute-select',
+                                                    className = 'width-100',
+                                                    options=[]
+                                                ),
+                                            ],
+                                            style={'display': 'none'},
+                                            className='margin-right width-60',
+                                            id='div-filter-attribute-select'
+                                        ),
+                                        html.Div(
+                                            [
+                                                html.P(
+                                                    className='p-option-col',
+                                                    children='Attribute value:'
+                                                ),
+                                                dcc.Input(id='filter-attribute-value', className='input-concept-name', placeholder=' Attribute value')
+                                            ],
+                                            style={'display': 'none'},
+                                            className='width-40',
+                                            id='div-filter-attribute-value'
+                                        ),
+                                ]),
                                 html.Div(
                                     className='flex-row',
                                     children = [
@@ -64,7 +96,21 @@ layout = html.Div([
                                                 ),
                                                 dcc.Input(id='case-num-limit', className='input-concept-name', type='number', placeholder=' Maximum number of cases')
                                             ],
-                                            className='margin-right width-66',
+                                            style={'display': 'none'},
+                                            className='margin-right width-60',
+                                            id='div-max-cases'
+                                        ),
+                                        html.Div(
+                                            [
+                                                html.P(
+                                                    className='p-option-col',
+                                                    children='Max. number of activities:'
+                                                ),
+                                                dcc.Input(id='activity-num-limit', className='input-concept-name', type='number', placeholder=' Maximum number of activities')
+                                            ],
+                                            style={'display': 'none'},
+                                            className='margin-right width-60',
+                                            id='div-max-activities'
                                         ),
                                         html.Div(
                                             [
@@ -74,7 +120,8 @@ layout = html.Div([
                                                 ),
                                                 dcc.Input(id='sampling-seed', className='input-concept-name', type='number', value=999)
                                             ],
-                                            className='width-33'
+                                            className='width-40',
+                                            id='div-seed'
                                         )
                                 ])
                         ])
@@ -303,6 +350,7 @@ layout = html.Div([
      State('dropdown-xes-select', 'value'),
      State('dropdown-sampling-strategy', 'value'),
      State('case-num-limit', 'value'),
+     State('activity-num-limit', 'value'),
      State('sampling-seed', 'value'),
      State('dropdown-iv-select', 'value'),
      State('dropdown-dv-select', 'value'),
@@ -318,7 +366,7 @@ layout = html.Div([
      State('input-dv-sql-query-rp', 'value')], 
      prevent_initial_call=True
 )
-def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sampling_strategy_value, case_limit_value, seed_value, independent_variable_value, dependent_variable_value, date_from_str, time_from_str, date_to_str, time_to_str, backwards_scope_value, backwards_scope_individual, iv_sql, iv_concept_name, iv_resource_name, dv_sql):
+def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sampling_strategy_value, case_limit_value, activity_limit_value, seed_value, independent_variable_value, dependent_variable_value, date_from_str, time_from_str, date_to_str, time_to_str, backwards_scope_value, backwards_scope_individual, iv_sql, iv_concept_name, iv_resource_name, dv_sql):
     
     if xes_select_value is None or xes_select_value == '':
         return no_update, no_update
@@ -379,8 +427,8 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
 
     if sampling_strategy_value == 'case_level':
         rbi_values, perf_values = sample_regression_data_case(df_event_log, case_limit_value, seed_value, date_from, date_to, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments, individual_scope=individual_scope_value)
-    # elif sampling_strategy_value == 'activity_level':
-    #     sample_regression_data_case(df_event_log, date_from, date_to, backwards_scope, )
+    elif sampling_strategy_value == 'activity_level':
+        rbi_values, perf_values = sample_regression_data_activity(df_event_log, activity_limit_value, seed_value, date_from, date_to, backwards_scope)
     else:
         return no_update, no_update
     
@@ -498,28 +546,49 @@ def delete_panel(n_clicks, panels):
         return sized_panel_children[:3]
 
     return sized_panel_children
-    
+
+# update input fields based on sampling strategy 
 @app.callback(
-    [Output('dropdown-backwards-scope', 'options')],
+    [Output('dropdown-backwards-scope', 'options'),
+     Output('div-max-cases', 'style'),
+     Output('div-max-activities', 'style'),
+     Output('div-seed', 'style'),
+     Output('div-filter-attribute-select', 'style'),
+     Output('div-filter-attribute-value', 'style')],
     Input('dropdown-sampling-strategy', 'value')
 )
 def update_resource_options(sampling_strategy):
     if sampling_strategy == 'activity_level':
-        options = [
+        scope_options = [
             {'label': 'Activity scope', 'value': 'activity'},
             {'label': 'Individual scope', 'value': 'individual'},
             {'label': 'Total scope', 'value': 'total'},
         ]
+        div_max_cases_style = {'display': 'none'} 
+        div_max_activities_style = {'display': 'block'}
+        div_seed_style = {'display': 'block'}
+        div_attribute_select_style = {'display': 'block'}
+        div_attribute_value_style = {'display': 'block'}
     elif sampling_strategy == 'case_level':
-        options = [
+        scope_options = [
             {'label': 'Case scope', 'value': 'case'},
             {'label': 'Individual scope', 'value': 'individual'},
             {'label': 'Total scope', 'value': 'total'},
         ]
+        div_max_cases_style = {'display': 'block'} 
+        div_max_activities_style = {'display': 'none'}
+        div_seed_style = {'display': 'block'}
+        div_attribute_select_style = {'display': 'none'}
+        div_attribute_value_style = {'display': 'none'}
     else:
-        options = no_update
+        scope_options = no_update
+        div_max_cases_style = {'display': 'none'} 
+        div_max_activities_style = {'display': 'none'}
+        div_seed_style = {'display': 'none'}
+        div_attribute_select_style = {'display': 'none'}
+        div_attribute_value_style = {'display': 'none'}
 
-    return [options]
+    return [scope_options, div_max_cases_style, div_max_activities_style, div_seed_style, div_attribute_select_style, div_attribute_value_style]
 
 # set values based on XES file
 @app.callback(
@@ -533,7 +602,9 @@ def update_resource_options(sampling_strategy):
      Output('date-to-rp', 'initial_visible_month'),
      Output('date-to-rp', 'date'),
      Output('time-to-rp', 'value'),
-     Output('case-num-limit', 'value')],
+     Output('case-num-limit', 'value'),
+     Output('activity-num-limit', 'value'),
+     Output('dropdown-filter-attribute-select', 'options'),],
     Input('pickle_df_name', 'data')
 )
 def update_resource_options(pickle_df_name):
@@ -553,11 +624,14 @@ def update_resource_options(pickle_df_name):
         latest_datetime = datetime.datetime.combine(latest_date, latest_time)
 
         case_count = count_unique_cases(df_event_log)
+        event_count = count_completed_events(df_event_log)
 
-        return [earliest_date, latest_date, earliest_date, earliest_date, earliest_datetime, earliest_date, latest_date, latest_date, latest_date, latest_datetime, case_count]
+        attribute_options = [{'label': col, 'value': col} for col in get_column_names(df_event_log)]
+
+        return [earliest_date, latest_date, earliest_date, earliest_date, earliest_datetime, earliest_date, latest_date, latest_date, latest_date, latest_datetime, case_count, event_count, attribute_options]
     else:
         # Return an empty list if no file is selected
-        return [no_update] * 11
+        return [no_update] * 13
 
 # toggle the visibility of iv input fields  
 @app.callback(
