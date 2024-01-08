@@ -7,6 +7,7 @@ import datetime
 from app import app
 from dash import html, Input, Output, State, dcc, no_update, ALL, callback_context
 import dash_mantine_components as dmc
+import dash_bootstrap_components as dbc
 import plotly.express as px
 
 from model.utility.pickle_utility import load_from_pickle
@@ -21,6 +22,7 @@ panel_id=0
 
 # Define the page layout
 layout = html.Div([
+    dbc.Alert(id='input-alert-rp', className='alert', duration=40000, color="warning", dismissable=True, is_open=False),
     html.Div(
         className='flex-row',
         id='page-resource-performance',
@@ -43,7 +45,10 @@ layout = html.Div([
                             children = [
                                 html.P(
                                     className='p-option-col',
-                                    children='Sampling Strategy:', 
+                                    children=[
+                                        'Sampling Strategy ',
+                                        html.Span('*', style={'color': 'red'})
+                                    ]
                                 ),
                                 dcc.Dropdown(
                                     id='dropdown-sampling-strategy',
@@ -60,7 +65,7 @@ layout = html.Div([
                                             [
                                                 html.P(
                                                     className='p-option-col',
-                                                    children='Filter attribute:'
+                                                    children='Filter attribute'
                                                 ),
                                                 dcc.Dropdown(
                                                     id='dropdown-filter-attribute-select',
@@ -76,7 +81,7 @@ layout = html.Div([
                                             [
                                                 html.P(
                                                     className='p-option-col',
-                                                    children='Attribute value:'
+                                                    children='Attribute value'
                                                 ),
                                                 dcc.Input(id='filter-attribute-value', className='input-concept-name', placeholder=' Attribute value')
                                             ],
@@ -92,7 +97,10 @@ layout = html.Div([
                                             [
                                                 html.P(
                                                     className='p-option-col',
-                                                    children='Max. number of cases:'
+                                                    children=[
+                                                        'Max. number of cases ',
+                                                        html.Span('*', style={'color': 'red'})
+                                                    ]
                                                 ),
                                                 dcc.Input(id='case-num-limit', className='input-concept-name', type='number', placeholder=' Maximum number of cases')
                                             ],
@@ -104,7 +112,10 @@ layout = html.Div([
                                             [
                                                 html.P(
                                                     className='p-option-col',
-                                                    children='Max. number of activities:'
+                                                    children=[
+                                                        'Max. number of activities ',
+                                                        html.Span('*', style={'color': 'red'})
+                                                    ]
                                                 ),
                                                 dcc.Input(id='activity-num-limit', className='input-concept-name', type='number', placeholder=' Maximum number of activities')
                                             ],
@@ -116,7 +127,10 @@ layout = html.Div([
                                             [
                                                 html.P(
                                                     className='p-option-col',
-                                                    children='Seed:'
+                                                    children=[
+                                                        'Seed ',
+                                                        html.Span('*', style={'color': 'red'})
+                                                    ]
                                                 ),
                                                 dcc.Input(id='sampling-seed', className='input-concept-name', type='number', value=999)
                                             ],
@@ -146,7 +160,10 @@ layout = html.Div([
                                     children=[
                                         html.P(
                                             className='p-option-col',
-                                            children='Independent Variable (RBI):', 
+                                            children=[
+                                                'Independent Variable (RBI) ',
+                                                html.Span('*', style={'color': 'red'})
+                                            ]
                                         ),
                                         dcc.Dropdown(
                                             id='dropdown-iv-select',
@@ -166,7 +183,13 @@ layout = html.Div([
                                         ),
                                         html.Div([
                                             html.Div([
-                                                html.P('SQL query:', className='p-option-col'),
+                                                html.P(
+                                                    children=[
+                                                        'SQL query ',
+                                                        html.Span('*', style={'color': 'red'})
+                                                    ],
+                                                    className='p-option-col'
+                                                ),
                                                 dcc.Textarea(
                                                     id='input-iv-sql-query-rp',
                                                     className='sql-input',
@@ -174,11 +197,23 @@ layout = html.Div([
                                                 ),
                                             ], id='sql-input-iv-container-rp', style={'display': 'none'}),
                                             html.Div([
-                                                html.P('Activity name:', className='p-option-col'),
+                                                html.P(
+                                                    children=[
+                                                        'Max. number of cases ',
+                                                        html.Span('*', style={'color': 'red'})
+                                                    ],
+                                                    className='p-option-col'
+                                                ),
                                                 dcc.Input(id='input-concept-name-rp', className='input-concept-name', type='text', placeholder=' Enter concept:name...'),
                                             ], id='concept-name-input-container-rp', style={'display': 'none'}), 
                                             html.Div([
-                                                html.P('Interaction resource id:', className='p-option-col'),
+                                                html.P(
+                                                    children=[
+                                                        'Interaction resource id ',
+                                                        html.Span('*', style={'color': 'red'})
+                                                    ],
+                                                    className='p-option-col'
+                                                ),
                                                 dcc.Input(id='input-resource-name-rp', className='input-resource-name', type='text', placeholder=' Enter org:resource...'),
                                             ], id='resource-id-input-container-rp', style={'display': 'none'}),
                                         ]),
@@ -212,7 +247,10 @@ layout = html.Div([
                                     children=[
                                         html.P(
                                             className='p-option-col',
-                                            children='Dependent Variable (Performance Metric):', 
+                                            children=[
+                                                'Dependent Variable (Performance Metric) ',
+                                                html.Span('*', style={'color': 'red'})
+                                            ]
                                         ),
                                         dcc.Dropdown(
                                             id='dropdown-dv-select',
@@ -255,7 +293,10 @@ layout = html.Div([
                                         html.Div([
                                             html.P(
                                                 className='p-option-col',
-                                                children='Date from:',
+                                                children=[
+                                                    'Date from ',
+                                                    html.Span('*', style={'color': 'red'})
+                                                ]
                                             ),
                                             dcc.DatePickerSingle(
                                                 id='date-from-rp',
@@ -277,7 +318,10 @@ layout = html.Div([
                                             children=[
                                                 html.P(
                                                     className='p-option-col',
-                                                    children='Date up to:',
+                                                    children=[
+                                                        'Date up to ',
+                                                        html.Span('*', style={'color': 'red'})
+                                                    ]
                                                 ),
                                                 dcc.DatePickerSingle(
                                                     id='date-to-rp',
@@ -300,7 +344,10 @@ layout = html.Div([
                                     children=[
                                         html.P(
                                             className='p-option-col',
-                                            children='Backwards scope:',
+                                            children=[
+                                                'Backwards scope ',
+                                                html.Span('*', style={'color': 'red'})
+                                            ]
                                         ),
                                         dcc.Dropdown(
                                             id='dropdown-backwards-scope',
@@ -344,6 +391,8 @@ layout = html.Div([
 @app.callback(
     Output('div-relationship-panels', 'children', allow_duplicate=True),
     Output('button-add-relationship', 'children'),
+    Output('input-alert-rp', 'children'),
+    Output('input-alert-rp', 'is_open'),
     Input('button-add-relationship', 'n_clicks'),
     [State('div-relationship-panels', 'children'),
      State('pickle_df_name', 'data'),
@@ -367,10 +416,20 @@ layout = html.Div([
      prevent_initial_call=True
 )
 def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sampling_strategy_value, case_limit_value, activity_limit_value, seed_value, independent_variable_value, dependent_variable_value, date_from_str, time_from_str, date_to_str, time_to_str, backwards_scope_value, backwards_scope_individual, iv_sql, iv_concept_name, iv_resource_name, dv_sql):
-    
-    if xes_select_value is None or xes_select_value == '':
-        return no_update, no_update
-    
+
+    # check for None values
+    if pickle_df_name is None:
+        return no_update, no_update, 'Select XES file before adding a new resource-performance relationship!', True
+    if any(var is None for var in [sampling_strategy_value, seed_value, independent_variable_value, dependent_variable_value, date_from_str, time_from_str, date_to_str, time_to_str, backwards_scope_value]):
+        return no_update, no_update, 'Input all required fields (*) before adding a new resource-performance relationship!', True  
+    if independent_variable_value == 'rbi_sql'  and (iv_sql == '' or iv_sql is None):
+        return no_update, no_update, 'Input a custom sql statement for the IV before adding a resource-performance relationship!', True
+    if independent_variable_value == 'rbi_activity_frequency'  and (iv_concept_name == '' or iv_concept_name is None):
+        return no_update, no_update, 'Input an activity name before adding a resource-performance relationship!', True
+    if independent_variable_value == 'rbi_interaction_two_resources'  and (iv_resource_name == '' or iv_resource_name is None):
+        return no_update, no_update, 'Input a resource id before adding a resource-performance relationship!', True
+    if dependent_variable_value == 'perf_sql'  and (dv_sql == '' or dv_sql is None):
+        return no_update, no_update, 'Input a custom sql statement for the DV before adding a resource-performance relationship!', True
     
     df_event_log = load_from_pickle(pickle_df_name)
     
@@ -393,8 +452,8 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
         'rbi_interaction_two_resources': (rbi_interaction_two_resources, [iv_resource_name], 'Interaction two resources'),
         'rbi_social_position': (rbi_social_position, [], 'Social position')
     }
-    rbi_function, additional_rbi_arguments, rbi_label = rbi_function_mapping.get(independent_variable_value, (None, [], ''))
-    
+    rbi_function, additional_rbi_arguments, rbi_label = rbi_function_mapping.get(independent_variable_value, (None, [], ''))    
+
     performance_function_mapping = {
         'perf_sql': (sql_to_case_performance_metric, [dv_sql], 'Custom Performance Metric (SQL)'),
         'perf_case_duration': (case_duration, [], 'Case duration (min)')
@@ -426,11 +485,13 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
         individual_scope_value = pd.Timedelta(minutes=backwards_scope_individual)
 
     if sampling_strategy_value == 'case_level':
+        if case_limit_value is None:
+            return no_update, no_update, 'Input Max. number of cases before generating!', True
         rbi_values, perf_values = sample_regression_data_case(df_event_log, case_limit_value, seed_value, date_from, date_to, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments, individual_scope=individual_scope_value)
     elif sampling_strategy_value == 'activity_level':
+        if activity_limit_value is None:
+            return no_update, no_update, 'Input Max. number of activities before generating!', True
         rbi_values, perf_values = sample_regression_data_activity(df_event_log, activity_limit_value, seed_value, date_from, date_to, backwards_scope)
-    else:
-        return no_update, no_update
     
     _, _, r_squared, rpi_p_value, rpi_t_stat = fit_regression(rbi_values, perf_values)
 
@@ -490,19 +551,19 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
     if len(old_panel_children) == 0:
         new_panel = html.Div(className='div-rbi-relationship-panel width-95 flex-col', id=new_panel.id, children=new_panel.children)
         new_panel_children = [new_panel]
-        return new_panel_children, no_update
+        return new_panel_children, no_update, no_update, no_update
     elif len(old_panel_children) == 1:
         new_panel = html.Div(className='div-rbi-relationship-panel width-45 flex-col', id=new_panel.id, children=new_panel.children)
         old_panel_child = html.Div(className='div-rbi-relationship-panel width-45 flex-col', id=old_panel_children[0]['props']['id'], children=old_panel_children[0]['props']['children'])
         new_panel_children = [new_panel] + [old_panel_child]
-        return new_panel_children, no_update
+        return new_panel_children, no_update, no_update, no_update
     elif len(old_panel_children) >= 2:
         new_panel = html.Div(className='div-rbi-relationship-panel width-30 flex-col', id=new_panel.id, children=new_panel.children)
         new_panel_children = [new_panel]
         for old_panel_child in old_panel_children:
             old_panel_child = html.Div(className='div-rbi-relationship-panel width-30 flex-col', id=old_panel_child['props']['id'], children=old_panel_child['props']['children'])
             new_panel_children += [old_panel_child]
-        return new_panel_children[:3], no_update
+        return new_panel_children[:3], no_update, no_update, no_update
 
 # Delete a resource-performance analysis panel
 @app.callback(

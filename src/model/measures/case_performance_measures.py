@@ -8,8 +8,6 @@ def pysqldf(q, local_vars):
 def sql_to_case_performance_metric(trace: pd.DataFrame, sql_query: str) -> float:
     result = pysqldf(sql_query, {'trace': trace}).iloc[0, 0]
 
-    print(result)
-
     if not result:
         result = 0
 

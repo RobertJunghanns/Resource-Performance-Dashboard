@@ -79,7 +79,10 @@ app.layout = html.Div([
                         children = [
                             html.P(
                                 id='p-xes-select',
-                                children='Select XES file:', 
+                                children=[
+                                    'Select XES file: ',
+                                    html.Span('*', style={'color': 'red'})
+                                ]
                             ),
                             dcc.Dropdown(
                                 id='dropdown-xes-select',
@@ -105,8 +108,8 @@ app.layout = html.Div([
                 html.Div(
                     id='div-buttons',
                     children=[
-                        html.Button('Resource Behavior', id={'type': 'dynamic-button', 'index': 1}, className='button-default'),
-                        html.Button('Resource-Performance Analysis', id={'type': 'dynamic-button', 'index': 2}, className='button-default'),
+                        html.Button('Resource Behavior', id={'type': 'dynamic-button', 'index': 1}, className='button-default width-45', style={'margin-right': '15px'}),
+                        html.Button('Resource-Performance Analysis', id={'type': 'dynamic-button', 'index': 2}, className='button-default width-45'),
                 ])
             ]),
     ]),
