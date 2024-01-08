@@ -8,6 +8,7 @@ from app import app
 from dash import html, Input, Output, State, dcc, no_update, ALL, callback_context
 import dash_mantine_components as dmc
 import dash_bootstrap_components as dbc
+import plotly.graph_objs as go
 import plotly.express as px
 
 from model.utility.pickle_utility import load_from_pickle
@@ -382,12 +383,29 @@ layout = html.Div([
             html.Div(
                 id='div-relationship-panels',
                 className='flex-row',
-                children=[]
+                children=[
+                    dcc.Graph(
+                        id='placeholder-chart',
+                        className='width-95',
+                        figure=go.Figure(layout={
+                            'xaxis': {'visible': False},
+                            'yaxis': {'visible': False},
+                            'annotations': [{
+                                'text': 'Select options and press "Add Resource-Performance Relationship".',
+                                'xref': 'paper',
+                                'yref': 'paper',
+                                'showarrow': False,
+                                'font': {
+                                    'size': 16
+                                }
+                            }]
+                        })
+                    )
+                ]
             )
     ])
 ])
 
-# Add a resource-performance analysis panel
 @app.callback(
     Output('div-relationship-panels', 'children', allow_duplicate=True),
     Output('button-add-relationship', 'children'),
@@ -548,6 +566,10 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
                     ),
                     html.Button('Delete', id={'type': 'delete-button', 'id': new_panel_id}, className='button-default margin-top', n_clicks=0)
             ])
+    
+    # delete placeholder panel if present
+    old_panel_children = [child for child in old_panel_children if child.get('props', {}).get('id') != 'placeholder-chart']
+    # set new panels
     if len(old_panel_children) == 0:
         new_panel = html.Div(className='div-rbi-relationship-panel width-95 flex-col', id=new_panel.id, children=new_panel.children)
         new_panel_children = [new_panel]

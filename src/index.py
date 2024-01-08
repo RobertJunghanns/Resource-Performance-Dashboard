@@ -227,9 +227,9 @@ def update_button_classes(n_clicks, *args):
         key = {'type': 'dynamic-button', 'index': i+1}
         
         if key == button_id_triggered:
-            class_list.append('button-default button-selected')
+            class_list.append('button-default width-45 button-selected')
         else:
-            class_list.append('button-default')
+            class_list.append('button-default width-45')
 
     return [class_list]
 
