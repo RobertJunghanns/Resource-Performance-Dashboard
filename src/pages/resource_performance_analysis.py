@@ -17,6 +17,7 @@ from model.sampling.case_level_sampling import ScopeCase, sample_regression_data
 from model.sampling.activity_level_sampling import ScopeActivity, sample_regression_data_activity
 from model.measures.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_case_completions, rbi_fraction_case_completions, rbi_average_workload, rbi_multitasking, rbi_average_duration_activity, rbi_interaction_two_resources, rbi_social_position
 from model.measures.case_performance_measures import sql_to_case_performance_metric, case_duration
+from model.measures.activity_performance_measures import activity_duration
 from model.regression_analysis import fit_regression
 
 panel_id=0
@@ -255,10 +256,7 @@ layout = html.Div([
                                         ),
                                         dcc.Dropdown(
                                             id='dropdown-dv-select',
-                                            options=[
-                                                {'label': 'Custom Performance Metric (SQL)', 'value': 'perf_sql'},
-                                                {'label': 'Case duration', 'value': 'perf_case_duration'},
-                                            ]
+                                            options=[]
                                         ),
                                         html.Div([
                                             html.Div([
@@ -418,6 +416,8 @@ layout = html.Div([
      State('dropdown-sampling-strategy', 'value'),
      State('case-num-limit', 'value'),
      State('activity-num-limit', 'value'),
+     State('dropdown-filter-attribute-select', 'value'),
+     State('filter-attribute-value', 'value'),
      State('sampling-seed', 'value'),
      State('dropdown-iv-select', 'value'),
      State('dropdown-dv-select', 'value'),
@@ -433,7 +433,7 @@ layout = html.Div([
      State('input-dv-sql-query-rp', 'value')], 
      prevent_initial_call=True
 )
-def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sampling_strategy_value, case_limit_value, activity_limit_value, seed_value, independent_variable_value, dependent_variable_value, date_from_str, time_from_str, date_to_str, time_to_str, backwards_scope_value, backwards_scope_individual, iv_sql, iv_concept_name, iv_resource_name, dv_sql):
+def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sampling_strategy_value, case_limit_value, activity_limit_value, filter_event_attribute, filter_event_value, seed_value, independent_variable_value, dependent_variable_value, date_from_str, time_from_str, date_to_str, time_to_str, backwards_scope_value, backwards_scope_individual, iv_sql, iv_concept_name, iv_resource_name, dv_sql):
 
     # check for None values
     if pickle_df_name is None:
@@ -474,7 +474,8 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
 
     performance_function_mapping = {
         'perf_sql': (sql_to_case_performance_metric, [dv_sql], 'Custom Performance Metric (SQL)'),
-        'perf_case_duration': (case_duration, [], 'Case duration (min)')
+        'perf_case_duration': (case_duration, [], 'Case duration (min)'),
+        'perf_activity_duration': (activity_duration, [], 'Activity duration (min)')
     }
     performance_function, additional_performance_arguments, performance_label = performance_function_mapping.get(dependent_variable_value, (None, [], ''))
 
@@ -505,11 +506,16 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
     if sampling_strategy_value == 'case_level':
         if case_limit_value is None:
             return no_update, no_update, 'Input Max. number of cases before generating!', True
-        rbi_values, perf_values = sample_regression_data_case(df_event_log, case_limit_value, seed_value, date_from, date_to, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments, individual_scope=individual_scope_value)
+        rbi_values, perf_values = sample_regression_data_case(df_event_log, date_from, date_to, case_limit_value, seed_value, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments, individual_scope=individual_scope_value)
+        count_str = str(len(rbi_values)) + '/' + str(case_limit_value) + ' cases'
     elif sampling_strategy_value == 'activity_level':
         if activity_limit_value is None:
             return no_update, no_update, 'Input Max. number of activities before generating!', True
-        rbi_values, perf_values = sample_regression_data_activity(df_event_log, activity_limit_value, seed_value, date_from, date_to, backwards_scope)
+        rbi_values, perf_values = sample_regression_data_activity(df_event_log, date_from, date_to, filter_event_attribute, filter_event_value, activity_limit_value, seed_value, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments, individual_scope=individual_scope_value)
+        count_str = str(len(rbi_values)) + '/' + str(activity_limit_value) + ' activities'
+
+    if len(rbi_values) == 0:
+        return no_update, no_update, 'Filter results in 0 selected cases/activities, change the inputs!', True
     
     _, _, r_squared, rpi_p_value, rpi_t_stat = fit_regression(rbi_values, perf_values)
 
@@ -524,31 +530,24 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
                 id = new_panel_id,
                 children=[
                     dcc.Markdown(
-                        className='',
                         children='**File:** ' + xes_select_value + '.xes',
                     ),
                     dcc.Markdown(
-                        className='',
                         children='**SS:** ' + sampling_strategy_label,
                     ),
                     dcc.Markdown(
-                        className='',
-                        children='**Max:** ' + str(case_limit_value) + ' (Seed: ' + str(seed_value) + ')',
+                        children='**Num/Max:** ' + count_str + ' (Seed: ' + str(seed_value) + ')',
                     ),
                     dcc.Markdown(
-                        className='',
                         children='**IV:** ' + rbi_label,
                     ),
                     dcc.Markdown(
-                        className='',
                         children='**DV:** ' + performance_label,
                     ),
                     dcc.Markdown(
-                        className='',
                         children='**Date:** ' + f"{date_from.strftime('%m/%d/%Y')} - {date_to.strftime('%m/%d/%Y')}",
                     ),
                     dcc.Markdown(
-                        className='',
                         children='**BS:** ' + backwards_scope_label,
                     ),
                     dcc.Graph(figure=fig),
@@ -632,7 +631,8 @@ def delete_panel(n_clicks, panels):
 
 # update input fields based on sampling strategy 
 @app.callback(
-    [Output('dropdown-backwards-scope', 'options'),
+    [Output('dropdown-dv-select', 'options'),
+     Output('dropdown-backwards-scope', 'options'),
      Output('div-max-cases', 'style'),
      Output('div-max-activities', 'style'),
      Output('div-seed', 'style'),
@@ -642,6 +642,9 @@ def delete_panel(n_clicks, panels):
 )
 def update_resource_options(sampling_strategy):
     if sampling_strategy == 'activity_level':
+        dv_options = [
+            {'label': 'Activity duration', 'value': 'perf_activity_duration'},
+        ]
         scope_options = [
             {'label': 'Activity scope', 'value': 'activity'},
             {'label': 'Individual scope', 'value': 'individual'},
@@ -653,6 +656,10 @@ def update_resource_options(sampling_strategy):
         div_attribute_select_style = {'display': 'block'}
         div_attribute_value_style = {'display': 'block'}
     elif sampling_strategy == 'case_level':
+        dv_options = [
+            {'label': 'Custom Performance Metric (SQL)', 'value': 'perf_sql'},
+            {'label': 'Case duration', 'value': 'perf_case_duration'},
+        ]
         scope_options = [
             {'label': 'Case scope', 'value': 'case'},
             {'label': 'Individual scope', 'value': 'individual'},
@@ -671,7 +678,7 @@ def update_resource_options(sampling_strategy):
         div_attribute_select_style = {'display': 'none'}
         div_attribute_value_style = {'display': 'none'}
 
-    return [scope_options, div_max_cases_style, div_max_activities_style, div_seed_style, div_attribute_select_style, div_attribute_value_style]
+    return [dv_options, scope_options, div_max_cases_style, div_max_activities_style, div_seed_style, div_attribute_select_style, div_attribute_value_style]
 
 # set values based on XES file
 @app.callback(
