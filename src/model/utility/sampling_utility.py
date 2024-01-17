@@ -48,19 +48,35 @@ def group_equal_timestamp_events(trace: pd.DataFrame) -> pd.DataFrame:
 
 
 def add_activity_durations_to_trace(trace: pd.DataFrame) -> pd.DataFrame:
-
+    # trace copy to delete used START events
+    trace_copy = trace.copy()
+    # set default activity duration
     trace['duration'] = pd.Timedelta(0)
 
     for index, row in trace.iterrows():
         if row['lifecycle:transition'] == 'COMPLETE' or row['lifecycle:transition'] == 'complete':
-            # Option 1: Find a matching START event
+            # For Option 1: find start event in trace_copy that deletes every used START event
+            start_event_copy = trace_copy[(trace_copy['concept:name'] == row['concept:name']) & 
+                                    ((trace_copy['lifecycle:transition'] == 'START') | (trace_copy['lifecycle:transition'] == 'start')) & 
+                                    (trace_copy['time:timestamp'] < row['time:timestamp'])]
+            # For Option 2: find any start event eaven if it is used before
             start_event = trace[(trace['concept:name'] == row['concept:name']) & 
                                     ((trace['lifecycle:transition'] == 'START') | (trace['lifecycle:transition'] == 'start')) & 
                                     (trace['time:timestamp'] < row['time:timestamp'])]
-            if not start_event.empty:
+            
+            # Option 1: Find the FIRST matching START event
+            if not start_event_copy.empty:
+                # take the first matching START event, that no COMPLETE event has matched before 
+                start_time = start_event_copy.iloc[0]['time:timestamp']
+                # Delete the first matching START event from trace_copy, such that no other COMPLETE event can match the START event
+                trace_copy.drop(start_event_copy.index[0], inplace=True)
+            
+            # Option 2: Find the ANY matching START event
+            elif not start_event.empty:
+                # take the last matching START event, eaven if some COMPLETE event has already matched
                 start_time = start_event.iloc[-1]['time:timestamp']
 
-            # Option 2: Use the previous COMPLETE event's timestamp
+            # Option 3: Use the previous COMPLETE event's timestamp
             else:
                 prev_complete_event = trace[(trace['time:timestamp'] < row['time:timestamp']) & 
                             ((trace['lifecycle:transition'] == 'COMPLETE') | (trace['lifecycle:transition'] == 'complete'))].tail(1)
