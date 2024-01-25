@@ -86,6 +86,7 @@ app.layout = html.Div([
                             ),
                             dcc.Dropdown(
                                 id='dropdown-xes-select',
+                                className='width-100',
                                 options=[]
                             ),
                     ]),
