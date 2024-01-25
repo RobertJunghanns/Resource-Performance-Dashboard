@@ -35,14 +35,14 @@ layout = html.Div([
                     className='div-div-sidebar flex-row',
                     children = [
                         html.Div(
-                            className="div-logo",
+                            className="margin-top",
                             children=html.Img(
                                 id='img-sample',
                                 src=("./assets/images/sample.png"),
                             ), 
                         ),
                         html.Div(
-                            className='div-selection',
+                            className='margin-left width-100',
                             children = [
                                 html.P(
                                     className='p-option-col',
@@ -84,7 +84,7 @@ layout = html.Div([
                                                     className='p-option-col',
                                                     children='Attribute value'
                                                 ),
-                                                dcc.Input(id='filter-attribute-value', className='input-concept-name', placeholder=' Attribute value')
+                                                dcc.Input(id='filter-attribute-value', className='input hight-35', placeholder=' Attribute value')
                                             ],
                                             style={'display': 'none'},
                                             className='width-40',
@@ -103,7 +103,7 @@ layout = html.Div([
                                                         html.Span('*', style={'color': 'red'})
                                                     ]
                                                 ),
-                                                dcc.Input(id='case-num-limit', className='input-concept-name', type='number', placeholder=' Maximum number of cases')
+                                                dcc.Input(id='case-num-limit', className='input hight-35', type='number', placeholder=' Maximum number of cases')
                                             ],
                                             style={'display': 'none'},
                                             className='margin-right width-60',
@@ -118,7 +118,7 @@ layout = html.Div([
                                                         html.Span('*', style={'color': 'red'})
                                                     ]
                                                 ),
-                                                dcc.Input(id='activity-num-limit', className='input-concept-name', type='number', placeholder=' Maximum number of activities')
+                                                dcc.Input(id='activity-num-limit', className='input hight-35', type='number', placeholder=' Maximum number of activities')
                                             ],
                                             style={'display': 'none'},
                                             className='margin-right width-60',
@@ -133,7 +133,7 @@ layout = html.Div([
                                                         html.Span('*', style={'color': 'red'})
                                                     ]
                                                 ),
-                                                dcc.Input(id='sampling-seed', className='input-concept-name', type='number', value=999)
+                                                dcc.Input(id='sampling-seed', className='input hight-35', type='number', value=999)
                                             ],
                                             className='width-40',
                                             id='div-seed'
@@ -146,18 +146,17 @@ layout = html.Div([
                     className='div-div-sidebar flex-col',
                     children = [
                         html.Div(
-                            id='select-rbi-iv',
-                            className='flex-row',
+                            className='flex-row width-100',
                             children=[
                                 html.Div(
-                                    className="div-logo",
+                                    className="margin-top",
                                     children=html.Img(
                                         id='img-rbi',
                                         src=("./assets/images/rbi.png"),
                                     ), 
                                 ),
                                 html.Div(
-                                    className='div-selection',
+                                    className='margin-left width-100',
                                     children=[
                                         html.P(
                                             className='p-option-col',
@@ -193,7 +192,7 @@ layout = html.Div([
                                                 ),
                                                 dcc.Textarea(
                                                     id='input-iv-sql-query-rp',
-                                                    className='sql-input',
+                                                    className='input hight-235',
                                                     placeholder="Enter SQL query. Example for activity frequency:\nSELECT CAST(count.activity AS FLOAT) / CAST(count.all_activities AS FLOAT)\n   FROM (\n      SELECT\n         (SELECT COUNT([concept:name])\n         FROM event_log\n         WHERE [org:resource] = 'resource_id'\n         AND [concept:name] = '09_AH_I_010')\n         AS activity,\n         (SELECT COUNT([concept:name])\n         FROM event_log\n         WHERE [org:resource] = 'resource_id')\n         AS all_activities\n   ) AS count",
                                                 ),
                                             ], id='sql-input-iv-container-rp', style={'display': 'none'}),
@@ -205,7 +204,7 @@ layout = html.Div([
                                                     ],
                                                     className='p-option-col'
                                                 ),
-                                                dcc.Input(id='input-concept-name-rp', className='input-concept-name', type='text', placeholder=' Enter concept:name...'),
+                                                dcc.Input(id='input-concept-name-rp', className='input hight-35', type='text', placeholder=' Enter concept:name...'),
                                             ], id='concept-name-input-container-rp', style={'display': 'none'}), 
                                             html.Div([
                                                 html.P(
@@ -215,7 +214,7 @@ layout = html.Div([
                                                     ],
                                                     className='p-option-col'
                                                 ),
-                                                dcc.Input(id='input-resource-name-rp', className='input-resource-name', type='text', placeholder=' Enter org:resource...'),
+                                                dcc.Input(id='input-resource-name-rp', className='input hight-35', type='text', placeholder=' Enter org:resource...'),
                                             ], id='resource-id-input-container-rp', style={'display': 'none'}),
                                         ]),
                                 ])
@@ -237,14 +236,14 @@ layout = html.Div([
                             className='flex-row',
                             children=[
                                 html.Div(
-                                    className="div-logo",
+                                    className="margin-top",
                                     children=html.Img(
                                         className='img-input',
                                         src=("./assets/images/performance.png"),
                                     ), 
                                 ),
                                 html.Div(
-                                    className='div-selection',
+                                    className='margin-left width-100',
                                     children=[
                                         html.P(
                                             className='p-option-col',
@@ -262,7 +261,7 @@ layout = html.Div([
                                                 html.P('SQL query:', className='p-option-col'),
                                                 dcc.Textarea(
                                                     id='input-dv-sql-query-rp',
-                                                    className='sql-input',
+                                                    className='input sql-input hight-100',
                                                     placeholder="Enter SQL query. Example for case duration in minutes: \n SELECT\n    (CAST(strftime('%s', MAX([time:timestamp])) AS FLOAT) - \n     CAST(strftime('%s', MIN([time:timestamp])) AS FLOAT)) / 60\nFROM\n    trace",                                               
                                                 ),
                                             ], id='sql-input-dv-container-rp', style={'display': 'none'}),
@@ -276,7 +275,7 @@ layout = html.Div([
                     className='div-div-sidebar flex-row',
                     children = [
                         html.Div(
-                            className="div-logo",
+                            className="margin-top",
                             children=html.Img(
                                 className='img-input',
                                 src=("./assets/images/calendar.png"),
@@ -286,7 +285,7 @@ layout = html.Div([
                             className='flex-col',
                             children=[
                                 html.Div(
-                                    className='div-time-selection flex-row',
+                                    className='flex-row margin-left',
                                     children=[
                                         html.Div([
                                             html.P(
@@ -312,7 +311,7 @@ layout = html.Div([
                                             ),
                                         ]),
                                         html.Div(
-                                            id='div-second-date',
+                                            className='margin-left-15',
                                             children=[
                                                 html.P(
                                                     className='p-option-col',
@@ -338,7 +337,7 @@ layout = html.Div([
                                         ]),
                                 ]),
                                 html.Div(
-                                    className='div-time-selection',
+                                    className='margin-left',
                                     children=[
                                         html.P(
                                             className='p-option-col',
@@ -349,13 +348,14 @@ layout = html.Div([
                                         ),
                                         dcc.Dropdown(
                                             id='dropdown-backwards-scope',
+                                            className='width-100',
                                             options=[
                                                 
                                             ]
                                         ),
                                         html.Div([
                                                 html.P('Individual backwards scope:', className='p-option-col'),
-                                                dcc.Input(id='input-individual-backwards-scope-rp', className='input-concept-name', type='number', placeholder=' Backwards scope in MINUTES'),
+                                                dcc.Input(id='input-individual-backwards-scope-rp', className='input hight-35', type='number', placeholder=' Backwards scope in MINUTES'),
                                         ], id='div-individual-backwards-scope', style={'display': 'none'}), 
                                 ])
                             ]
@@ -370,7 +370,7 @@ layout = html.Div([
                                         html.Button(
                                             'Add Resource-Performance Relationship',
                                             id='button-add-relationship',
-                                            className='generate-button',
+                                            className='button-generate',
                                         )
                                     ]
                                 )

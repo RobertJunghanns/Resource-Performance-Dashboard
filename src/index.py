@@ -49,19 +49,19 @@ app.layout = html.Div([
             ),
         ]
     ),
-    dbc.Alert(id='upload-alert',className='alert', duration=4000, dismissable=True, is_open=False),
+    dbc.Alert(id='upload-alert',className='margin-top', duration=4000, dismissable=True, is_open=False),
     html.Div(
         className='div-option-box',
         children=[
             html.Div(
-                className='div-in-option-box',
+                className='div-div-option-box',
                 children = [
                     html.Div(
                     id='div-xes-upload',
                     children= [
                         html.Div([
                             html.P(
-                                id='p-xes-upload',
+                                className='margin-left',
                                 children='Upload XES file:', 
                             ),
                             dcc.Upload(
@@ -103,9 +103,9 @@ app.layout = html.Div([
         className='div-option-box',
         children=[
             html.Div(
-                className='div-in-option-box',
+                className='div-div-option-box',
                 children = [
-                html.P(id='p-page-select', children='Select page:'),
+                html.P(className='margin-left', children='Select page:'),
                 html.Div(
                     id='div-buttons',
                     children=[

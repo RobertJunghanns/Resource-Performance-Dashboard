@@ -13,9 +13,9 @@ from model.utility.xes_utility import get_unique_resources, get_earliest_timesta
 from model.measures.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_case_completions, rbi_fraction_case_completions, rbi_average_workload, rbi_multitasking, rbi_average_duration_activity, rbi_interaction_two_resources, rbi_social_position
 
 layout = html.Div([
-    dbc.Alert(id='input-alert', className='alert', duration=40000, color="warning", dismissable=True, is_open=False),
+    dbc.Alert(id='input-alert', className='margin-top', duration=40000, color="warning", dismissable=True, is_open=False),
     html.Div(
-        id='page-resource',
+        className='flex-row width-100',
         children = [
         html.Div(
             className='div-sidebar',
@@ -24,7 +24,7 @@ layout = html.Div([
                     className='div-div-sidebar flex-row',
                     children = [
                         html.Div(
-                            className="div-logo",
+                            className="margin-top",
                             children=html.Img(
                                 className='img-input',
                                 src=("./assets/images/resource.png"),
@@ -51,7 +51,7 @@ layout = html.Div([
                     className='div-div-sidebar flex-row',
                     children = [
                         html.Div(
-                            className="div-logo",
+                            className="margin-top",
                             children=html.Img(
                                 id='img-rbi',
                                 src=("./assets/images/rbi.png"),
@@ -88,17 +88,17 @@ layout = html.Div([
                                         html.P('SQL query:', className='p-option-col'),
                                         dcc.Textarea(
                                             id='input-sql-query',
-                                            className='sql-input',
+                                            className='input sql-input hight-235',
                                             placeholder="Enter SQL query. Example for activity frequency:\nSELECT CAST(count.activity AS FLOAT) / CAST(count.all_activities AS FLOAT)\n   FROM (\n      SELECT\n         (SELECT COUNT([concept:name])\n         FROM event_log\n         WHERE [org:resource] = 'resource_id'\n         AND [concept:name] = '09_AH_I_010')\n         AS activity,\n         (SELECT COUNT([concept:name])\n         FROM event_log\n         WHERE [org:resource] = 'resource_id')\n         AS all_activities\n   ) AS count",
                                         ),
                                     ], id='sql-input-container', style={'display': 'none'}),
                                     html.Div([
                                         html.P('Activity name:', className='p-option-col'),
-                                        dcc.Input(id='input-concept-name', className='input-concept-name', type='text', placeholder=' Enter concept:name...'),
+                                        dcc.Input(id='input-concept-name', className='input hight-35', type='text', placeholder=' Enter concept:name...'),
                                     ], id='concept-name-input-container', style={'display': 'none'}), 
                                     html.Div([
                                         html.P('Interaction resource id:', className='p-option-col'),
-                                        dcc.Input(id='input-resource-name', className='input-resource-name', type='text', placeholder=' Enter org:resource...'),
+                                        dcc.Input(id='input-resource-name', className='input hight-35', type='text', placeholder=' Enter org:resource...'),
                                     ], id='resource-id-input-container', style={'display': 'none'}),
                                 ]),
                         ]),
@@ -107,7 +107,7 @@ layout = html.Div([
                     className='div-div-sidebar flex-row',
                     children = [
                         html.Div(
-                            className="div-logo",
+                            className="margin-top",
                             children=html.Img(
                                 className='img-input',
                                 src=("./assets/images/calendar.png"),
@@ -200,7 +200,7 @@ layout = html.Div([
                                 html.Button(
                                     'Generate Time Series Diagram',
                                     id='button-generate',
-                                    className='generate-button',
+                                    className='button-generate',
                                 ),
                             ]
                         )
