@@ -3,9 +3,11 @@ import os
 
 # Function to save a DataFrame as a pickle file
 def save_as_pickle(df, filename):
-    # Define the path to the pickle directory relative to the current file
-    current_dir = os.path.dirname(__file__)
-    pickle_dir = os.path.join(current_dir, "../data/pickle")
+    # Get the grandparent directory (two levels up)
+    grandparent_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    
+    # Define the path to the pickle directory
+    pickle_dir = os.path.join(grandparent_dir, "data/pickle")
     pickle_path = os.path.join(pickle_dir, filename + '.pkl')
     
     # Ensure the directory exists
@@ -17,9 +19,11 @@ def save_as_pickle(df, filename):
 # Function to load a DataFrame from a pickle file
 def load_from_pickle(filename):
     if filename:
-        # Define the path to the pickle directory relative to the current file
-        current_dir = os.path.dirname(__file__)
-        pickle_dir = os.path.join(current_dir, "../data/pickle")
+        # Get the grandparent directory (two levels up)
+        grandparent_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        
+        # Define the path to the pickle directory
+        pickle_dir = os.path.join(grandparent_dir, "data/pickle")
         pickle_path = os.path.join(pickle_dir, filename + '.pkl')
         
         # Load the DataFrame
