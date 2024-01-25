@@ -1,9 +1,12 @@
+import datetime as dt
+
 import pandas as pd
+import plotly.graph_objs as go
+import dash_bootstrap_components as dbc
+import dash_mantine_components as dmc
 
 from app import app
 from dash import html, State, Input, Output, dcc, no_update
-import plotly.graph_objs as go
-import dash_bootstrap_components as dbc
 
 from model.utility.pickle_utility import load_from_pickle
 from model.utility.xes_utility import get_unique_resources, get_earliest_timestamp, get_latest_timestamp, get_period_name, generate_time_period_intervals, generate_until_end_period_intervals
@@ -15,144 +18,193 @@ layout = html.Div([
         id='page-resource',
         children = [
         html.Div(
-            className='div-sidebar-options',
+            className='div-sidebar',
             children = [
                 html.Div(
-                    className='div-div-sidebar-options',
+                    className='div-div-sidebar flex-row',
                     children = [
                         html.Div(
-                            className='div-div-div-sidebar-options',
+                            className="div-logo",
+                            children=html.Img(
+                                className='img-input',
+                                src=("./assets/images/resource.png"),
+                            ), 
+                        ),
+                        html.Div(
+                            className='margin-left width-100 flex-col',
                             children = [
+                                html.P(
+                                    className='p-option-col',
+                                    children=[
+                                        'Resource ',
+                                        html.Span('*', style={'color': 'red'})
+                                    ]
+                                ),
+                                dcc.Dropdown(
+                                    id='dropdown-resource-select',
+                                    className='',
+                                    options=[]
+                                )
+                        ]),
+                ]),
+                html.Div(
+                    className='div-div-sidebar flex-row',
+                    children = [
+                        html.Div(
+                            className="div-logo",
+                            children=html.Img(
+                                id='img-rbi',
+                                src=("./assets/images/rbi.png"),
+                            ), 
+                        ),
+                        html.Div(
+                            className='margin-left width-100 flex-col',
+                            children = [
+                                html.P(
+                                    className='p-option-col',
+                                    children=[
+                                        'Resource behavior indicator ',
+                                        html.Span('*', style={'color': 'red'})
+                                    ]
+                                ),
+                                dcc.Dropdown(
+                                    id='dropdown-rbi-select',
+                                    options=[
+                                        {'label': 'Custom RBI (SQL)', 'value': 'rbi_sql'},
+                                        {'label': 'Distinct activities', 'value': 'rbi_distinct_activities'},
+                                        {'label': 'Activity frequency', 'value': 'rbi_activity_frequency'},
+                                        {'label': 'Activity completions', 'value': 'rbi_activity_completions'},
+                                        {'label': 'Case completions', 'value': 'rbi_case_completions'},
+                                        {'label': 'Fraction case completion', 'value': 'rbi_fraction_case_completion'},
+                                        {'label': 'Average workload', 'value': 'rbi_average_workload'},
+                                        {'label': 'Mulitasking', 'value': 'rbi_multitasking'},
+                                        {'label': 'Average duration activity', 'value': 'rbi_average_duration_activity'},
+                                        {'label': 'Interaction two resources', 'value': 'rbi_interaction_two_resources'},
+                                        {'label': 'Social position', 'value': 'rbi_social_position'},
+                                    ]
+                                ),
+                                html.Div(id='dynamic-additional-input-fields', children=[
+                                    html.Div([
+                                        html.P('SQL query:', className='p-option-col'),
+                                        dcc.Textarea(
+                                            id='input-sql-query',
+                                            className='sql-input',
+                                            placeholder="Enter SQL query. Example for activity frequency:\nSELECT CAST(count.activity AS FLOAT) / CAST(count.all_activities AS FLOAT)\n   FROM (\n      SELECT\n         (SELECT COUNT([concept:name])\n         FROM event_log\n         WHERE [org:resource] = 'resource_id'\n         AND [concept:name] = '09_AH_I_010')\n         AS activity,\n         (SELECT COUNT([concept:name])\n         FROM event_log\n         WHERE [org:resource] = 'resource_id')\n         AS all_activities\n   ) AS count",
+                                        ),
+                                    ], id='sql-input-container', style={'display': 'none'}),
+                                    html.Div([
+                                        html.P('Activity name:', className='p-option-col'),
+                                        dcc.Input(id='input-concept-name', className='input-concept-name', type='text', placeholder=' Enter concept:name...'),
+                                    ], id='concept-name-input-container', style={'display': 'none'}), 
+                                    html.Div([
+                                        html.P('Interaction resource id:', className='p-option-col'),
+                                        dcc.Input(id='input-resource-name', className='input-resource-name', type='text', placeholder=' Enter org:resource...'),
+                                    ], id='resource-id-input-container', style={'display': 'none'}),
+                                ]),
+                        ]),
+                ]),
+                html.Div(
+                    className='div-div-sidebar flex-row',
+                    children = [
+                        html.Div(
+                            className="div-logo",
+                            children=html.Img(
+                                className='img-input',
+                                src=("./assets/images/calendar.png"),
+                            ), 
+                        ),
+                        html.Div(
+                            className='flex-col',
+                            children=[
                                 html.Div(
-                                id='div-option-col-left',
-                                className='div-option-col',
-                                children = [
-                                    html.P(
-                                        className='p-option-col',
-                                        children=[
-                                            'Resource ',
-                                            html.Span('*', style={'color': 'red'})
-                                        ]
-                                    ),
-                                    dcc.Dropdown(
-                                        id='dropdown-resource-select',
-                                        options=[]
-                                    ),
-                                    html.P(
-                                        className='p-option-col',
-                                        children=[
-                                            'Time period ',
-                                            html.Span('*', style={'color': 'red'})
-                                        ]
-                                    ),
-                                    dcc.Dropdown(
-                                        id='dropdown-time-select',
-                                        options=[
-                                            {'label': 'Day', 'value': 'day'},
-                                            {'label': 'Week', 'value': 'week'},
-                                            {'label': 'Month', 'value': 'month'},
-                                            {'label': 'Year', 'value': 'year'}
-                                        ],
-                                        value='month'
-                                    ),
-                                    html.P(
-                                        className='p-option-col',
-                                        children=[
-                                            'Backwards scope ',
-                                            html.Span('*', style={'color': 'red'})
-                                        ]
-                                    ),
-                                    dcc.Dropdown(
-                                        id='dropdown-scope-select',
-                                        options=[
-                                            {'label': 'Start of time period', 'value': 'start_period'},
-                                            {'label': 'Start of event log', 'value': 'start_log'},
-                                        ],
-                                        value='start_period'
-                                    ),
-                                    html.P(
-                                        className='p-option-col',
-                                        children=[
-                                            'Date from ',
-                                            html.Span('*', style={'color': 'red'})
-                                        ]
-                                    ),
-                                    dcc.DatePickerSingle(
-                                        id='date-from',
-                                        className='date-select',
-                                        min_date_allowed=pd.Timestamp('1995-08-05'),
-                                        max_date_allowed=pd.Timestamp('2023-11-30'),
-                                        initial_visible_month=pd.Timestamp('2023-11-30'),
-                                        date=pd.Timestamp('2023-11-30')
-                                    ),
-                                    html.P(
-                                        className='p-option-col',
-                                        children=[
-                                            'Date up to ',
-                                            html.Span('*', style={'color': 'red'})
-                                        ]
-                                    ),
-                                    dcc.DatePickerSingle(
-                                        id='date-to',
-                                        className='date-select',
-                                        min_date_allowed=pd.Timestamp('1995-08-05'),
-                                        max_date_allowed=pd.Timestamp('2023-11-30'),
-                                        initial_visible_month=pd.Timestamp('2023-11-30'),
-                                        date=pd.Timestamp('2023-11-30')
-                                    ),
+                                    className='margin-left flex-row',
+                                    children=[
+                                        html.Div([
+                                            html.P(
+                                                className='p-option-col',
+                                                children=[
+                                                    'Date from ',
+                                                    html.Span('*', style={'color': 'red'})
+                                                ]
+                                            ),
+                                            dcc.DatePickerSingle(
+                                                id='date-from',
+                                                className='date-select',
+                                                min_date_allowed=pd.Timestamp('1995-08-05'),
+                                                max_date_allowed=pd.Timestamp('2023-11-30'),
+                                                initial_visible_month=pd.Timestamp('2023-11-30'),
+                                                date=pd.Timestamp('2023-11-30')
+                                            ),
+                                        ]),
+                                        html.Div(
+                                            id='div-second-date',
+                                            children=[
+                                                html.P(
+                                                    className='p-option-col',
+                                                    children=[
+                                                        'Date up to ',
+                                                        html.Span('*', style={'color': 'red'})
+                                                    ]
+                                                ),
+                                                dcc.DatePickerSingle(
+                                                    id='date-to',
+                                                    className='date-select',
+                                                    min_date_allowed=pd.Timestamp('1995-08-05'),
+                                                    max_date_allowed=pd.Timestamp('2023-11-30'),
+                                                    initial_visible_month=pd.Timestamp('2023-11-30'),
+                                                    date=pd.Timestamp('2023-11-30')
+                                                ),
+                                        ]),
                                 ]),
                                 html.Div(
-                                    id='div-option-col-right',
-                                    className='div-option-col',
-                                    children = [
+                                    className='margin-left',
+                                    children=[
                                         html.P(
                                             className='p-option-col',
                                             children=[
-                                                'Resource behavior indicator ',
+                                                'Time period ',
                                                 html.Span('*', style={'color': 'red'})
                                             ]
                                         ),
                                         dcc.Dropdown(
-                                            id='dropdown-rbi-select',
+                                            id='dropdown-time-select',
                                             options=[
-                                                {'label': 'Custom RBI (SQL)', 'value': 'rbi_sql'},
-                                                {'label': 'Distinct activities', 'value': 'rbi_distinct_activities'},
-                                                {'label': 'Activity frequency', 'value': 'rbi_activity_frequency'},
-                                                {'label': 'Activity completions', 'value': 'rbi_activity_completions'},
-                                                {'label': 'Case completions', 'value': 'rbi_case_completions'},
-                                                {'label': 'Fraction case completion', 'value': 'rbi_fraction_case_completion'},
-                                                {'label': 'Average workload', 'value': 'rbi_average_workload'},
-                                                {'label': 'Mulitasking', 'value': 'rbi_multitasking'},
-                                                {'label': 'Average duration activity', 'value': 'rbi_average_duration_activity'},
-                                                {'label': 'Interaction two resources', 'value': 'rbi_interaction_two_resources'},
-                                                {'label': 'Social position', 'value': 'rbi_social_position'},
+                                                {'label': 'Day', 'value': 'day'},
+                                                {'label': 'Week', 'value': 'week'},
+                                                {'label': 'Month', 'value': 'month'},
+                                                {'label': 'Year', 'value': 'year'}
+                                            ],
+                                            value='month'
+                                        ),
+                                        html.P(
+                                            className='p-option-col',
+                                            children=[
+                                                'Backwards scope ',
+                                                html.Span('*', style={'color': 'red'})
                                             ]
                                         ),
-                                        html.Div(id='dynamic-additional-input-fields', children=[
-                                            html.Div([
-                                                html.P('SQL query:', className='p-option-col'),
-                                                dcc.Textarea(
-                                                    id='input-sql-query',
-                                                    className='sql-input',
-                                                    placeholder="Enter SQL query. Example for activity frequency:\nSELECT CAST(count.activity AS FLOAT) / CAST(count.all_activities AS FLOAT)\n   FROM (\n      SELECT\n         (SELECT COUNT([concept:name])\n         FROM event_log\n         WHERE [org:resource] = 'resource_id'\n         AND [concept:name] = '09_AH_I_010')\n         AS activity,\n         (SELECT COUNT([concept:name])\n         FROM event_log\n         WHERE [org:resource] = 'resource_id')\n         AS all_activities\n   ) AS count",
-                                                ),
-                                            ], id='sql-input-container', style={'display': 'none'}),
-                                            html.Div([
-                                                html.P('Activity name:', className='p-option-col'),
-                                                dcc.Input(id='input-concept-name', className='input-concept-name', type='text', placeholder=' Enter concept:name...'),
-                                            ], id='concept-name-input-container', style={'display': 'none'}), 
-                                            html.Div([
-                                                html.P('Interaction resource id:', className='p-option-col'),
-                                                dcc.Input(id='input-resource-name', className='input-resource-name', type='text', placeholder=' Enter org:resource...'),
-                                            ], id='resource-id-input-container', style={'display': 'none'}),
-                                        ]),
-                                ]),
-                        ]),
-                        html.Button(
-                            'Generate Time Series Diagram',
-                            id='button-generate',
-                        )   
-                    ]),
+                                        dcc.Dropdown(
+                                            id='dropdown-scope-select',
+                                            options=[
+                                                {'label': 'Start of time period', 'value': 'start_period'},
+                                                {'label': 'Start of event log', 'value': 'start_log'},
+                                            ],
+                                            value='start_period'
+                                        ), 
+                                ])
+                            ]
+                        ),
+                        html.Div(
+                            className='div-center-button',
+                            children=[
+                                html.Button(
+                                    'Generate Time Series Diagram',
+                                    id='button-generate',
+                                    className='generate-button',
+                                ),
+                            ]
+                        )
+                ])
             ]),
             dcc.Loading(
                 id="loading-chart",

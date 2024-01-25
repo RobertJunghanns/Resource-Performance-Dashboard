@@ -1,6 +1,9 @@
 .alert{
         margin-top: 10px;
 }
+.margin-left{
+        margin-left: 10px;
+}
 .margin-right{
         margin-right: 10px;
 }
@@ -51,12 +54,12 @@
         width: 45%;
         margin: 10px;
 }
-.div-rp-sidebar{
+.div-sidebar{
         display: flex;
         flex-direction: column;
         width: 35%;   
 }
-.div-div-rp-sidebar{
+.div-div-sidebar{
         background: #f3f3f1;
         width: 100%;
         border-radius: 10px;
@@ -76,7 +79,6 @@
 }
 .div-sidebar-options {
         display: inline-block;
-        background: #f3f3f1; 
         width: 35%;
         border-radius: 10px;
         margin-left: 10px;
@@ -148,6 +150,11 @@
         padding: 6px; 
         margin-top: 3px
 }
+#img-down-arrow {
+        margin-top: 5px;
+        margin-bottom: -10px;
+        height: 35px;
+}
 #img-sample {
         margin-top: 10px;
         height: 55px;
@@ -156,10 +163,11 @@
         margin-top: 15px;
         height: 55px;
 }
-#img-down-arrow {
-        margin-top: 5px;
-        margin-bottom: -10px;
-        height: 35px;
+.img-input {
+        margin-top: 15px;
+        margin-left: 5px;
+        margin-right: 5px;
+        height: 45px; 
 }
 #img-performance{
         margin-top: 15px;
@@ -168,6 +176,12 @@
         height: 45px;
 }
 #img-calendar{
+        margin-top: 15px;
+        margin-left: 5px;
+        margin-right: 5px;
+        height: 45px;
+}
+#img-resource{
         margin-top: 15px;
         margin-left: 5px;
         margin-right: 5px;
@@ -201,8 +215,9 @@
 }
 #time-series-chart{
         display: inline-block;
-        width: 65%;
+        width: 60%;
         min-width: 65vw;
+        margin: 30px;
 }
 #div-github-logo {
         float: right;
@@ -253,22 +268,7 @@
         align-self: flex-start;
         margin-top: 0;
 }
-#button-generate{
-        align-self: flex-end;
-        margin: 15px;
-        margin-top: -55px;
-        width: 45%;
-
-        background-color: white;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        padding: 10px 15px;
-        font-size: 16px;
-        text-align: center;
-        cursor: pointer;
-        line-height: 1;  
-}
-#button-add-relationship{
+.generate-button{
         width: 70%;
         margin-left: auto;
 
@@ -277,7 +277,7 @@
         border-radius: 4px;
         font-size: 12px;
         padding: 10px 15px;
-        cursor: pointer; 
+        cursor: pointer;    
 }
 .div-center-button {
         width: 100%;

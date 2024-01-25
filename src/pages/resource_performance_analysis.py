@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import uuid
 import json
 import datetime
@@ -24,22 +23,22 @@ panel_id=0
 
 # Define the page layout
 layout = html.Div([
-    dbc.Alert(id='input-alert-rp', className='alert', duration=40000, color="warning", dismissable=True, is_open=False),
+    dbc.Alert(id='input-alert-rp', className='margin-top', duration=40000, color="warning", dismissable=True, is_open=False),
     html.Div(
         className='flex-row',
         id='page-resource-performance',
         children = [
             html.Div(
-            className='div-rp-sidebar',
+            className='div-sidebar',
             children = [
                 html.Div(
-                    className='div-div-rp-sidebar flex-row',
+                    className='div-div-sidebar flex-row',
                     children = [
                         html.Div(
                             className="div-logo",
                             children=html.Img(
                                 id='img-sample',
-                                className="", src=("./assets/images/sample.png"),
+                                src=("./assets/images/sample.png"),
                             ), 
                         ),
                         html.Div(
@@ -144,7 +143,7 @@ layout = html.Div([
                 ]),
                 html.Div(
                     id='select-relationship-container',
-                    className='div-div-rp-sidebar flex-col',
+                    className='div-div-sidebar flex-col',
                     children = [
                         html.Div(
                             id='select-rbi-iv',
@@ -154,7 +153,7 @@ layout = html.Div([
                                     className="div-logo",
                                     children=html.Img(
                                         id='img-rbi',
-                                        className="", src=("./assets/images/rbi.png"),
+                                        src=("./assets/images/rbi.png"),
                                     ), 
                                 ),
                                 html.Div(
@@ -228,7 +227,7 @@ layout = html.Div([
                                 html.Div(
                                     children=html.Img(
                                         id='img-down-arrow',
-                                        className="", src=("./assets/images/down-arrow.png"),
+                                        src=("./assets/images/down-arrow.png"),
                                     ),
                                 ),
                             ]
@@ -240,8 +239,8 @@ layout = html.Div([
                                 html.Div(
                                     className="div-logo",
                                     children=html.Img(
-                                        id='img-performance',
-                                        className="", src=("./assets/images/performance.png"),
+                                        className='img-input',
+                                        src=("./assets/images/performance.png"),
                                     ), 
                                 ),
                                 html.Div(
@@ -274,13 +273,13 @@ layout = html.Div([
                 ]),
                 html.Div(
                     id='select-time-container',
-                    className='div-div-rp-sidebar flex-row',
+                    className='div-div-sidebar flex-row',
                     children = [
                         html.Div(
                             className="div-logo",
                             children=html.Img(
-                                id='img-calendar',
-                                className="", src=("./assets/images/calendar.png"),
+                                className='img-input',
+                                src=("./assets/images/calendar.png"),
                             ), 
                         ),
                         html.Div(
@@ -370,7 +369,8 @@ layout = html.Div([
                                     children=[
                                         html.Button(
                                             'Add Resource-Performance Relationship',
-                                            id='button-add-relationship'
+                                            id='button-add-relationship',
+                                            className='generate-button',
                                         )
                                     ]
                                 )
@@ -506,11 +506,15 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
     if sampling_strategy_value == 'case_level':
         if case_limit_value is None:
             return no_update, no_update, 'Input Max. number of cases before generating!', True
+        if case_limit_value < 2:
+            return no_update, no_update, 'The number of cases has to be larger than 1!', True
         rbi_values, perf_values = sample_regression_data_case(df_event_log, date_from, date_to, case_limit_value, seed_value, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments, individual_scope=individual_scope_value)
         count_str = str(len(rbi_values)) + '/' + str(case_limit_value) + ' cases'
     elif sampling_strategy_value == 'activity_level':
         if activity_limit_value is None:
             return no_update, no_update, 'Input Max. number of activities before generating!', True
+        if activity_limit_value < 2:
+            return no_update, no_update, 'The number of activities has to be larger than 1!', True
         rbi_values, perf_values = sample_regression_data_activity(df_event_log, date_from, date_to, filter_event_attribute, filter_event_value, activity_limit_value, seed_value, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments, individual_scope=individual_scope_value)
         count_str = str(len(rbi_values)) + '/' + str(activity_limit_value) + ' activities'
 
