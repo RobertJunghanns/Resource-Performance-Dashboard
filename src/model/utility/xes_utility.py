@@ -31,26 +31,24 @@ def count_completed_events(df, lifecycle_column='lifecycle:transition'):
         raise ValueError(f"Column '{lifecycle_column}' not found in DataFrame")
 
 def align_date_to_period(date, period, next_period=False):
-    if period == 'day':
-        aligned_date = date.replace(hour=0, minute=0, second=0, microsecond=0)
-    elif period == 'week':
-        aligned_date = (date - timedelta(days=date.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
-    elif period == 'month':
-        aligned_date = date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    elif period == 'year':
-        aligned_date = date.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-    else:
+    period_logic = {
+        'day': {'align': lambda d: d.replace(hour=0, minute=0, second=0, microsecond=0),
+                'shift': lambda d: d + timedelta(days=1)},
+        'week': {'align': lambda d: (d - timedelta(days=d.weekday())).replace(hour=0, minute=0, second=0, microsecond=0),
+                 'shift': lambda d: d + timedelta(weeks=1)},
+        'month': {'align': lambda d: d.replace(day=1, hour=0, minute=0, second=0, microsecond=0),
+                  'shift': lambda d: d + pd.DateOffset(months=1)},
+        'year': {'align': lambda d: d.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0),
+                 'shift': lambda d: d + pd.DateOffset(years=1)}
+    }
+
+    if period not in period_logic:
         raise ValueError("Invalid period. Choose from 'day', 'week', 'month', 'year'.")
 
+    aligned_date = period_logic[period]['align'](date)
+
     if next_period:
-        if period == 'day':
-            aligned_date += timedelta(days=1)
-        elif period == 'week':
-            aligned_date += timedelta(weeks=1)
-        elif period == 'month':
-            aligned_date += pd.DateOffset(months=1)
-        elif period == 'year':
-            aligned_date += pd.DateOffset(years=1)
+        aligned_date = period_logic[period]['shift'](aligned_date)
 
     return aligned_date
 
@@ -104,36 +102,3 @@ def get_period_name(date, period):
         return date.strftime("%Y")
     else:
         raise ValueError("Invalid period. Choose from 'day', 'week', 'month', 'year'.")
-
-# Convert DataFrame to a JSON string
-def df_to_json(df):
-    df_json = df.reset_index().to_json(date_format='iso', orient='split')
-    data_types = df.dtypes.apply(lambda x: x.name).to_dict()
-    
-    return df_json, data_types
-
-# Convert JSON string back to DataFrame
-def json_to_df(json_str, data_types):
-    # Convert the string of JSON to a file-like object
-    str_io = StringIO(json_str)
-    df = pd.read_json(str_io, orient='split')
-
-    # Convert iso date strings to timestap
-    date_columns = [col for col in df.columns if 'date' in col or 'Date' in col or 'time' in col or 'Time' in col]
-    for column in date_columns:
-        try:
-            # Attempt to parse the column as a datetime
-            df[column] = pd.to_datetime(df[column], utc=True, errors='raise')
-        except (ValueError, TypeError):
-            # If parsing fails, we assume it's not a datetime column and move on
-            continue
-    
-    # Ensure datatype of org:resource / undo impicit convertion of pandas
-    # if 'org:resource' in df.columns:
-    #     df['org:resource'] = df['org:resource'].astype(str)
-
-    #Ensure datatype / undo impicit convertion of pandas
-    for column, dtype in data_types.items():
-        df[column] = df[column].astype(dtype)
-
-    return df

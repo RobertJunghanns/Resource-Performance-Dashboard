@@ -11,6 +11,7 @@ click-didyoumean==0.3.0
 click-plugins==1.1.1
 click-repl==0.3.0
 contourpy==1.2.0
+coverage==7.4.0
 cvxopt==1.3.2
 cycler==0.12.1
 dash==2.14.1
