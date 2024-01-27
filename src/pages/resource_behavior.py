@@ -8,9 +8,9 @@ import dash_mantine_components as dmc
 from app import app
 from dash import html, State, Input, Output, dcc, no_update
 
-from model.utility.pickle_utility import load_from_pickle
-from model.utility.xes_utility import get_unique_resources, get_earliest_timestamp, get_latest_timestamp, get_period_name, generate_time_period_intervals, generate_until_end_period_intervals
-from model.measures.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_case_completions, rbi_fraction_case_completions, rbi_average_workload, rbi_multitasking, rbi_average_duration_activity, rbi_interaction_two_resources, rbi_social_position
+from framework.utility.pickle_utility import load_from_pickle
+from framework.utility.xes_utility import get_unique_resources, get_earliest_timestamp, get_latest_timestamp, get_period_name, generate_time_period_intervals, generate_until_end_period_intervals
+from framework.measures.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_case_completions, rbi_fraction_case_completions, rbi_average_workload, rbi_multitasking, rbi_average_duration_activity, rbi_interaction_two_resources, rbi_social_position
 
 layout = html.Div([
     dbc.Alert(id='input-alert', className='margin-top', duration=40000, color="warning", dismissable=True, is_open=False),

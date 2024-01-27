@@ -2,7 +2,7 @@ import unittest
 import pm4py
 import pandas as pd
 import pandas.testing as pdt
-from src.model.utility import pickle_utility 
+from src.framework.utility import pickle_utility 
 import warnings
 
 

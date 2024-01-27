@@ -2,7 +2,7 @@ import unittest
 import pm4py
 import pandas as pd
 from datetime import datetime
-from src.model.utility import xes_utility 
+from src.framework.utility import xes_utility 
 import warnings
 
 

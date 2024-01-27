@@ -1,6 +1,6 @@
 from pages import resource_behavior, resource_performance_analysis
 from app import app
-from model.utility.pickle_utility import save_as_pickle
+from framework.utility.pickle_utility import save_as_pickle
 
 import base64
 import dash

@@ -10,14 +10,14 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 import plotly.express as px
 
-from model.utility.pickle_utility import load_from_pickle
-from model.utility.xes_utility import get_earliest_timestamp, get_latest_timestamp, get_column_names, count_unique_cases, count_completed_events
-from model.sampling.case_level_sampling import ScopeCase, sample_regression_data_case
-from model.sampling.activity_level_sampling import ScopeActivity, sample_regression_data_activity
-from model.measures.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_case_completions, rbi_fraction_case_completions, rbi_average_workload, rbi_multitasking, rbi_average_duration_activity, rbi_interaction_two_resources, rbi_social_position
-from model.measures.case_performance_measures import sql_to_case_performance_metric, case_duration
-from model.measures.activity_performance_measures import activity_duration
-from model.regression_analysis import fit_regression
+from framework.utility.pickle_utility import load_from_pickle
+from framework.utility.xes_utility import get_earliest_timestamp, get_latest_timestamp, get_column_names, count_unique_cases, count_completed_events
+from framework.sampling.case_level_sampling import ScopeCase, sample_regression_data_case
+from framework.sampling.activity_level_sampling import ScopeActivity, sample_regression_data_activity
+from framework.measures.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_case_completions, rbi_fraction_case_completions, rbi_average_workload, rbi_multitasking, rbi_average_duration_activity, rbi_interaction_two_resources, rbi_social_position
+from framework.measures.case_performance_measures import sql_to_case_performance_metric, case_duration
+from framework.measures.activity_performance_measures import activity_duration
+from framework.regression_analysis import fit_regression
 
 panel_id=0
 
