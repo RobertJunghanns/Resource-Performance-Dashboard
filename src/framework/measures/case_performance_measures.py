@@ -1,6 +1,6 @@
 import pandas as pd
 from pandasql import sqldf
-from model.utility.xes_utility import get_earliest_timestamp, get_latest_timestamp
+from framework.utility.xes_utility import get_earliest_timestamp, get_latest_timestamp
 
 def pysqldf(q, local_vars):
     return sqldf(q, local_vars) 
