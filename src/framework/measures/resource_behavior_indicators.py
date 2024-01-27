@@ -1,7 +1,6 @@
 import pandas as pd
 from pandasql import sqldf
 from pm4py.algo.organizational_mining.resource_profiles import algorithm
-import statistics
 
 def pysqldf(q, local_vars):
     return sqldf(q, local_vars)

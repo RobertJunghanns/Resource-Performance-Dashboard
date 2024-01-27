@@ -57,7 +57,9 @@ def get_independent_variable_case(event_log: pd.DataFrame, case_id: str, scope: 
     elif scope == ScopeCase.INDIVIDUAL:
         t1 = get_earliest_timestamp(trace) - individual_scope
     elif scope == ScopeCase.TOTAL:
-        t1 = get_earliest_timestamp(event_log)  
+        t1 = get_earliest_timestamp(event_log) 
+    else:
+        raise ValueError(f"ScopeCase not found.")
 
     weighted_avg = 0
 

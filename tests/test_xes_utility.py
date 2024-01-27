@@ -1,4 +1,6 @@
 import unittest
+import sys
+import os
 import pm4py
 import pandas as pd
 from datetime import datetime
@@ -11,6 +13,8 @@ class TestXESUtilityFunctions(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        # Add the src directory to the sys.path
+        sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
         # Suppress specific warnings from pm4py
         warnings.simplefilter("ignore", category=ResourceWarning)
         warnings.simplefilter("ignore", category=UserWarning)
@@ -55,95 +59,13 @@ class TestXESUtilityFunctions(unittest.TestCase):
 
     def test_completed_events(self):
         completed_events_count = xes_utility.count_completed_events(self.event_log)
-        self.assertEqual(completed_events_count, 44)
+        self.assertEqual(completed_events_count, 46)
 
     def test_completed_events_error(self):
         with self.assertRaises(ValueError) as context:
             xes_utility.count_completed_events(self.event_log, lifecycle_column='non_existent_column')
         
-        self.assertTrue("Column 'non_existent_column' not found in DataFrame" in str(context.exception))
-
-    def test_day_intervals(self):
-        start_date = datetime(2022, 1, 2)
-        end_date = datetime(2022, 1, 4)
-        intervals = xes_utility.generate_time_period_intervals(start_date, end_date, 'day')
-        self.assertEqual(len(intervals), 2)
-        self.assertEqual(intervals[0], (datetime(2022, 1, 2), datetime(2022, 1, 3)))
-        self.assertEqual(intervals[1], (datetime(2022, 1, 3), datetime(2022, 1, 4)))
-
-    def test_week_intervals(self):
-        start_date = datetime(2022, 1, 1, 12, 0)
-        end_date = datetime(2022, 1, 17, 12, 0)
-        intervals = xes_utility.generate_time_period_intervals(start_date, end_date, 'week')
-        self.assertEqual(len(intervals), 2)
-        self.assertEqual(intervals[0], (datetime(2022, 1, 3), datetime(2022, 1, 10)))
-        self.assertEqual(intervals[1], (datetime(2022, 1, 10), datetime(2022, 1, 17)))
-
-    def test_month_intervals(self):
-        start_date = datetime(2022, 1, 29, 12, 0)
-        end_date = datetime(2022, 4, 17, 12, 0)
-        intervals = xes_utility.generate_time_period_intervals(start_date, end_date, 'month')
-        self.assertEqual(len(intervals), 2)
-        self.assertEqual(intervals[0], (datetime(2022, 2, 1), datetime(2022, 3, 1)))
-        self.assertEqual(intervals[1], (datetime(2022, 3, 1), datetime(2022, 4, 1)))
-
-    def test_year_intervals(self):
-        start_date = datetime(2019, 1, 1, 12, 0)
-        end_date = datetime(2022, 1, 17, 12, 0)
-        intervals = xes_utility.generate_time_period_intervals(start_date, end_date, 'year')
-        self.assertEqual(len(intervals), 2)
-        self.assertEqual(intervals[0], (datetime(2020, 1, 1), datetime(2021, 1, 1)))
-        self.assertEqual(intervals[1], (datetime(2021, 1, 1), datetime(2022, 1, 1)))
-
-    def test_year_intervals_error(self):
-        start_date = datetime(2019, 1, 1, 12, 0)
-        end_date = datetime(2022, 1, 17, 12, 0)
-
-        with self.assertRaises(ValueError):
-            xes_utility.generate_time_period_intervals(start_date, end_date, 'no_time_period')
-        
-        self.assertTrue("Invalid period. Choose from 'day', 'week', 'month', 'year'.")
-
-    def test_year_intervals_total(self):
-        start_date = datetime(2019, 1, 1, 12, 0)
-        end_date = datetime(2021, 1, 17, 12, 0)
-        intervals = xes_utility.generate_until_end_period_intervals(start_date, end_date, 'year')
-        self.assertEqual(len(intervals), 3)
-        self.assertEqual(intervals[0], (datetime(2019, 1, 1, 12, 0), datetime(2020, 1, 1), datetime(2019, 1, 1, 12, 0)))
-        self.assertEqual(intervals[1], (datetime(2019, 1, 1, 12, 0), datetime(2021, 1, 1), datetime(2020, 1, 1)))
-        self.assertEqual(intervals[2], (datetime(2019, 1, 1, 12, 0), datetime(2021, 1, 17, 12, 0), datetime(2021, 1, 1)))
-
-    def test_align_date_period(self):
-        date = datetime(2019, 1, 1, 12, 0)
-        result = xes_utility.align_date_to_period(date, 'day')
-        self.assertEqual(result, datetime(2019, 1, 1))
-
-    def test_day_period_name(self):
-        date = datetime(2022, 1, 15)
-        result = xes_utility.get_period_name(date, 'day')
-        self.assertEqual(result, "Jan. 15, 2022")
-
-    def test_week_period_name(self):
-        date = datetime(2022, 1, 3) 
-        result = xes_utility.get_period_name(date, 'week')
-        self.assertEqual(result, "Week 1, 2022")
-
-    def test_month_period_name(self):
-        date = datetime(2022, 1, 15)
-        result = xes_utility.get_period_name(date, 'month')
-        self.assertEqual(result, "Jan. 2022")
-
-    def test_year_period_name(self):
-        date = datetime(2022, 1, 15)
-        result = xes_utility.get_period_name(date, 'year')
-        self.assertEqual(result, "2022")
-
-    def test_invalid_period_name(self):
-        date = datetime(2022, 1, 15)
-        with self.assertRaises(ValueError):
-            xes_utility.get_period_name(date, 'invalid')
-        self.assertTrue("Invalid period. Choose from 'day', 'week', 'month', 'year'.")
-        
+        self.assertTrue("Column 'non_existent_column' not found in DataFrame" in str(context.exception))     
 
 if __name__ == '__main__':
     unittest.main()

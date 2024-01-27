@@ -13,8 +13,8 @@ Show packages: pip freeze
 Create requirements.txt: pip freeze > requirements.txt
 ### Tests
 Run tests from root: python -m unittest discover -s tests
-Run statement coverage test: coverage run --source=src/model -m unittest discover -s tests
-Run statment and branch coverage test: coverage run --branch --source=src/model -m unittest discover -s tests
+Run statement coverage test: coverage run --source=src/framework -m unittest discover -s tests
+Run statment and branch coverage test: coverage run --branch --source=src/framework -m unittest discover -s tests
 Get coverage report: coverage report
 Get html coverage report: coverage html
 Open html coverage report: open htmlcov/index.html

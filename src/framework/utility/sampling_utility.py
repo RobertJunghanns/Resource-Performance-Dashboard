@@ -9,7 +9,7 @@ def get_n_case_ids(case_ids, n_cases, seed=999):
     else:
         return case_ids
     
-# get a lower number of activities to reduce case sampling time
+# get a lower number of activities to reduce activity sampling time
 def get_n_events(event_log, n_events, seed=999):
     if len(event_log) > n_events:
         return event_log.sample(n=n_events, random_state=seed)
@@ -28,16 +28,17 @@ def group_equal_timestamp_events(trace: pd.DataFrame) -> pd.DataFrame:
     for (resource, timestamp), group in grouped_complete_events:
         if len(group) > 1:
             concept_names_with_start = []
-            for concept_name in group['concept:name'].unique():
+            # check if any of the grouped events has a start event
+            for concept_name in group['concept:name']:
                 if any((trace['concept:name'] == concept_name) & 
-                        ((trace['lifecycle:transition'] == 'START') | (trace['lifecycle:transition'] == 'start')) & 
+                        (trace['lifecycle:transition'].str.lower() == 'start') & 
                         (trace['time:timestamp'] < timestamp)):
                     concept_names_with_start.append(concept_name)
             # delete events if they have the same resource and timestamp exept they have a corresponting start event
             trace = trace[~((trace['org:resource'] == resource) & (trace['time:timestamp'] == timestamp)) | trace['concept:name'].isin(concept_names_with_start)]
             # create new grouped event, if nessesary
             if len(concept_names_with_start) < len(group):
-                aggregated_name = ' + '.join(list(set(group['concept:name'].unique()) - set(concept_names_with_start)))
+                aggregated_name = ' + '.join([name for name in group['concept:name'].unique() if name not in concept_names_with_start])
                 aggregated_event = group.iloc[0].copy()  # Take the first row as base for aggregated event
                 aggregated_event['concept:name'] = aggregated_name
                 trace = pd.concat([trace, pd.DataFrame([aggregated_event])], ignore_index=True)
@@ -59,7 +60,7 @@ def add_activity_durations_to_trace(trace: pd.DataFrame) -> pd.DataFrame:
             start_event_copy = trace_copy[(trace_copy['concept:name'] == row['concept:name']) & 
                                     ((trace_copy['lifecycle:transition'] == 'START') | (trace_copy['lifecycle:transition'] == 'start')) & 
                                     (trace_copy['time:timestamp'] < row['time:timestamp'])]
-            # For Option 2: find any start event eaven if it is used before
+            # For Option 2: find any start event even if it is used before
             start_event = trace[(trace['concept:name'] == row['concept:name']) & 
                                     ((trace['lifecycle:transition'] == 'START') | (trace['lifecycle:transition'] == 'start')) & 
                                     (trace['time:timestamp'] < row['time:timestamp'])]
