@@ -1,18 +1,16 @@
-from pages import resource_behavior, resource_performance_analysis
 from app import app
-from framework.utility.pickle_utility import save_as_pickle
+from pages import resource_behavior
+from pages import resource_performance
 
 import base64
 import dash
 import pm4py
 import json
 import dash_bootstrap_components as dbc
-import pandas as pd
 
 from dash import html, dcc, Input, Output, State, ALL, callback_context, no_update
 from pathlib import Path
-
-
+from framework.utility.pickle_utility import save_as_pickle
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
@@ -201,7 +199,7 @@ def display_page(pathname):
     if pathname == '/resource-behavior':
         return resource_behavior.layout
     if pathname == '/resource-performance-analysis':
-        return resource_performance_analysis.layout
+        return resource_performance.layout
     else: # if redirected to unknown link
         return "Select a page to start analysing the XES file!"
 

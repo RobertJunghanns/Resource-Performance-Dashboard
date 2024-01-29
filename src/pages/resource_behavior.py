@@ -335,11 +335,28 @@ def get_rbi_time_series(n_clicks, pickle_df_name, rbi, resource, start_date_str,
             else:
                 return no_figure, no_update, no_update
             
+        rbi_function_mapping = {
+            'rbi_sql': 'Custom RBI (SQL)',
+            'rbi_distinct_activities': 'Distinct activities',
+            'rbi_activity_frequency': 'Activity frequency',
+            'rbi_activity_completions': 'Activity completions',
+            'rbi_case_completions': 'Case completions',
+            'rbi_fraction_case_completion': 'Fraction case completion',
+            'rbi_average_workload': 'Average workload',
+            'rbi_multitasking': 'Multitasking',
+            'rbi_average_duration_activity': 'Average duration activity',
+            'rbi_interaction_two_resources': 'Interaction two resources',
+            'rbi_social_position': 'Social position'
+        }
+
+        # Retrieve only the label for a given independent_variable_value
+        rbi_label = rbi_function_mapping.get(rbi, '')
+            
         fig = go.Figure([go.Scatter(x=rbi_time_series_names, y=rbi_time_series_values)])
 
         fig.update_layout(
             xaxis_title="Time",
-            yaxis_title="RBI Value",
+            yaxis_title=rbi_label,
             title="RBI Time Series"
         )
                 

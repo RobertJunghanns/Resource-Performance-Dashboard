@@ -73,14 +73,14 @@
         border: 2px solid #333;
 }
 .button-generate{
-        width: 70%;
+        width: 85%;
         background-color: white;
         border: 1px solid #ccc;
         border-radius: 4px;
         font-size: 12px;
         padding: 10px 15px;
         margin-left: auto;
-        cursor: pointer;    
+        text-align: center;   
 }
 .checklist-button-box {
         display: flex;
