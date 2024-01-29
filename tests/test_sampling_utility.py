@@ -1,6 +1,8 @@
-import unittest
 import sys
 import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+
+import unittest
 import pm4py
 import warnings
 import pandas as pd
@@ -15,8 +17,6 @@ class TestSamplingUtilityFunctions(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # Add the src directory to the sys.path
-        sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
         # Suppress specific warnings from pm4py
         warnings.simplefilter("ignore", category=ResourceWarning)
         warnings.simplefilter("ignore", category=UserWarning)
@@ -28,7 +28,6 @@ class TestSamplingUtilityFunctions(unittest.TestCase):
         cls.case_ids = ['case1', 'case2', 'case3', 'case4', 'case5']
 
     def test_get_n_case_ids_less(self):
-        
         sampled_ids = sampling_utility.get_n_case_ids(self.case_ids, 3)
         self.assertEqual(len(sampled_ids), 3)
 

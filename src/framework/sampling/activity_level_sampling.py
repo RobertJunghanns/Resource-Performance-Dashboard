@@ -32,7 +32,9 @@ def get_independent_variable_activity(event_log: pd.DataFrame, event: pd.Series,
     elif scope == ScopeActivity.INDIVIDUAL:
         t1 = event['time:timestamp'] - activity_duration - individual_scope
     elif scope == ScopeActivity.TOTAL:
-        t1 = get_earliest_timestamp(event_log)  
+        t1 = get_earliest_timestamp(event_log)
+    else:
+        raise ValueError(f"ScopeActivity not found.")
 
     activity_resource_id = event['org:resource']
     rbi_value = rbi_function(event_log, t1, t2, activity_resource_id, *args)
@@ -58,8 +60,7 @@ def sample_regression_data_activity(event_log: pd.DataFrame, t_start: pd.Timesta
 
          # find the prepared event in the trace and extract duration
         matching_events_prepared = trace_prepared[trace_prepared['concept:name'].str.contains(event['concept:name']) & (trace_prepared['time:timestamp'] == event['time:timestamp'])]
-        if not matching_events_prepared.empty:
-            activity_duration = matching_events_prepared.iloc[0]['duration']
+        activity_duration = matching_events_prepared.iloc[0]['duration']
 
         rbi_values = np.append(rbi_values, get_independent_variable_activity(event_log, event, activity_duration, scope, rbi_function, *additional_rbi_arguments, individual_scope=individual_scope))
         perf_values = np.append(perf_values, get_dependent_variable_activity(event, performance_function, activity_duration, *additional_performance_arguments))

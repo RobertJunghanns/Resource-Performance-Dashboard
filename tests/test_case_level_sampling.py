@@ -1,11 +1,12 @@
-import unittest
 import sys
 import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+
+import unittest
 import pm4py
 import warnings
 import numpy as np
 import pandas as pd
-import pandas.testing as pdt
 from src.framework.measures.resource_behavior_indicators import rbi_distinct_activities
 from src.framework.measures.case_performance_measures import case_duration
 from src.framework.sampling import case_level_sampling
@@ -18,8 +19,6 @@ class TestCaseLevelSampling(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # Add the src directory to the sys.path
-        sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
         # Suppress specific warnings from pm4py
         warnings.simplefilter("ignore", category=ResourceWarning)
         warnings.simplefilter("ignore", category=UserWarning)

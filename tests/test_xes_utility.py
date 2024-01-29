@@ -1,6 +1,8 @@
-import unittest
 import sys
 import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+
+import unittest
 import pm4py
 import pandas as pd
 from datetime import datetime
@@ -13,8 +15,6 @@ class TestXESUtilityFunctions(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # Add the src directory to the sys.path
-        sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
         # Suppress specific warnings from pm4py
         warnings.simplefilter("ignore", category=ResourceWarning)
         warnings.simplefilter("ignore", category=UserWarning)
