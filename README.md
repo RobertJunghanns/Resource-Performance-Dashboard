@@ -25,14 +25,30 @@ $ make exit
 ```
 
 ### Package Management
-Show requirements: make show-requirements
-Update requirements.txt: make update-requirements
-Install requirements (implicit by run-dashboard): make install-requirements
-### Tests
-Run tests: make run-tests
-Run tests with statement and branch coverage: make run-tests
+- Show all requirements of the application.
+```
+$ make show-requirements
+```
+- Update the requirements in the `requirements.txt` file.
+```
+$ make update-requirements
+```
+- Install all requirements of the `requirements.txt` file. This is implicitly done during the start of the application.
+```
+$ make install-requirements
+```
 
-## Example SQL queries
+### Tests
+- Run all tests of the framework instance module.
+```
+$ make run-tests
+```
+- Run all tests of the framework instance module with statement and branch coverage.
+```
+$ make run-coverage-tests
+```
+
+## Example SQL queries for the use in the Dashboard
 ### Custom RBI: Example SQL queries:
 #### Distinct Activities
 SELECT COUNT(DISTINCT [concept:name])
