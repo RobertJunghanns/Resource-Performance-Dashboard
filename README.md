@@ -49,16 +49,21 @@ $ make run-coverage-tests
 ```
 
 ## Example SQL queries for the use in the Dashboard
-### Custom RBI: Example SQL queries:
+### Custom RBI
 #### Distinct Activities
+```
 SELECT COUNT(DISTINCT [concept:name])
         FROM event_log
         WHERE [org:resource] = '{r}'
+```
 #### Activity Completions
+```
 SELECT COUNT([concept:name])
         FROM event_log
         WHERE [org:resource] = '{r}'
+```
 #### Activity Frequency
+```
 SELECT CAST(count.activity AS FLOAT) / CAST(count.all_activities AS FLOAT)
 FROM (
     SELECT
@@ -70,10 +75,13 @@ FROM (
          FROM event_log
          WHERE [org:resource] = '{r}') AS all_activities
 ) AS count
-### Custom Performance Metric: Example SQL query:
+```
+### Custom Performance Metric
+```
 SELECT
     (CAST(strftime('%s', MAX([time:timestamp])) AS FLOAT) - 
      CAST(strftime('%s', MIN([time:timestamp])) AS FLOAT)) / 60
 FROM
     trace
+```
 
