@@ -2,12 +2,28 @@
 
 ## Commands
 ### Run Dashboard
-The following steps have do be performed to start and access the Dashboard. The project folder uses a makefile to wrap all commands.
-- Navigate to project folder
-- Go in shell: make shell
-- Start Dashboard: make run-dashboard
-- Open Browser: http://127.0.0.1:8050/
-- Exit out of shell: make exit
+The following steps have do be performed to start and access the Dashboard. The project uses a makefile to wrap all important commands.
+1. Navigate to project folder.
+```
+$ cd project_folder_path
+```
+2. Create/enter pipenv shell.
+```
+$ make shell
+```
+3. Start the Dash application "Resource-Performance Analysis Dashbaord" inside the shell. This implicitly installs all necessary dependancies if not already satisfied.
+```
+$ make run-dashboard
+```
+4. Open the Dash application.
+```
+$ open http://127.0.0.1:8050/
+```
+5. (Optional) Terminate the Dash application (CTRL + C) and exit the shell.
+```
+$ make exit
+```
+
 ### Package Management
 Show requirements: make show-requirements
 Update requirements.txt: make update-requirements
