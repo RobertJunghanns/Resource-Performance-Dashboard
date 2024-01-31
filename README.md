@@ -77,6 +77,8 @@ FROM (
 ) AS count
 ```
 ### Custom Performance Metric
+
+#### Case Duration
 ```
 SELECT
     (CAST(strftime('%s', MAX([time:timestamp])) AS FLOAT) - 
