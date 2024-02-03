@@ -107,7 +107,7 @@ app.layout = html.Div([
                 html.Div(
                     id='div-buttons',
                     children=[
-                        html.Button('Resource Behavior Analysis', id={'type': 'dynamic-button', 'index': 1}, className='button-default width-45', style={'margin-right': '15px'}),
+                        html.Button('Resource Behavior Analysis', id={'type': 'dynamic-button', 'index': 1}, className='button-default width-45 button-selected', style={'margin-right': '15px'}),
                         html.Button('Resource-Performance Analysis', id={'type': 'dynamic-button', 'index': 2}, className='button-default width-45'),
                 ])
             ]),
@@ -201,36 +201,34 @@ def display_page(pathname):
     if pathname == '/resource-performance-analysis':
         return resource_performance.layout
     else: # if redirected to unknown link
-        return "Select a page to start analysing the XES file!"
+        return resource_behavior.layout
 
 # ROUTING-3: Change button style based on selected page
 @app.callback(
     [Output({'type': 'dynamic-button', 'index': ALL}, 'className')],
-    [Input({'type': 'dynamic-button', 'index': ALL}, 'n_clicks')],
+    [Input('url', 'pathname')],
     [State({'type': 'dynamic-button', 'index': ALL}, 'className')],
 )
-def update_button_classes(n_clicks, *args):
+def update_button_classes(pathname, *args):
+    if pathname == '/resource-behavior':
+        button_id = {'type': 'dynamic-button', 'index': 1}
+    if pathname == '/resource-performance-analysis':
+         button_id = {'type': 'dynamic-button', 'index': 2}
+    else: # if redirected to unknown link
+         button_id = {'type': 'dynamic-button', 'index': 1}
+
     ctx = dash.callback_context
-
-    if not ctx.triggered:
-        # No buttons have been clicked yet
-        return dash.no_update
-
-    button_id_triggered = ctx.triggered[0]['prop_id'].split('.')[0]
-    button_id_triggered = json.loads(button_id_triggered)
-
     button_states = ctx.states
     class_list = []
 
-    for i in range(len(button_states)):
-        key = {'type': 'dynamic-button', 'index': i+1}
-        
-        if key == button_id_triggered:
+    for i in range(len(button_states)):   
+        if button_id == {'type': 'dynamic-button', 'index': i+1}:
             class_list.append('button-default width-45 button-selected')
         else:
             class_list.append('button-default width-45')
 
-    return [class_list]
+    return [class_list]    
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
