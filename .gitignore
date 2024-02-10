@@ -1,3 +1,4 @@
 Pipfile
 .DS_Store
 .coverage
+**/__pycache__/
