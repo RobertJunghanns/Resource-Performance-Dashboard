@@ -1,5 +1,4 @@
 import datetime as dt
-
 import pandas as pd
 import plotly.graph_objs as go
 import dash_bootstrap_components as dbc
@@ -37,7 +36,7 @@ layout = html.Div([
                                 html.P(
                                     className='p-option-col',
                                     children=[
-                                        'Resource ',
+                                        'Resource ID ',
                                         html.Span('*', style={'color': 'red'})
                                     ]
                                 ),
@@ -124,7 +123,7 @@ layout = html.Div([
                                             html.P(
                                                 className='p-option-col',
                                                 children=[
-                                                    'Date from ',
+                                                    'Time from ',
                                                     html.Span('*', style={'color': 'red'})
                                                 ]
                                             ),
@@ -136,6 +135,13 @@ layout = html.Div([
                                                 initial_visible_month=pd.Timestamp('2023-11-30'),
                                                 date=pd.Timestamp('2023-11-30')
                                             ),
+                                            dmc.TimeInput(
+                                                id='time-from',
+                                                className='margin-top-5',
+                                                format="24",
+                                                withSeconds=True,
+                                                value=dt.datetime.combine(dt.date.today(), dt.time.min)
+                                            ),
                                         ]),
                                         html.Div(
                                             id='div-second-date',
@@ -143,7 +149,7 @@ layout = html.Div([
                                                 html.P(
                                                     className='p-option-col',
                                                     children=[
-                                                        'Date up to ',
+                                                        'Time to ',
                                                         html.Span('*', style={'color': 'red'})
                                                     ]
                                                 ),
@@ -154,6 +160,13 @@ layout = html.Div([
                                                     max_date_allowed=pd.Timestamp('2023-11-30'),
                                                     initial_visible_month=pd.Timestamp('2023-11-30'),
                                                     date=pd.Timestamp('2023-11-30')
+                                                ),
+                                                dmc.TimeInput(
+                                                    id='time-to',
+                                                    className='margin-top-5',
+                                                    format="24",
+                                                    withSeconds=True,
+                                                    value=dt.datetime.combine(dt.date.today(), dt.time.min)
                                                 ),
                                         ]),
                                 ]),
@@ -222,10 +235,12 @@ layout = html.Div([
      Output('date-from', 'max_date_allowed'),
      Output('date-from', 'initial_visible_month'),
      Output('date-from', 'date'),
+     Output('time-from', 'value'),
      Output('date-to', 'min_date_allowed'),
      Output('date-to', 'max_date_allowed'),
      Output('date-to', 'initial_visible_month'),
      Output('date-to', 'date'),],
+     Output('time-to', 'value'),
     Input('pickle_df_name', 'data')
 )
 def update_resource_options(pickle_df_name):
@@ -235,13 +250,22 @@ def update_resource_options(pickle_df_name):
         sorted_resources = sorted(unique_resources)
         options = [{'label': resource, 'value': str(resource)} for resource in sorted_resources]
         
-        earliest_dt = get_earliest_timestamp(df_event_log)
-        latest_dt = get_latest_timestamp(df_event_log)
+        earliest_timestamp = get_earliest_timestamp(df_event_log)
+        latest_timestamp = get_latest_timestamp(df_event_log)
 
-        return [options, earliest_dt, latest_dt, earliest_dt, earliest_dt, earliest_dt, latest_dt, latest_dt, latest_dt]
+        earliest_date = earliest_timestamp.date()
+        latest_date = latest_timestamp.date()
+
+        earliest_time = earliest_timestamp.time()
+        latest_time = latest_timestamp.time()
+
+        earliest_datetime = dt.datetime.combine(earliest_date, earliest_time)
+        latest_datetime = dt.datetime.combine(latest_date, latest_time)
+
+        return [options, earliest_date, latest_date, earliest_date, earliest_date, earliest_datetime, earliest_date, latest_date, latest_date, latest_date, latest_datetime]
     else:
         # Return an empty list if no file is selected
-        return [no_update] * 9
+        return [no_update] * 11
 
 # sample and display time series
 @app.callback(
@@ -252,15 +276,17 @@ def update_resource_options(pickle_df_name):
     [State('pickle_df_name', 'data'),
      State('dropdown-rbi-select', 'value'),
      State('dropdown-resource-select', 'value'),
-     State('date-from', 'date'), 
+     State('date-from', 'date'),
+     State('time-from', 'value'),
      State('date-to', 'date'),
+     State('time-to', 'value'),
      State('dropdown-time-select', 'value'),
      State('dropdown-scope-select', 'value'),
      State('input-sql-query', 'value'),
      State('input-concept-name', 'value'),
      State('input-resource-name', 'value')]
 )
-def get_rbi_time_series(n_clicks, pickle_df_name, rbi, resource, start_date_str, end_date_str, period, scope, sql_query, concept_name, interaction_resource):
+def get_rbi_time_series(n_clicks, pickle_df_name, rbi, resource, date_from_str, time_from_str, date_to_str, time_to_str, period, scope, sql_query, concept_name, interaction_resource):
     no_figure = go.Figure(layout={
                 'xaxis': {'visible': False},
                 'yaxis': {'visible': False},
@@ -284,20 +310,19 @@ def get_rbi_time_series(n_clicks, pickle_df_name, rbi, resource, start_date_str,
     df_event_log = load_from_pickle(pickle_df_name)
     
     # check for None values
-    if all(variable is not None and variable for variable in [rbi, resource, start_date_str, end_date_str, period, scope]):
-        # convert date strings
-        start_date = pd.to_datetime(start_date_str)
-        end_date = pd.to_datetime(end_date_str)
+    if all(variable is not None and variable for variable in [rbi, resource, date_from_str, time_from_str, date_to_str, time_to_str, period, scope]):
+        # convert timestamp strings
+        timestamp_from_str = date_from_str + 'T' + time_from_str.split('T')[1] + '+00:00'
+        timestamp_to_str = date_to_str + 'T' + time_to_str.split('T')[1] + '+00:00'
 
-        if start_date.tzinfo is None:
-            start_date = start_date.tz_localize('UTC')
-        if end_date.tzinfo is None:
-            end_date = end_date.tz_localize('UTC')
+        timestamp_from = pd.Timestamp(timestamp_from_str)
+        timestamp_to = pd.Timestamp(timestamp_to_str)
+
         # generate intervals
         if scope == 'start_period': 
-            time_intervals = generate_time_period_intervals(start_date, end_date, period)
+            time_intervals = generate_time_period_intervals(timestamp_from, timestamp_to, period)
         elif scope == 'start_log':
-            time_intervals = generate_until_end_period_intervals(start_date, end_date, period)
+            time_intervals = generate_until_end_period_intervals(timestamp_from, timestamp_to, period)
 
         rbi_time_series_names = []
         rbi_time_series_values = []

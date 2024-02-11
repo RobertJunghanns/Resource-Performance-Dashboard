@@ -1,7 +1,7 @@
 import pandas as pd
 import uuid
 import json
-import datetime
+import datetime as dt
 
 from app import app
 from dash import html, Input, Output, State, dcc, no_update, ALL, callback_context
@@ -291,7 +291,7 @@ layout = html.Div([
                                             html.P(
                                                 className='p-option-col',
                                                 children=[
-                                                    'Date from ',
+                                                    'Time from ',
                                                     html.Span('*', style={'color': 'red'})
                                                 ]
                                             ),
@@ -307,7 +307,7 @@ layout = html.Div([
                                                 className='margin-top-5',
                                                 format="24",
                                                 withSeconds=True,
-                                                value=datetime.datetime.combine(datetime.date.today(), datetime.time.min)
+                                                value=dt.datetime.combine(dt.date.today(), dt.time.min)
                                             ),
                                         ]),
                                         html.Div(
@@ -316,7 +316,7 @@ layout = html.Div([
                                                 html.P(
                                                     className='p-option-col',
                                                     children=[
-                                                        'Date up to ',
+                                                        'Time to ',
                                                         html.Span('*', style={'color': 'red'})
                                                     ]
                                                 ),
@@ -332,7 +332,7 @@ layout = html.Div([
                                                     className='margin-top-5',
                                                     format="24",
                                                     withSeconds=True,
-                                                    value=datetime.datetime.combine(datetime.date.today(), datetime.time.min)
+                                                    value=dt.datetime.combine(dt.date.today(), dt.time.min)
                                                 ),
                                         ]),
                                 ]),
@@ -454,8 +454,8 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
     timestamp_from_str = date_from_str + 'T' + time_from_str.split('T')[1] + '+00:00'
     timestamp_to_str = date_to_str + 'T' + time_to_str.split('T')[1] + '+00:00'
 
-    date_from = pd.Timestamp(timestamp_from_str)
-    date_to = pd.Timestamp(timestamp_to_str)
+    timestamp_from = pd.Timestamp(timestamp_from_str)
+    timestamp_to = pd.Timestamp(timestamp_to_str)
 
     rbi_function_mapping = {
         'rbi_sql': (sql_to_rbi, [iv_sql], 'Custom RBI (SQL)'),
@@ -508,14 +508,14 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
             return no_update, no_update, 'Input Max. number of cases before generating!', True
         if case_limit_value < 2:
             return no_update, no_update, 'The number of cases has to be larger than 1!', True
-        rbi_values, perf_values = sample_regression_data_case(df_event_log, date_from, date_to, case_limit_value, seed_value, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments, individual_scope=individual_scope_value)
+        rbi_values, perf_values = sample_regression_data_case(df_event_log, timestamp_from, timestamp_to, case_limit_value, seed_value, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments, individual_scope=individual_scope_value)
         count_str = str(len(rbi_values)) + '/' + str(case_limit_value) + ' cases'
     elif sampling_strategy_value == 'activity_level':
         if activity_limit_value is None:
             return no_update, no_update, 'Input Max. number of activities before generating!', True
         if activity_limit_value < 2:
             return no_update, no_update, 'The number of activities has to be larger than 1!', True
-        rbi_values, perf_values = sample_regression_data_activity(df_event_log, date_from, date_to, filter_event_attribute, filter_event_value, activity_limit_value, seed_value, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments, individual_scope=individual_scope_value)
+        rbi_values, perf_values = sample_regression_data_activity(df_event_log, timestamp_from, timestamp_to, filter_event_attribute, filter_event_value, activity_limit_value, seed_value, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments, individual_scope=individual_scope_value)
         count_str = str(len(rbi_values)) + '/' + str(activity_limit_value) + ' activities'
 
     if len(rbi_values) == 0:
@@ -549,7 +549,7 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
                         children='**DV:** ' + performance_label,
                     ),
                     dcc.Markdown(
-                        children='**Date:** ' + f"{date_from.strftime('%m/%d/%Y')} - {date_to.strftime('%m/%d/%Y')}",
+                        children='**Date:** ' + f"{timestamp_from.strftime('%m/%d/%Y')} - {timestamp_to.strftime('%m/%d/%Y')}",
                     ),
                     dcc.Markdown(
                         children='**BS:** ' + backwards_scope_label,
@@ -714,8 +714,8 @@ def update_resource_options(pickle_df_name):
         earliest_time = earliest_timestamp.time()
         latest_time = latest_timestamp.time()
 
-        earliest_datetime = datetime.datetime.combine(earliest_date, earliest_time)
-        latest_datetime = datetime.datetime.combine(latest_date, latest_time)
+        earliest_datetime = dt.datetime.combine(earliest_date, earliest_time)
+        latest_datetime = dt.datetime.combine(latest_date, latest_time)
 
         case_count = count_unique_cases(df_event_log)
         event_count = count_completed_events(df_event_log)

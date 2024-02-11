@@ -24,15 +24,15 @@ def align_date_to_period(date, period, next_period=False):
 
     return aligned_date
 
-def generate_time_period_intervals(start_date, end_date, period):
+def generate_time_period_intervals(timestamp_from, timestamp_to, period):
     intervals = []
-    current_start = start_date
+    current_start = timestamp_from
 
-    while current_start < end_date:
+    while current_start < timestamp_to:
         current_end = align_date_to_period(current_start, period, next_period=True)
 
-        if current_end > end_date:
-            current_end = end_date
+        if current_end > timestamp_to:
+            current_end = timestamp_to
 
         intervals.append((current_start, current_end))
         current_start = current_end
@@ -47,17 +47,17 @@ def generate_time_period_intervals(start_date, end_date, period):
 
     return intervals
 
-def generate_until_end_period_intervals(start_date, end_date, period):
+def generate_until_end_period_intervals(timestamp_from, timestamp_to, period):
     intervals = []
-    current_start = start_date
+    current_start = timestamp_from
 
-    while current_start < end_date:
+    while current_start < timestamp_to:
         current_end = align_date_to_period(current_start, period, next_period=True)
 
-        if current_end > end_date:
-            current_end = end_date
+        if current_end > timestamp_to:
+            current_end = timestamp_to
 
-        intervals.append((start_date, current_end, current_start)) #allways start from start_date
+        intervals.append((timestamp_from, current_end, current_start)) #allways start from start_date
         current_start = current_end
 
     return intervals
@@ -67,7 +67,8 @@ def get_period_name(date, period):
         return date.strftime("%b. %d, %Y")
     elif period == 'week':
         week_num = date.isocalendar()[1]
-        return f"Week {week_num}, {date.year}"
+        year = date.isocalendar()[0]
+        return f"Week {week_num}, {year}"
     elif period == 'month':
         return date.strftime("%b. %Y")
     elif period == 'year':
