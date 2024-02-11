@@ -14,12 +14,17 @@ def sql_to_rbi(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timesta
 
     sql_query = sql_query.replace('{r}', resource_id)
 
-    result = pysqldf(sql_query, {'event_log': event_log}).iloc[0, 0]
+    result = pysqldf(sql_query, {'event_log': event_log})
 
-    if not result:
-        result = 0
+    try:
+        result_num = result.iloc[0, 0]
+    except Exception as e:
+        raise ValueError("SQL query result is empty. This is likely due to a missing aggregation function to return a numeric value.") from e
 
-    return result
+    if not isinstance(result_num, (int, float)):
+        raise ValueError("SQL query result is not numeric.")
+
+    return float(result_num)
 
 def rbi_distinct_activities(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, resource_id: str) -> float:
     return algorithm.activity_completions(event_log, t_start, t_end, resource_id)
