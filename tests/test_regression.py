@@ -8,7 +8,7 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from src.framework.measures.resource_behavior_indicators import rbi_distinct_activities
+from src.framework.measures.resource_behavior_indicators import rbi_activity_completions
 from src.framework.measures.case_performance_measures import case_duration
 from src.framework.sampling import case_level_sampling
 from src.framework import regression_analysis
@@ -31,7 +31,7 @@ class TestCaseLevelSampling(unittest.TestCase):
     def test_rbi_sql(self): 
         t_start = pd.Timestamp("2010-12-31T23:30:00.000+02:00")
         t_end = pd.Timestamp("2011-01-07T06:30:00.000+02:00")
-        regression_data_cs = case_level_sampling.sample_regression_data_case(self.event_log_simple_mt, t_start, t_end, case_limit=100, seed=999, scope=case_level_sampling.ScopeCase.CASE, rbi_function=rbi_distinct_activities, performance_function=case_duration)
+        regression_data_cs = case_level_sampling.sample_regression_data_case(self.event_log_simple_mt, t_start, t_end, case_limit=100, seed=999, scope=case_level_sampling.ScopeCase.CASE, rbi_function=rbi_activity_completions, performance_function=case_duration)
 
         intercept, slope, r_squared, rpi_p_value, rpi_t_stat  = regression_analysis.fit_regression(regression_data_cs[0], regression_data_cs[1])
 

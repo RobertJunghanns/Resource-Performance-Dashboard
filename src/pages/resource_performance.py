@@ -354,7 +354,7 @@ layout = html.Div([
                                             ]
                                         ),
                                         html.Div([
-                                                html.P('Individual backwards scope:', className='p-option-col'),
+                                                html.P('Additional backwards scope:', className='p-option-col'),
                                                 dcc.Input(id='input-individual-backwards-scope-rp', className='input hight-35', type='number', placeholder=' Backwards scope in MINUTES'),
                                         ], id='div-individual-backwards-scope', style={'display': 'none'}), 
                                 ])

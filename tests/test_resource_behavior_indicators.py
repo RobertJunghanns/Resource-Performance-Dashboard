@@ -57,9 +57,10 @@ class TestCaseLevelSampling(unittest.TestCase):
                 WHERE [org:resource] = '{r}'
                 AND [concept:name] = 'invalid'"""
 
-        result = resource_behavior_indicators.sql_to_rbi(self.event_log_simple_mt, self.t_start, self.t_end, self.resource_id, sql_query=rbi_sql)
+        with self.assertRaises(ValueError) as context:
+            resource_behavior_indicators.sql_to_rbi(self.event_log_simple_mt, self.t_start, self.t_end, self.resource_id, sql_query=rbi_sql)
 
-        self.assertEqual(result, 0)
+        self.assertTrue("SQL query result is not numeric." in str(context.exception))
     
     def test_rbi_distinct_activities(self):
         result = resource_behavior_indicators.rbi_distinct_activities(self.event_log_simple_mt, self.t_start, self.t_end, self.resource_id)

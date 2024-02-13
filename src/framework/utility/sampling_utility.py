@@ -11,10 +11,15 @@ def get_n_case_ids(case_ids, n_cases, seed=999):
     
 # get a lower number of activities to reduce activity sampling time
 def get_n_events(event_log, n_events, seed=999):
-    if len(event_log) > n_events:
-        return event_log.sample(n=n_events, random_state=seed)
+    # Filter out rows where 'org:resource' is None or NaN
+    filtered_event_log = event_log.dropna(subset=['org:resource'])
+    
+    if len(filtered_event_log) > n_events:
+        # Sample n_events from the filtered DataFrame
+        return filtered_event_log.sample(n=n_events, random_state=seed)
     else:
-        return event_log
+        # If there aren't enough events after filtering, return the filtered DataFrame
+        return filtered_event_log
 
 
 def get_trace(event_log: pd.DataFrame, case_id: str) -> pd.DataFrame:

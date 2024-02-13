@@ -45,7 +45,7 @@ def get_dependent_variable_activity(event: pd.Series, performance_function: Call
     return performance_function(event, *args)
 
 # [(IV, DV)] for all c element C_{T}(t_{1},t_{2})
-def sample_regression_data_activity(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, filter_event_attribute: str, filter_event_value: str, activity_limit: int, seed: int,  scope: ScopeActivity, rbi_function: Callable, performance_function: Callable, additional_rbi_arguments: List[Any] = [], additional_performance_arguments: List[Any] = [], individual_scope = pd.Timedelta(0)):
+def sample_regression_data_activity(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, filter_event_attribute: str, filter_event_value: str, activity_limit: int, seed: int, scope: ScopeActivity, rbi_function: Callable, performance_function: Callable, additional_rbi_arguments: List[Any] = [], additional_performance_arguments: List[Any] = [], individual_scope = pd.Timedelta(0)):
     included_events = get_included_events(event_log, t_start, t_end, filter_event_attribute, filter_event_value)
     included_events = get_n_events(included_events, activity_limit, seed)
 

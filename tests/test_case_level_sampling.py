@@ -7,7 +7,7 @@ import pm4py
 import warnings
 import numpy as np
 import pandas as pd
-from src.framework.measures.resource_behavior_indicators import rbi_distinct_activities
+from src.framework.measures.resource_behavior_indicators import rbi_activity_completions
 from src.framework.measures.case_performance_measures import case_duration
 from src.framework.sampling import case_level_sampling
 from src.framework.utility import sampling_utility
@@ -71,9 +71,9 @@ class TestCaseLevelSampling(unittest.TestCase):
     def test_case_level_sampling(self):
         t_start = pd.Timestamp("2010-12-31T23:30:00.000+02:00")
         t_end = pd.Timestamp("2011-01-07T06:30:00.000+02:00")
-        regression_data_cs = case_level_sampling.sample_regression_data_case(self.event_log_simple_mt, t_start, t_end, case_limit=100, seed=999, scope=case_level_sampling.ScopeCase.CASE, rbi_function=rbi_distinct_activities, performance_function=case_duration)
-        regression_data_is = case_level_sampling.sample_regression_data_case(self.event_log_simple_mt, t_start, t_end, case_limit=100, seed=999, scope=case_level_sampling.ScopeCase.INDIVIDUAL, rbi_function=rbi_distinct_activities, performance_function=case_duration, individual_scope=pd.Timedelta(days=1))
-        regression_data_ts = case_level_sampling.sample_regression_data_case(self.event_log_simple_mt, t_start, t_end, case_limit=100, seed=999, scope=case_level_sampling.ScopeCase.TOTAL, rbi_function=rbi_distinct_activities, performance_function=case_duration)
+        regression_data_cs = case_level_sampling.sample_regression_data_case(self.event_log_simple_mt, t_start, t_end, case_limit=100, seed=999, scope=case_level_sampling.ScopeCase.CASE, rbi_function=rbi_activity_completions, performance_function=case_duration)
+        regression_data_is = case_level_sampling.sample_regression_data_case(self.event_log_simple_mt, t_start, t_end, case_limit=100, seed=999, scope=case_level_sampling.ScopeCase.INDIVIDUAL, rbi_function=rbi_activity_completions, performance_function=case_duration, individual_scope=pd.Timedelta(days=1))
+        regression_data_ts = case_level_sampling.sample_regression_data_case(self.event_log_simple_mt, t_start, t_end, case_limit=100, seed=999, scope=case_level_sampling.ScopeCase.TOTAL, rbi_function=rbi_activity_completions, performance_function=case_duration)
 
         expected_regression_data_cs = (np.array([7/3, 4/3, 7/4]), np.array([420., 420., 240.]))
         expected_regression_data_is = (np.array([5, 7/2, 5/2]), np.array([420., 420., 240.]))
@@ -97,7 +97,7 @@ class TestCaseLevelSampling(unittest.TestCase):
         t_end = pd.Timestamp("2011-01-07T06:30:00.000+02:00")
         
         with self.assertRaises(ValueError):
-            case_level_sampling.sample_regression_data_case(self.event_log_simple_mt, t_start, t_end, case_limit=100, seed=999, scope='invalidScope', rbi_function=rbi_distinct_activities, performance_function=case_duration)
+            case_level_sampling.sample_regression_data_case(self.event_log_simple_mt, t_start, t_end, case_limit=100, seed=999, scope='invalidScope', rbi_function=rbi_activity_completions, performance_function=case_duration)
 
 if __name__ == '__main__':
     unittest.main()

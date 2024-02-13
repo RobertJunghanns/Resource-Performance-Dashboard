@@ -40,8 +40,9 @@ class TestSamplingUtilityFunctions(unittest.TestCase):
         self.assertEqual(len(sampled_events), 5)
 
     def test_get_n_events_more(self):
-        sampled_events = sampling_utility.get_n_events(self.event_log, len(self.event_log))
-        self.assertEqual(len(sampled_events), len(self.event_log))
+        filtered_event_log = self.event_log.dropna(subset=['org:resource'])
+        sampled_events = sampling_utility.get_n_events(filtered_event_log, len(filtered_event_log))
+        self.assertEqual(len(sampled_events), len(filtered_event_log))
 
     def test_get_trace(self):
         sampled_trace = sampling_utility.get_trace(self.event_log, '173691')

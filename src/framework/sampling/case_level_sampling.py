@@ -1,3 +1,4 @@
+import time
 import pandas as pd
 import numpy as np
 
@@ -47,7 +48,7 @@ def participation_share(trace_prepared: pd.DataFrame, resource_id: str) -> float
     return resource_duration_sum/duration_sum
 
 # IV(c)
-def get_independent_variable_case(event_log: pd.DataFrame, case_id: str, scope: ScopeCase, rbi_function: Callable, *args, individual_scope = pd.Timedelta(0)):    
+def get_independent_variable_case(event_log: pd.DataFrame, case_id: str, scope: ScopeCase, rbi_function: Callable, *args, individual_scope = pd.Timedelta(0)):
     trace = get_trace(event_log, case_id)
     trace_prepared = prepare_trace(trace)
 
@@ -67,7 +68,6 @@ def get_independent_variable_case(event_log: pd.DataFrame, case_id: str, scope: 
     for resource_id in resource_ids:
         ps = participation_share(trace_prepared, resource_id)
         rbi_value = rbi_function(event_log, t1, t2, resource_id, *args)
-
         weighted_avg += rbi_value * ps
 
     return weighted_avg
@@ -84,7 +84,7 @@ def sample_regression_data_case(event_log: pd.DataFrame, t_start: pd.Timestamp, 
 
     rbi_values = np.array([])
     perf_values = np.array([])
-    
+
     for case_id in case_ids:
         rbi_values = np.append(rbi_values, get_independent_variable_case(event_log, case_id, scope, rbi_function, *additional_rbi_arguments, individual_scope=individual_scope))
         perf_values = np.append(perf_values, get_dependent_variable_case(event_log, case_id, performance_function, *additional_performance_arguments))

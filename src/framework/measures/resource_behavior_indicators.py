@@ -27,7 +27,7 @@ def sql_to_rbi(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timesta
     return float(result_num)
 
 def rbi_distinct_activities(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, resource_id: str) -> float:
-    return algorithm.activity_completions(event_log, t_start, t_end, resource_id)
+    return algorithm.distinct_activities(event_log, t_start, t_end, resource_id)
 
 def rbi_activity_completions(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, resource_id: str) -> float:
     return algorithm.activity_completions(event_log, t_start, t_end, resource_id)

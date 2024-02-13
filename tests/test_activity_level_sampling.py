@@ -7,7 +7,7 @@ import pm4py
 import warnings
 import numpy as np
 import pandas as pd
-from src.framework.measures.resource_behavior_indicators import rbi_distinct_activities
+from src.framework.measures.resource_behavior_indicators import rbi_activity_completions
 from src.framework.measures.activity_performance_measures import activity_duration
 from src.framework.sampling import activity_level_sampling
 
@@ -42,11 +42,11 @@ class TestCaseLevelSampling(unittest.TestCase):
         t_end = pd.Timestamp("2011-01-07T06:30:00.000+02:00")
 
 
-        regression_data_cs = activity_level_sampling.sample_regression_data_activity(self.event_log_simple_mt, t_start, t_end, filter_event_attribute='org:resource', filter_event_value='1', activity_limit=10, seed=999, scope=activity_level_sampling.ScopeActivity.ACTIVITY, rbi_function=rbi_distinct_activities, performance_function=activity_duration)
+        regression_data_cs = activity_level_sampling.sample_regression_data_activity(self.event_log_simple_mt, t_start, t_end, filter_event_attribute='org:resource', filter_event_value='1', activity_limit=10, seed=999, scope=activity_level_sampling.ScopeActivity.ACTIVITY, rbi_function=rbi_activity_completions, performance_function=activity_duration)
 
-        regression_data_is = activity_level_sampling.sample_regression_data_activity(self.event_log_simple_mt, t_start, t_end, filter_event_attribute='org:resource', filter_event_value='1', activity_limit=10, seed=999, scope=activity_level_sampling.ScopeActivity.INDIVIDUAL, rbi_function=rbi_distinct_activities, performance_function=activity_duration, individual_scope = pd.Timedelta(days=1))
+        regression_data_is = activity_level_sampling.sample_regression_data_activity(self.event_log_simple_mt, t_start, t_end, filter_event_attribute='org:resource', filter_event_value='1', activity_limit=10, seed=999, scope=activity_level_sampling.ScopeActivity.INDIVIDUAL, rbi_function=rbi_activity_completions, performance_function=activity_duration, individual_scope = pd.Timedelta(days=1))
 
-        regression_data_ts = activity_level_sampling.sample_regression_data_activity(self.event_log_simple_mt, t_start, t_end, filter_event_attribute='org:resource', filter_event_value='1', activity_limit=10, seed=999, scope=activity_level_sampling.ScopeActivity.TOTAL, rbi_function=rbi_distinct_activities, performance_function=activity_duration)
+        regression_data_ts = activity_level_sampling.sample_regression_data_activity(self.event_log_simple_mt, t_start, t_end, filter_event_attribute='org:resource', filter_event_value='1', activity_limit=10, seed=999, scope=activity_level_sampling.ScopeActivity.TOTAL, rbi_function=rbi_activity_completions, performance_function=activity_duration)
 
         expected_regression_data_cs = (np.array([0., 1., 2., 0.]), np.array([  0.,  60., 120.,  60.]))
         expected_regression_data_is = (np.array([3., 4., 6., 6.]), np.array([  0.,  60., 120.,  60.]))
@@ -70,7 +70,7 @@ class TestCaseLevelSampling(unittest.TestCase):
         t_end = pd.Timestamp("2011-01-07T06:30:00.000+02:00")
         
         with self.assertRaises(ValueError):
-            activity_level_sampling.sample_regression_data_activity(self.event_log_simple_mt, t_start, t_end, filter_event_attribute='org:resource', filter_event_value='1', activity_limit=10, seed=999, scope='invalid scope', rbi_function=rbi_distinct_activities, performance_function=activity_duration)
+            activity_level_sampling.sample_regression_data_activity(self.event_log_simple_mt, t_start, t_end, filter_event_attribute='org:resource', filter_event_value='1', activity_limit=10, seed=999, scope='invalid scope', rbi_function=rbi_activity_completions, performance_function=activity_duration)
 
 if __name__ == '__main__':
     unittest.main()

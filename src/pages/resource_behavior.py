@@ -193,7 +193,7 @@ layout = html.Div([
                                         html.P(
                                             className='p-option-col',
                                             children=[
-                                                'Backwards scope ',
+                                                'Interval start point ',
                                                 html.Span('*', style={'color': 'red'})
                                             ]
                                         ),
