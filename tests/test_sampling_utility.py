@@ -50,7 +50,7 @@ class TestSamplingUtilityFunctions(unittest.TestCase):
 
         pdt.assert_frame_equal(sampled_trace, expected_trace)
 
-    def test_group_equal_timestamp_events(self):
+    def test_group_equal_timestamp_events_1(self):
         trace = sampling_utility.get_trace(self.event_log, '173691')
         grouped_trace = sampling_utility.group_equal_timestamp_events(trace)
 
@@ -63,6 +63,25 @@ class TestSamplingUtilityFunctions(unittest.TestCase):
         self.assertEqual(len(grouped_event_2), 1)
         self.assertEqual(len(grouped_event_3), 1)
         self.assertEqual(len(grouped_event_4), 0)
+    
+    def test_group_equal_timestamp_events_2(self):
+        trace = sampling_utility.get_trace(self.event_log_simple, '002')
+        grouped_trace = sampling_utility.group_equal_timestamp_events(trace)
+
+        grouped_event_1_wrong = grouped_trace[grouped_trace['concept:name'] == 'B + C + D'] # same timestamps & resource but B has start event
+        self.assertEqual(len(grouped_event_1_wrong), 0) # 'B + C + D' should not occure because B hast start event
+
+        grouped_event_1_correct = grouped_trace[grouped_trace['concept:name'] == 'C + D'] # same timestamps & resource but B has start event
+        self.assertEqual(len(grouped_event_1_correct), 1) # 'C + D' should occure once because B hast start event
+
+        grouped_event_2_wrong = grouped_trace[grouped_trace['concept:name'] == 'E + F'] # same timestamps & resource but E has start event
+        self.assertEqual(len(grouped_event_2_wrong), 0) # 'E + F should not occure because E hast start event
+
+        grouped_event_2_correct_E = grouped_trace[(grouped_trace['lifecycle:transition'] == 'COMPLETE') & (grouped_trace['concept:name'] == 'E')] 
+        grouped_event_2_correct_F = grouped_trace[(grouped_trace['lifecycle:transition'] == 'COMPLETE') & (grouped_trace['concept:name'] == 'F')] 
+        self.assertEqual(len(grouped_event_2_correct_E), 1) # 'E' should occure once
+        self.assertEqual(len(grouped_event_2_correct_F), 1) # 'F' should occure once
+        
         
     def test_add_activity_duration(self):
         trace = sampling_utility.get_trace(self.event_log_simple, '001')

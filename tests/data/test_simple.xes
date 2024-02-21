@@ -61,6 +61,56 @@
 			<string key="concept:name" value="C"/>
 			<date key="time:timestamp" value="2011-01-01T05:00:00.000+02:00"/>
 		</event>
-		
+	</trace>
+	<trace>
+		<string key="concept:name" value="002"/>
+		<event>
+			<string key="org:resource" value="1"/>
+			<string key="lifecycle:transition" value="COMPLETE"/>
+			<string key="concept:name" value="A"/>
+			<date key="time:timestamp" value="2011-02-01T01:00:00.000+02:00"/>
+		</event>
+		<event>
+			<string key="org:resource" value="2"/>
+			<string key="lifecycle:transition" value="START"/>
+			<string key="concept:name" value="B"/>
+			<date key="time:timestamp" value="2011-02-01T02:00:00.000+02:00"/>
+		</event>
+		<event>
+			<string key="org:resource" value="2"/>
+			<string key="lifecycle:transition" value="COMPLETE"/>
+			<string key="concept:name" value="B"/>
+			<date key="time:timestamp" value="2011-02-01T03:00:00.000+02:00"/>
+		</event>
+		<event>
+			<string key="org:resource" value="2"/>
+			<string key="lifecycle:transition" value="COMPLETE"/>
+			<string key="concept:name" value="C"/>
+			<date key="time:timestamp" value="2011-02-01T03:00:00.000+02:00"/>
+		</event>
+		<event>
+			<string key="org:resource" value="2"/>
+			<string key="lifecycle:transition" value="COMPLETE"/>
+			<string key="concept:name" value="D"/>
+			<date key="time:timestamp" value="2011-02-01T03:00:00.000+02:00"/>
+		</event>
+		<event>
+			<string key="org:resource" value="3"/>
+			<string key="lifecycle:transition" value="START"/>
+			<string key="concept:name" value="E"/>
+			<date key="time:timestamp" value="2011-02-01T04:00:00.000+02:00"/>
+		</event>
+		<event>
+			<string key="org:resource" value="3"/>
+			<string key="lifecycle:transition" value="COMPLETE"/>
+			<string key="concept:name" value="E"/>
+			<date key="time:timestamp" value="2011-02-01T05:00:00.000+02:00"/>
+		</event>
+		<event>
+			<string key="org:resource" value="3"/>
+			<string key="lifecycle:transition" value="COMPLETE"/>
+			<string key="concept:name" value="F"/>
+			<date key="time:timestamp" value="2011-02-01T05:00:00.000+02:00"/>
+		</event>
 	</trace>
 </log>
