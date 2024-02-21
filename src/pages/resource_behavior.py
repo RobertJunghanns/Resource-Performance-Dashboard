@@ -36,14 +36,15 @@ layout = html.Div([
                                 html.P(
                                     className='p-option-col',
                                     children=[
-                                        'Resource ID ',
+                                        'Resource IDs ',
                                         html.Span('*', style={'color': 'red'})
                                     ]
                                 ),
                                 dcc.Dropdown(
                                     id='dropdown-resource-select',
                                     className='',
-                                    options=[]
+                                    options=[],
+                                    multi=True
                                 )
                         ]),
                 ]),
@@ -286,7 +287,7 @@ def update_resource_options(pickle_df_name):
      State('input-concept-name', 'value'),
      State('input-resource-name', 'value')]
 )
-def get_rbi_time_series(n_clicks, pickle_df_name, rbi, resource, date_from_str, time_from_str, date_to_str, time_to_str, period, scope, sql_query, concept_name, interaction_resource):
+def get_rbi_time_series(n_clicks, pickle_df_name, rbi, selected_resources, date_from_str, time_from_str, date_to_str, time_to_str, period, scope, sql_query, concept_name, interaction_resource):
     no_figure = go.Figure(layout={
                 'xaxis': {'visible': False},
                 'yaxis': {'visible': False},
@@ -310,7 +311,7 @@ def get_rbi_time_series(n_clicks, pickle_df_name, rbi, resource, date_from_str, 
     df_event_log = load_from_pickle(pickle_df_name)
     
     # check for None values
-    if all(variable is not None and variable for variable in [rbi, resource, date_from_str, time_from_str, date_to_str, time_to_str, period, scope]):
+    if all(variable is not None and variable for variable in [rbi, selected_resources, date_from_str, time_from_str, date_to_str, time_to_str, period, scope]):
         # convert timestamp strings
         timestamp_from_str = date_from_str + 'T' + time_from_str.split('T')[1] + '+00:00'
         timestamp_to_str = date_to_str + 'T' + time_to_str.split('T')[1] + '+00:00'
@@ -324,41 +325,48 @@ def get_rbi_time_series(n_clicks, pickle_df_name, rbi, resource, date_from_str, 
         elif scope == 'start_log':
             time_intervals = generate_until_end_period_intervals(timestamp_from, timestamp_to, period)
 
-        rbi_time_series_names = []
-        rbi_time_series_values = []
-        for interval in time_intervals:
-            if scope=='start_period':
-                rbi_time_series_names.append(get_period_name(interval[0], period))
-            elif scope == 'start_log':
-                rbi_time_series_names.append(get_period_name(interval[2], period))
+        # Initialize a list to hold traces for the figure
+        resource_scatters = []
 
-            if rbi == 'rbi_sql':
-                try:
-                    rbi_time_series_values.append(sql_to_rbi(df_event_log, interval[0], interval[1], resource, sql_query))
-                except Exception as error:
-                    return no_figure, 'SQL failed:\n' + str(error), True
-            elif rbi == 'rbi_distinct_activities':
-                rbi_time_series_values.append(rbi_distinct_activities(df_event_log, interval[0], interval[1], resource))
-            elif rbi == 'rbi_activity_frequency':
-                rbi_time_series_values.append(rbi_activity_fequency(df_event_log, interval[0], interval[1], resource, concept_name))
-            elif rbi == 'rbi_activity_completions':
-                rbi_time_series_values.append(rbi_activity_completions(df_event_log, interval[0], interval[1], resource))
-            elif rbi == 'rbi_case_completions':
-                rbi_time_series_values.append(rbi_case_completions(df_event_log, interval[0], interval[1], resource))
-            elif rbi == 'rbi_fraction_case_completion':
-                rbi_time_series_values.append(rbi_fraction_case_completions(df_event_log, interval[0], interval[1], resource))
-            elif rbi == 'rbi_average_workload':
-                rbi_time_series_values.append(rbi_average_workload(df_event_log, interval[0], interval[1], resource))
-            elif rbi == 'rbi_multitasking':
-                rbi_time_series_values.append(rbi_multitasking(df_event_log, interval[0], interval[1], resource))
-            elif rbi == 'rbi_average_duration_activity':
-                rbi_time_series_values.append(rbi_average_duration_activity(df_event_log, interval[0], interval[1], resource, concept_name))
-            elif rbi == 'rbi_interaction_two_resources':
-                rbi_time_series_values.append(rbi_interaction_two_resources(df_event_log, interval[0], interval[1], resource, interaction_resource))
-            elif rbi == 'rbi_social_position':
-                rbi_time_series_values.append(rbi_social_position(df_event_log, interval[0], interval[1], resource))
-            else:
-                return no_figure, no_update, no_update
+        for resource in selected_resources:
+
+            rbi_time_series_names = []
+            rbi_time_series_values = []
+            for interval in time_intervals:
+                if scope=='start_period':
+                    rbi_time_series_names.append(get_period_name(interval[0], period))
+                elif scope == 'start_log':
+                    rbi_time_series_names.append(get_period_name(interval[2], period))
+
+                if rbi == 'rbi_sql':
+                    try:
+                        rbi_time_series_values.append(sql_to_rbi(df_event_log, interval[0], interval[1], resource, sql_query))
+                    except Exception as error:
+                        return no_figure, 'SQL failed:\n' + str(error), True
+                elif rbi == 'rbi_distinct_activities':
+                    rbi_time_series_values.append(rbi_distinct_activities(df_event_log, interval[0], interval[1], resource))
+                elif rbi == 'rbi_activity_frequency':
+                    rbi_time_series_values.append(rbi_activity_fequency(df_event_log, interval[0], interval[1], resource, concept_name))
+                elif rbi == 'rbi_activity_completions':
+                    rbi_time_series_values.append(rbi_activity_completions(df_event_log, interval[0], interval[1], resource))
+                elif rbi == 'rbi_case_completions':
+                    rbi_time_series_values.append(rbi_case_completions(df_event_log, interval[0], interval[1], resource))
+                elif rbi == 'rbi_fraction_case_completion':
+                    rbi_time_series_values.append(rbi_fraction_case_completions(df_event_log, interval[0], interval[1], resource))
+                elif rbi == 'rbi_average_workload':
+                    rbi_time_series_values.append(rbi_average_workload(df_event_log, interval[0], interval[1], resource))
+                elif rbi == 'rbi_multitasking':
+                    rbi_time_series_values.append(rbi_multitasking(df_event_log, interval[0], interval[1], resource))
+                elif rbi == 'rbi_average_duration_activity':
+                    rbi_time_series_values.append(rbi_average_duration_activity(df_event_log, interval[0], interval[1], resource, concept_name))
+                elif rbi == 'rbi_interaction_two_resources':
+                    rbi_time_series_values.append(rbi_interaction_two_resources(df_event_log, interval[0], interval[1], resource, interaction_resource))
+                elif rbi == 'rbi_social_position':
+                    rbi_time_series_values.append(rbi_social_position(df_event_log, interval[0], interval[1], resource))
+                else:
+                    return no_figure, no_update, no_update
+                
+            resource_scatters.append(go.Scatter(x=rbi_time_series_names, y=rbi_time_series_values, name=f'Resource: {resource}'))
             
         rbi_function_mapping = {
             'rbi_sql': 'Custom RBI (SQL)',
@@ -377,7 +385,7 @@ def get_rbi_time_series(n_clicks, pickle_df_name, rbi, resource, date_from_str, 
         # Retrieve only the label for a given independent_variable_value
         rbi_label = rbi_function_mapping.get(rbi, '')
             
-        fig = go.Figure([go.Scatter(x=rbi_time_series_names, y=rbi_time_series_values)])
+        fig = go.Figure(resource_scatters)
 
         fig.update_layout(
             xaxis_title="Time",

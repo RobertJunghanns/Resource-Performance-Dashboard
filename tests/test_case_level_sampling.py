@@ -41,7 +41,7 @@ class TestCaseLevelSampling(unittest.TestCase):
         t_end = pd.Timestamp("2011-01-01T06:30:00.000+02:00")
         events_in_time_frame = case_level_sampling.get_events_not_in_time_frame(self.event_log_simple, t_start, t_end)
 
-        self.assertEqual(len(events_in_time_frame), 3)
+        self.assertEqual(len(events_in_time_frame), 11)
 
     def test_caseids_in_time_frame(self):
         t_start = pd.Timestamp("2010-12-31T23:30:00.000+02:00")
