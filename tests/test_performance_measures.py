@@ -8,7 +8,7 @@ import warnings
 import numpy as np
 import pandas as pd
 from src.framework.measures import case_performance_measures
-from src.framework.utility import activity_duration_estimation
+from src.framework.sampling import activity_duration_estimation
 
 
 def sort_tuple_data(data_tuple):

@@ -3,7 +3,7 @@ import numpy as np
 
 from enum import Enum
 from typing import Callable, List, Any
-from framework.utility.activity_duration_estimation import get_trace, get_n_events, prepare_trace
+from framework.sampling.activity_duration_estimation import get_trace, get_n_events, prepare_trace
 from framework.utility.xes_utility import get_earliest_timestamp
 
 class ScopeActivity(Enum):

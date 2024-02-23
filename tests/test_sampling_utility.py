@@ -7,7 +7,7 @@ import pm4py
 import warnings
 import pandas as pd
 import pandas.testing as pdt
-from src.framework.utility import activity_duration_estimation
+from src.framework.sampling import activity_duration_estimation
 from src.framework.utility import xes_utility
 
 
