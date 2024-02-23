@@ -76,14 +76,46 @@ FROM (
          WHERE [org:resource] = '{r}') AS all_activities
 ) AS count
 ```
-### Custom Performance Metric
 
-#### Case Duration
+#### Custom: Average number of activities executed in a case by the participating resource
+```
+SELECT AVG(completed_activities) AS avg_completed_activities
+FROM (
+    SELECT [case:concept:name], 
+           COUNT(*) AS completed_activities
+    FROM event_log
+    WHERE [lifecycle:transition] = 'complete'
+    AND [org:resource] = '{r}'
+    GROUP BY [case:concept:name]
+) AS case_activities
+```
+### Custom: Average number of activities executed in a case where the resource participated
+SELECT AVG(completed_activities) AS avg_completed_activities
+FROM (
+    SELECT e.[case:concept:name], 
+           COUNT(*) AS completed_activities
+    FROM event_log e
+    INNER JOIN (
+        SELECT DISTINCT [case:concept:name]
+        FROM event_log
+        WHERE [org:resource] = '{r}'
+    ) r1_cases ON e.[case:concept:name] = r1_cases.[case:concept:name]
+    WHERE e.[lifecycle:transition] = 'complete'
+    GROUP BY e.[case:concept:name]
+) AS completed_activities_per_case;
+
+#### Case Duration in Minutes
 ```
 SELECT
     (CAST(strftime('%s', MAX([time:timestamp])) AS FLOAT) - 
      CAST(strftime('%s', MIN([time:timestamp])) AS FLOAT)) / 60
 FROM
     trace
+```
+
+#### Cost of application (case level) for BPIC'15
+```
+SELECT DISTINCT([case:SUMleges])
+FROM trace
 ```
 
