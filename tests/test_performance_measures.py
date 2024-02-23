@@ -8,7 +8,7 @@ import warnings
 import numpy as np
 import pandas as pd
 from src.framework.measures import case_performance_measures
-from src.framework.utility import sampling_utility
+from src.framework.utility import activity_duration_estimation
 
 
 def sort_tuple_data(data_tuple):
@@ -27,7 +27,7 @@ class TestCaseLevelSampling(unittest.TestCase):
 
 
     def test_case_duration_and_sql(self):
-        sampled_trace = sampling_utility.get_trace(self.event_log_simple_mt, '001')
+        sampled_trace = activity_duration_estimation.get_trace(self.event_log_simple_mt, '001')
 
         case_duration_sql = """
         SELECT
@@ -43,7 +43,7 @@ class TestCaseLevelSampling(unittest.TestCase):
         self.assertEqual(case_duration_sql, case_duration)
 
     def test_sql_no_return(self):
-        sampled_trace = sampling_utility.get_trace(self.event_log_simple_mt, '001')
+        sampled_trace = activity_duration_estimation.get_trace(self.event_log_simple_mt, '001')
 
         case_duration_sql = """
         SELECT COUNT([org:resource]) FROM trace WHERE [org:resource] = 'invalid'

@@ -10,7 +10,7 @@ import pandas as pd
 from src.framework.measures.resource_behavior_indicators import rbi_activity_completions
 from src.framework.measures.case_performance_measures import case_duration
 from src.framework.sampling import case_level_sampling
-from src.framework.utility import sampling_utility
+from src.framework.utility import activity_duration_estimation
 
 def sort_tuple_data(data_tuple):
     return (np.sort(data_tuple[0]), np.sort(data_tuple[1]))
@@ -51,15 +51,15 @@ class TestCaseLevelSampling(unittest.TestCase):
         self.assertEqual(caseids, np.array(['001']))
 
     def test_participating_resources(self):
-        trace = sampling_utility.get_trace(self.event_log_simple, '001')
-        trace_prepared = sampling_utility.prepare_trace(trace)
+        trace = activity_duration_estimation.get_trace(self.event_log_simple, '001')
+        trace_prepared = activity_duration_estimation.prepare_trace(trace)
         resources = case_level_sampling.get_participating_resources(trace_prepared)
 
         np.testing.assert_array_equal(np.sort(resources), np.array(['1', '2', '3']))
     
     def test_participating_share(self):
-        trace = sampling_utility.get_trace(self.event_log_simple, '001')
-        trace_prepared = sampling_utility.prepare_trace(trace)
+        trace = activity_duration_estimation.get_trace(self.event_log_simple, '001')
+        trace_prepared = activity_duration_estimation.prepare_trace(trace)
         share_r1 = case_level_sampling.participation_share(trace_prepared, '1')
         share_r2 = case_level_sampling.participation_share(trace_prepared, '2')
         share_r3 = case_level_sampling.participation_share(trace_prepared, '3')
