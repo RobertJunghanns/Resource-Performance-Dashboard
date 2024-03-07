@@ -1,7 +1,9 @@
+import time
 import pandas as pd
 import numpy as np
 
 from enum import Enum
+from datetime import timedelta
 from typing import Callable, List, Any
 from framework.sampling.activity_duration_estimation import get_trace, get_n_events, prepare_trace
 from framework.utility.xes_utility import get_earliest_timestamp
@@ -26,11 +28,12 @@ def get_included_events(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: p
     
 # IV(c)
 def get_independent_variable_activity(event_log: pd.DataFrame, event: pd.Series, activity_duration: pd.Timedelta, scope: ScopeActivity, rbi_function: Callable, *args, individual_scope = pd.Timedelta(0)):    
-    t2 = event['time:timestamp']
+    # add millisecond to t2 to use pm4py RBIs with <=t2 not <t2
+    t2 = event['time:timestamp'] #+ timedelta(milliseconds=1)
     if scope == ScopeActivity.ACTIVITY:
         t1 = event['time:timestamp'] - activity_duration
     elif scope == ScopeActivity.INDIVIDUAL:
-        t1 = event['time:timestamp'] - activity_duration - individual_scope
+        t1 = event['time:timestamp'] - individual_scope
     elif scope == ScopeActivity.TOTAL:
         t1 = get_earliest_timestamp(event_log)
     else:
@@ -51,8 +54,20 @@ def sample_regression_data_activity(event_log: pd.DataFrame, t_start: pd.Timesta
 
     rbi_values = np.array([])
     perf_values = np.array([])
+
+    # information for lookup
+    case_id_info = np.array([])
+    activity_info = np.array([])
+    resource_info = np.array([])
+
+    # information runtime
+    iteration_times = np.array([])
+    total_events = included_events.shape[0]
+    iteration_count = 0
     
     for _, event in included_events.iterrows():
+        start_time = time.time()
+
         # get the trace for an activity duration analysis (prepare_trace)
         trace = get_trace(event_log, event['case:concept:name'])
         trace_prepared = prepare_trace(trace)
@@ -65,4 +80,23 @@ def sample_regression_data_activity(event_log: pd.DataFrame, t_start: pd.Timesta
         rbi_values = np.append(rbi_values, get_independent_variable_activity(event_log, event, activity_duration, scope, rbi_function, *additional_rbi_arguments, individual_scope=individual_scope))
         perf_values = np.append(perf_values, get_dependent_variable_activity(event, performance_function, activity_duration, *additional_performance_arguments))
 
-    return rbi_values, perf_values
+        # information for lookup
+        case_id_info = np.append(case_id_info, event['case:concept:name'])
+        activity_info = np.append(activity_info, event['concept:name'])
+        resource_info = np.append(resource_info, event['org:resource'])
+
+        # information for runtime
+        end_time = time.time()
+        iteration_time = end_time - start_time
+        iteration_times = np.append(iteration_times, iteration_time)
+        iteration_count += 1
+        if iteration_count % 10 == 0:
+            print(f"Progress: {iteration_count}/{total_events}. Average time per iteration: {(np.average(iteration_times)):.4f} seconds.")
+
+    # information for lookup
+    lookup_information = {
+        'case_id': case_id_info,
+        'activity_id': activity_info,
+        'resource': resource_info
+    }
+    return rbi_values, perf_values, lookup_information

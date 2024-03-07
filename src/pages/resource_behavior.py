@@ -392,6 +392,22 @@ def get_rbi_time_series(n_clicks, pickle_df_name, rbi, selected_resources, date_
             yaxis_title=rbi_label,
             title="RBI Time Series"
         )
+        thesis_large_font = True
+        if thesis_large_font:
+            axis_title_font_size = 20
+            tick_label_font_size = 15
+            legend_font_size = 15  # Adjust this value as needed for legend item text
+            legend_title_font_size = 17  # Adjust for the legend title text
+
+            fig.update_layout(
+                xaxis_title_font=dict(size=axis_title_font_size),
+                yaxis_title_font=dict(size=axis_title_font_size),
+                legend_title_font=dict(size=legend_title_font_size),  # Set legend title font size
+                legend_font=dict(size=legend_font_size)  # Set legend item font size
+            )
+
+            fig.update_xaxes(tickfont=dict(size=tick_label_font_size))
+            fig.update_yaxes(tickfont=dict(size=tick_label_font_size))
                 
         return fig, no_update, no_update
     else:

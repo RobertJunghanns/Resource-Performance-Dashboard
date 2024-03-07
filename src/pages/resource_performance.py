@@ -354,7 +354,7 @@ layout = html.Div([
                                             ]
                                         ),
                                         html.Div([
-                                                html.P('Additional backwards scope:', className='p-option-col'),
+                                                html.P('Individual backwards scope:', className='p-option-col'),
                                                 dcc.Input(id='input-individual-backwards-scope-rp', className='input hight-35', type='number', placeholder=' Backwards scope in MINUTES'),
                                         ], id='div-individual-backwards-scope', style={'display': 'none'}), 
                                 ])
@@ -470,7 +470,12 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
         'rbi_interaction_two_resources': (rbi_interaction_two_resources, [iv_resource_name], 'Interaction two resources'),
         'rbi_social_position': (rbi_social_position, [], 'Social position')
     }
-    rbi_function, additional_rbi_arguments, rbi_label = rbi_function_mapping.get(independent_variable_value, (None, [], ''))    
+    rbi_function, additional_rbi_arguments, rbi_label = rbi_function_mapping.get(independent_variable_value, (None, [], ''))
+    # Add string representation of additional arguments to rbi_label
+    if additional_rbi_arguments:
+        arguments_str = ' (' + ', '.join(additional_rbi_arguments) + ')'
+    else:
+        arguments_str = ''
 
     performance_function_mapping = {
         'perf_sql': (sql_to_case_performance_metric, [dv_sql], 'Custom Performance Metric (SQL)'),
@@ -503,72 +508,135 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
     else:
         individual_scope_value = pd.Timedelta(minutes=backwards_scope_individual)
 
+    if backwards_scope_label == 'Individual scope':
+        backwards_scope_label = backwards_scope_label + ' (' + str(individual_scope_value.total_seconds()/60) + ' minutes)'
+
     if sampling_strategy_value == 'case_level':
         if case_limit_value is None:
             return no_update, no_update, 'Input Max. number of cases before generating!', True
         if case_limit_value < 2:
             return no_update, no_update, 'The number of cases has to be larger than 1!', True
-        rbi_values, perf_values = sample_regression_data_case(df_event_log, timestamp_from, timestamp_to, case_limit_value, seed_value, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments, individual_scope=individual_scope_value)
+        rbi_values, perf_values, lookup_information = sample_regression_data_case(df_event_log, timestamp_from, timestamp_to, case_limit_value, seed_value, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments, individual_scope=individual_scope_value)
+        # create dataframe for figure
+        df = pd.DataFrame({
+            'RBI Value': rbi_values,
+            'Performance Value': perf_values,
+            'Case ID': lookup_information['case_id'],
+            'Trace': lookup_information['trace'],
+            'Resources': lookup_information['resources'],
+        })
         count_str = str(len(rbi_values)) + '/' + str(case_limit_value) + ' cases'
+
     elif sampling_strategy_value == 'activity_level':
         if activity_limit_value is None:
             return no_update, no_update, 'Input Max. number of activities before generating!', True
         if activity_limit_value < 2:
             return no_update, no_update, 'The number of activities has to be larger than 1!', True
-        rbi_values, perf_values = sample_regression_data_activity(df_event_log, timestamp_from, timestamp_to, filter_event_attribute, filter_event_value, activity_limit_value, seed_value, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments, individual_scope=individual_scope_value)
+        rbi_values, perf_values, lookup_information = sample_regression_data_activity(df_event_log, timestamp_from, timestamp_to, filter_event_attribute, filter_event_value, activity_limit_value, seed_value, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments, individual_scope=individual_scope_value)
+        # create dataframe for figure
+        df = pd.DataFrame({
+            'RBI Value': rbi_values,
+            'Performance Value': perf_values,
+            'Case ID': lookup_information['case_id'],
+            'Activity': lookup_information['activity_id'],
+            'Resource': lookup_information['resource'],
+        })
         count_str = str(len(rbi_values)) + '/' + str(activity_limit_value) + ' activities'
 
     if len(rbi_values) == 0:
         return no_update, no_update, 'Filter results in 0 selected cases/activities, change the inputs!', True
     
+    print(rbi_values, perf_values)
     _, _, r_squared, rpi_p_value, rpi_t_stat = fit_regression(rbi_values, perf_values)
+    if sampling_strategy_value == 'case_level':
+        fig = px.scatter(
+            df,
+            x='RBI Value',
+            y='Performance Value',
+            hover_data=['Case ID', 'Trace', 'Resources'],
+            trendline="ols",
+            trendline_color_override="red",
+            opacity=0.7
+        )
+    elif sampling_strategy_value == 'activity_level':
+        fig = px.scatter(
+            df,
+            x='RBI Value',
+            y='Performance Value',
+            hover_data=['Case ID', 'Activity', 'Resource'],
+            trendline="ols",
+            trendline_color_override="red",
+            opacity=0.7
+        )
 
-    fig = px.scatter(x=rbi_values, y=perf_values, trendline="ols")
     fig.update_layout(margin=dict(l=30, r=30, t=50, b=70))
     fig.update_xaxes(title_text=rbi_label)
     fig.update_yaxes(title_text=performance_label)
 
+    # to take screenshot for the thesis with larger fonts, set this to True
+    thesis_large_font = True
+    if thesis_large_font:
+        axis_title_font_size = 20
+        fig.update_layout(
+            xaxis_title_font=dict(size=axis_title_font_size),
+            yaxis_title_font=dict(size=axis_title_font_size)
+        )
+        tick_label_font_size = 12
+        fig.update_xaxes(tickfont=dict(size=tick_label_font_size))
+        fig.update_yaxes(tickfont=dict(size=tick_label_font_size))
+    
     new_panel_id = str(uuid.uuid4())
-
     new_panel = html.Div(
-                id = new_panel_id,
-                children=[
-                    dcc.Markdown(
-                        children='**File:** ' + xes_select_value + '.xes',
-                    ),
-                    dcc.Markdown(
-                        children='**SS:** ' + sampling_strategy_label,
-                    ),
-                    dcc.Markdown(
-                        children='**Num/Max:** ' + count_str + ' (Seed: ' + str(seed_value) + ')',
-                    ),
-                    dcc.Markdown(
-                        children='**IV:** ' + rbi_label,
-                    ),
-                    dcc.Markdown(
-                        children='**DV:** ' + performance_label,
-                    ),
-                    dcc.Markdown(
-                        children='**Date:** ' + f"{timestamp_from.strftime('%m/%d/%Y')} - {timestamp_to.strftime('%m/%d/%Y')}",
-                    ),
-                    dcc.Markdown(
-                        children='**BS:** ' + backwards_scope_label,
-                    ),
-                    dcc.Graph(figure=fig),
-                    dcc.Markdown(
-                        className='',
-                        children='**R-squared:** ' + str(round(r_squared, 8)),
-                    ),
-                    dcc.Markdown(
-                        className='',
-                        children='**p-value:** ' + str(format(rpi_p_value, '.8e')),
-                    ),
-                    dcc.Markdown(
-                        className='',
-                        children='**t-statistics:** ' + str(round(rpi_t_stat, 8)),
-                    ),
-                    html.Button('Delete', id={'type': 'delete-button', 'id': new_panel_id}, className='button-default margin-top', n_clicks=0)
-            ])
+        id=new_panel_id,
+        children=[
+            dcc.Markdown(
+                children='**File:** ' + xes_select_value + '.xes',
+                style={'font-size': '20px'} if thesis_large_font else {}
+            ),
+            dcc.Markdown(
+                children='**SS:** ' + sampling_strategy_label,
+                style={'font-size': '20px'} if thesis_large_font else {}
+            ),
+            dcc.Markdown(
+                children='**Num/Max:** ' + count_str + ' (Seed: ' + str(seed_value) + ')',
+                style={'font-size': '20px'} if thesis_large_font else {}
+            ),
+            dcc.Markdown(
+                children='**IV:** ' + rbi_label + arguments_str,
+                style={'font-size': '20px'} if thesis_large_font else {}
+            ),
+            dcc.Markdown(
+                children='**DV:** ' + performance_label,
+                style={'font-size': '20px'} if thesis_large_font else {}
+            ),
+            dcc.Markdown(
+                children='**Date:** ' + f"{timestamp_from.strftime('%m/%d/%Y')} - {timestamp_to.strftime('%m/%d/%Y')}",
+                style={'font-size': '20px'} if thesis_large_font else {}
+            ),
+            dcc.Markdown(
+                children='**BS:** ' + backwards_scope_label,
+                style={'font-size': '20px'} if thesis_large_font else {}
+            ),
+            dcc.Graph(figure=fig),
+            dcc.Markdown(
+                className='',
+                children='**R-squared:** ' + str(round(r_squared, 8)),
+                style={'font-size': '20px'} if thesis_large_font else {}
+            ),
+            dcc.Markdown(
+                className='',
+                children='**p-value:** ' + str(format(rpi_p_value, '.8e')),
+                style={'font-size': '20px'} if thesis_large_font else {}
+            ),
+            dcc.Markdown(
+                className='',
+                children='**t-statistics:** ' + str(round(rpi_t_stat, 8)),
+                style={'font-size': '20px'} if thesis_large_font else {}
+            ),
+            html.Button('Delete', id={'type': 'delete-button', 'id': new_panel_id}, className='button-default margin-top', n_clicks=0)
+        ]
+    )
+
     
     # delete placeholder panel if present
     old_panel_children = [child for child in old_panel_children if child.get('props', {}).get('id') != 'placeholder-chart']
@@ -578,15 +646,15 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
         new_panel_children = [new_panel]
         return new_panel_children, no_update, no_update, no_update
     elif len(old_panel_children) == 1:
-        new_panel = html.Div(className='div-rbi-relationship-panel width-45 flex-col', id=new_panel.id, children=new_panel.children)
-        old_panel_child = html.Div(className='div-rbi-relationship-panel width-45 flex-col', id=old_panel_children[0]['props']['id'], children=old_panel_children[0]['props']['children'])
+        new_panel = html.Div(className='div-rbi-relationship-panel width-47 flex-col', id=new_panel.id, children=new_panel.children)
+        old_panel_child = html.Div(className='div-rbi-relationship-panel width-47 flex-col', id=old_panel_children[0]['props']['id'], children=old_panel_children[0]['props']['children'])
         new_panel_children = [new_panel] + [old_panel_child]
         return new_panel_children, no_update, no_update, no_update
     elif len(old_panel_children) >= 2:
-        new_panel = html.Div(className='div-rbi-relationship-panel width-30 flex-col', id=new_panel.id, children=new_panel.children)
+        new_panel = html.Div(className='div-rbi-relationship-panel width-31 flex-col', id=new_panel.id, children=new_panel.children)
         new_panel_children = [new_panel]
         for old_panel_child in old_panel_children:
-            old_panel_child = html.Div(className='div-rbi-relationship-panel width-30 flex-col', id=old_panel_child['props']['id'], children=old_panel_child['props']['children'])
+            old_panel_child = html.Div(className='div-rbi-relationship-panel width-31 flex-col', id=old_panel_child['props']['id'], children=old_panel_child['props']['children'])
             new_panel_children += [old_panel_child]
         return new_panel_children[:3], no_update, no_update, no_update
 
@@ -619,9 +687,9 @@ def delete_panel(n_clicks, panels):
     elif len(rest_panels) == 1:
         className_str = 'div-rbi-relationship-panel width-95 flex-col'
     elif len(rest_panels) == 2:
-        className_str = 'div-rbi-relationship-panel width-45 flex-col'
+        className_str = 'div-rbi-relationship-panel width-47 flex-col'
     elif len(rest_panels) == 3:
-        className_str = 'div-rbi-relationship-panel width-30 flex-col'
+        className_str = 'div-rbi-relationship-panel width-31 flex-col'
     
     sized_panel_children = []
     for panel in rest_panels:

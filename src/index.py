@@ -6,6 +6,7 @@ import base64
 import dash
 import pm4py
 import json
+import pandas as pd
 import dash_bootstrap_components as dbc
 
 from dash import html, dcc, Input, Output, State, ALL, callback_context, no_update
@@ -124,7 +125,32 @@ def set_global_variable(selected_filename):
     if selected_filename is not None:
         current_file_path = Path(__file__).resolve().parent
         file_path = str(current_file_path / 'data' / (selected_filename + '.xes'))
+
         df_event_log = pm4py.read_xes(file_path)
+
+        # filter auto decline trace variant for BPIC2012 ('A_SUBMITTED','A_PARTLYSUBMITTED', 'A_DECLINED') with only technical resource involved (ID: 112)
+        # if selected_filename == 'BPI_Challenge_2012_no_direct_decline':
+        #     df_event_log = pm4py.filter_variants(df_event_log, [('A_SUBMITTED','A_PARTLYSUBMITTED', 'A_DECLINED')], retain=False, activity_key='concept:name', case_id_key='case:concept:name', timestamp_key='time:timestamp')
+        # if selected_filename == 'BPI_Challenge_2012_no_decline_cancel':
+        #     df_event_log = pm4py.filter_event_attribute_values(df_event_log, "concept:name", ["A_DECLINED", "A_CANCELLED"], level="case", retain=False)
+        # if selected_filename == 'BPI_Challenge_2012_direct_declined':
+        #     #df_event_log = pm4py.filter_event_attribute_values(df_event_log, "concept:name", ["A_DECLINED"], level="case", retain=True) #"A_DECLINED", 
+        #     df_event_log = pm4py.filter_variants(df_event_log, [('A_SUBMITTED','A_PARTLYSUBMITTED', 'A_DECLINED')], retain=True, activity_key='concept:name', case_id_key='case:concept:name', timestamp_key='time:timestamp')
+
+        # Ensure timestamps are datetime objects
+        df_event_log['time:timestamp'] = pd.to_datetime(df_event_log['time:timestamp'])
+
+        # Calculate durations
+        df_event_log['case_duration'] = df_event_log.groupby('case:concept:name')['time:timestamp'].transform(lambda x: x.max() - x.min())
+
+        # Calculate average duration
+        average_duration = df_event_log.drop_duplicates('case:concept:name')['case_duration'].dt.total_seconds().mean() / 60
+
+        # Calculate median duration
+        median_duration = df_event_log.drop_duplicates('case:concept:name')['case_duration'].dt.total_seconds().median() / 60
+
+        print("Average Case Duration:", average_duration)
+        print("Median Case Duration:", median_duration)
 
         save_as_pickle(df_event_log, selected_filename)
 
