@@ -37,11 +37,12 @@ def get_caseids_in_time_frame(event_log: pd.DataFrame, t_start: pd.Timestamp, t_
 
     return np.array(list(cases_ids_in_time_frame - cases_ids_not_in_time_frame))
 
-def get_filtered_caseids(event_log: pd.DataFrame, case_ids, filter_function: callable) -> pd.DataFrame:
-    filtered_case_ids = []
-    for case_id in case_id:
-        get_trace(event_log, case_id)
-    
+# extra filter for targeted sub-sampling of cases (e.g. trace variants of BPIC'12)
+def get_filtered_caseids(event_log: pd.DataFrame, case_ids_tf, filter_function: callable) -> pd.DataFrame:
+    event_log = event_log[event_log['case:concept:name'].isin(case_ids_tf)]
+    event_log_filtered = filter_function(event_log)
+    case_ids_filtered = event_log_filtered['case:concept:name'].unique()
+    return case_ids_filtered
 
 # R_{C}(c)
 def get_participating_resources(trace: pd.DataFrame) -> np.ndarray:
@@ -88,10 +89,13 @@ def get_dependent_variable_case(event_log: pd.DataFrame, case_id: str, performan
     return performance_function(trace, *args)
 
 # [(IV, DV)] for all c element C_{T}(t_{1},t_{2})
-def sample_regression_data_case(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, case_limit: int, seed: int, scope: ScopeCase, rbi_function: Callable, performance_function: Callable, additional_rbi_arguments: List[Any] = [], additional_performance_arguments: List[Any] = [], individual_scope = pd.Timedelta(0)):
-    case_ids = get_caseids_in_time_frame(event_log, t_start, t_end)
-    case_ids = get_filtered_caseids(event_log, case_ids, filter_function)
-    case_ids = get_n_case_ids(case_ids, case_limit, seed)
+def sample_regression_data_case(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, case_limit: int, seed: int, scope: ScopeCase, rbi_function: Callable, performance_function: Callable, additional_rbi_arguments: List[Any] = [], additional_performance_arguments: List[Any] = [], individual_scope = pd.Timedelta(0), filter_function: callable = lambda log: log):
+    # filter by time frame
+    case_ids_tf = get_caseids_in_time_frame(event_log, t_start, t_end)
+    # filter by case ids in time frame by custom case filter function
+    case_ids_filtered = get_filtered_caseids(event_log, case_ids_tf, filter_function)
+    # get max n case ids
+    case_ids = get_n_case_ids(case_ids_filtered, case_limit, seed)
 
     rbi_values = np.array([])
     perf_values = np.array([])

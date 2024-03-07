@@ -12,6 +12,7 @@ import plotly.express as px
 
 from framework.utility.pickle_utility import load_from_pickle
 from framework.utility.xes_utility import get_earliest_timestamp, get_latest_timestamp, get_column_names, count_unique_cases, count_completed_events
+from framework.utility.filter_functions import filter_cancel_decline_bpic_12, filter_direct_decline_bpic_12
 from framework.sampling.case_level_sampling import ScopeCase, sample_regression_data_case
 from framework.sampling.activity_level_sampling import ScopeActivity, sample_regression_data_activity
 from framework.measures.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_case_completions, rbi_fraction_case_completions, rbi_average_workload, rbi_multitasking, rbi_average_duration_activity, rbi_interaction_two_resources, rbi_social_position
@@ -47,7 +48,7 @@ layout = html.Div([
                                 html.P(
                                     className='p-option-col',
                                     children=[
-                                        'Sampling Strategy ',
+                                        'Sampling strategy ',
                                         html.Span('*', style={'color': 'red'})
                                     ]
                                 ),
@@ -89,6 +90,27 @@ layout = html.Div([
                                             style={'display': 'none'},
                                             className='width-40',
                                             id='div-filter-attribute-value'
+                                        ),
+                                        html.Div(
+                                            [
+                                                html.P(
+                                                    className='p-option-col',
+                                                    children='Case filter:'
+                                                ),
+                                                dcc.Dropdown(
+                                                    id='dropdown-filter-case',
+                                                    className = 'width-100',
+                                                    options=[
+                                                        {'label': 'No case filter', 'value': 'no_filter'},
+                                                        {'label': 'BPIC\'12: No direct declines', 'value': 'bpic_12_direct_decline'},
+                                                        {'label': 'BPIC\'12: No decline and cancel', 'value': 'bpic_12_cancel_decline'},
+                                                    ],
+                                                    value='no_filter'
+                                                ),
+                                            ],
+                                            style={'display': 'none'},
+                                            className='width-100',
+                                            id='div-filter-case'
                                         ),
                                 ]),
                                 html.Div(
@@ -418,6 +440,7 @@ layout = html.Div([
      State('activity-num-limit', 'value'),
      State('dropdown-filter-attribute-select', 'value'),
      State('filter-attribute-value', 'value'),
+     State('dropdown-filter-case', 'value'),
      State('sampling-seed', 'value'),
      State('dropdown-iv-select', 'value'),
      State('dropdown-dv-select', 'value'),
@@ -433,7 +456,7 @@ layout = html.Div([
      State('input-dv-sql-query-rp', 'value')], 
      prevent_initial_call=True
 )
-def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sampling_strategy_value, case_limit_value, activity_limit_value, filter_event_attribute, filter_event_value, seed_value, independent_variable_value, dependent_variable_value, date_from_str, time_from_str, date_to_str, time_to_str, backwards_scope_value, backwards_scope_individual, iv_sql, iv_concept_name, iv_resource_name, dv_sql):
+def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sampling_strategy_value, case_limit_value, activity_limit_value, filter_event_attribute, filter_event_value, case_filter_value, seed_value, independent_variable_value, dependent_variable_value, date_from_str, time_from_str, date_to_str, time_to_str, backwards_scope_value, backwards_scope_individual, iv_sql, iv_concept_name, iv_resource_name, dv_sql):
 
     # check for None values
     if pickle_df_name is None:
@@ -511,12 +534,37 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
     if backwards_scope_label == 'Individual scope':
         backwards_scope_label = backwards_scope_label + ' (' + str(individual_scope_value.total_seconds()/60) + ' minutes)'
 
+    if sampling_strategy_value == 'activity_level' and (not filter_event_attribute is None and not filter_event_value is None):
+        filter_label = f" {filter_event_attribute} = {filter_event_value}"
+        filter_activated = True
+    elif sampling_strategy_value == 'case_level' and (not case_filter_value == 'no_filter'):
+        case_filter_mapping_label = {
+            'bpic_12_direct_decline': 'BPIC\'12: No direct declines',
+            'bpic_12_cancel_decline': 'BPIC\'12: No decline and cancel'
+        }
+        filter_label = f" {case_filter_mapping_label.get(case_filter_value)}"
+        filter_activated = True
+    else:
+        filter_label = ''
+        filter_activated = False
+    
+    print(filter_label, filter_activated)
+    
+
     if sampling_strategy_value == 'case_level':
         if case_limit_value is None:
             return no_update, no_update, 'Input Max. number of cases before generating!', True
         if case_limit_value < 2:
             return no_update, no_update, 'The number of cases has to be larger than 1!', True
-        rbi_values, perf_values, lookup_information = sample_regression_data_case(df_event_log, timestamp_from, timestamp_to, case_limit_value, seed_value, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments, individual_scope=individual_scope_value)
+        if case_filter_value is None:
+            return no_update, no_update, 'The case filter can not be empty. If no filter is desired select "No case filter".', True
+        case_filter_mapping = {
+            'no_filter': lambda log: log,
+            'bpic_12_direct_decline': filter_direct_decline_bpic_12,
+            'bpic_12_cancel_decline': filter_cancel_decline_bpic_12
+        }
+        case_filter_function = case_filter_mapping.get(case_filter_value)
+        rbi_values, perf_values, lookup_information = sample_regression_data_case(df_event_log, timestamp_from, timestamp_to, case_limit_value, seed_value, backwards_scope, rbi_function, performance_function, additional_rbi_arguments, additional_performance_arguments, individual_scope=individual_scope_value, filter_function=case_filter_function)
         # create dataframe for figure
         df = pd.DataFrame({
             'RBI Value': rbi_values,
@@ -546,7 +594,6 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
     if len(rbi_values) == 0:
         return no_update, no_update, 'Filter results in 0 selected cases/activities, change the inputs!', True
     
-    print(rbi_values, perf_values)
     _, _, r_squared, rpi_p_value, rpi_t_stat = fit_regression(rbi_values, perf_values)
     if sampling_strategy_value == 'case_level':
         fig = px.scatter(
@@ -592,6 +639,10 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
             dcc.Markdown(
                 children='**File:** ' + xes_select_value + '.xes',
                 style={'font-size': '20px'} if thesis_large_font else {}
+            ),
+            dcc.Markdown(
+                children='**Filter:** ' + filter_label,
+                style={'display': 'none'} if not filter_activated else ({'font-size': '20px'} if thesis_large_font else {})
             ),
             dcc.Markdown(
                 children='**SS:** ' + sampling_strategy_label,
@@ -709,7 +760,8 @@ def delete_panel(n_clicks, panels):
      Output('div-max-activities', 'style'),
      Output('div-seed', 'style'),
      Output('div-filter-attribute-select', 'style'),
-     Output('div-filter-attribute-value', 'style')],
+     Output('div-filter-attribute-value', 'style'),
+     Output('div-filter-case', 'style')],
     Input('dropdown-sampling-strategy', 'value')
 )
 def update_resource_options(sampling_strategy):
@@ -727,6 +779,7 @@ def update_resource_options(sampling_strategy):
         div_seed_style = {'display': 'block'}
         div_attribute_select_style = {'display': 'block'}
         div_attribute_value_style = {'display': 'block'}
+        div_case_style = {'display': 'none'}
     elif sampling_strategy == 'case_level':
         dv_options = [
             {'label': 'Custom Performance Metric (SQL)', 'value': 'perf_sql'},
@@ -742,6 +795,7 @@ def update_resource_options(sampling_strategy):
         div_seed_style = {'display': 'block'}
         div_attribute_select_style = {'display': 'none'}
         div_attribute_value_style = {'display': 'none'}
+        div_case_style = {'display': 'block'}
     else:
         scope_options = no_update
         div_max_cases_style = {'display': 'none'} 
@@ -749,8 +803,9 @@ def update_resource_options(sampling_strategy):
         div_seed_style = {'display': 'none'}
         div_attribute_select_style = {'display': 'none'}
         div_attribute_value_style = {'display': 'none'}
+        div_case_style = {'display': 'none'}
 
-    return [dv_options, scope_options, div_max_cases_style, div_max_activities_style, div_seed_style, div_attribute_select_style, div_attribute_value_style]
+    return [dv_options, scope_options, div_max_cases_style, div_max_activities_style, div_seed_style, div_attribute_select_style, div_attribute_value_style, div_case_style]
 
 # set values based on XES file
 @app.callback(
