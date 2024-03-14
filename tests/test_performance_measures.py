@@ -22,12 +22,12 @@ class TestCaseLevelSampling(unittest.TestCase):
         warnings.simplefilter("ignore", category=ResourceWarning)
         warnings.simplefilter("ignore", category=UserWarning)
         #import xes file(s)
-        event_log_simple_mt_path = 'tests/data/test_simple_more_traces.xes'  
-        cls.event_log_simple_mt = pm4py.read_xes(event_log_simple_mt_path)
+        log_path_synth_long = 'tests/data/synthetic_log_long.xes'  
+        cls.event_log_synth = pm4py.read_xes(log_path_synth_long)
 
 
     def test_case_duration_and_sql(self):
-        sampled_trace = activity_duration_estimation.get_trace(self.event_log_simple_mt, '001')
+        sampled_trace = activity_duration_estimation.get_trace(self.event_log_synth, '001')
 
         case_duration_sql = """
         SELECT
@@ -43,7 +43,7 @@ class TestCaseLevelSampling(unittest.TestCase):
         self.assertEqual(case_duration_sql, case_duration)
 
     def test_sql_no_return(self):
-        sampled_trace = activity_duration_estimation.get_trace(self.event_log_simple_mt, '001')
+        sampled_trace = activity_duration_estimation.get_trace(self.event_log_synth, '001')
 
         case_duration_sql = """
         SELECT COUNT([org:resource]) FROM trace WHERE [org:resource] = 'invalid'

@@ -18,7 +18,7 @@ class TestTimeSeriesFunctions(unittest.TestCase):
         warnings.simplefilter("ignore", category=ResourceWarning)
         warnings.simplefilter("ignore", category=UserWarning)
         #import xes file(s)
-        log_path = 'tests/data/test.xes'  
+        log_path = 'tests/data/real_log_short.xes'  
         cls.event_log = pm4py.read_xes(log_path)
 
     def test_day_intervals(self):

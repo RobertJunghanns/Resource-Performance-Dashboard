@@ -21,10 +21,10 @@ class TestSamplingUtilityFunctions(unittest.TestCase):
         warnings.simplefilter("ignore", category=ResourceWarning)
         warnings.simplefilter("ignore", category=UserWarning)
         #import xes file(s)
-        log_path = 'tests/data/test.xes'  
+        log_path = 'tests/data/real_log_short.xes'  
         cls.event_log = pm4py.read_xes(log_path)
-        event_log_simple_path = 'tests/data/test_simple.xes'  
-        cls.event_log_simple = pm4py.read_xes(event_log_simple_path)
+        log_path_synth = 'tests/data/synthetic_log_short.xes'  
+        cls.event_log_synth = pm4py.read_xes(log_path_synth)
         cls.case_ids = ['case1', 'case2', 'case3', 'case4', 'case5']
 
     def test_get_n_case_ids_less(self):
@@ -65,7 +65,7 @@ class TestSamplingUtilityFunctions(unittest.TestCase):
         self.assertEqual(len(grouped_event_4), 0)
     
     def test_group_equal_timestamp_events_2(self):
-        trace = activity_duration_estimation.get_trace(self.event_log_simple, '002')
+        trace = activity_duration_estimation.get_trace(self.event_log_synth, '002')
         grouped_trace = activity_duration_estimation.group_equal_timestamp_events(trace)
 
         grouped_event_1_wrong = grouped_trace[grouped_trace['concept:name'] == 'B + C + D'] # same timestamps & resource but B has start event
@@ -84,7 +84,7 @@ class TestSamplingUtilityFunctions(unittest.TestCase):
         
         
     def test_add_activity_duration(self):
-        trace = activity_duration_estimation.get_trace(self.event_log_simple, '001')
+        trace = activity_duration_estimation.get_trace(self.event_log_synth, '001')
         trace_activity_duration = activity_duration_estimation.add_activity_durations_to_trace(trace)
         durations = trace_activity_duration['duration']
 
@@ -96,7 +96,7 @@ class TestSamplingUtilityFunctions(unittest.TestCase):
         pdt.assert_series_equal(durations, expected_durations)
 
     def test_prepare_trace(self):
-        trace = activity_duration_estimation.get_trace(self.event_log_simple, '001')
+        trace = activity_duration_estimation.get_trace(self.event_log_synth, '001')
         trace_prepared = activity_duration_estimation.prepare_trace(trace)
 
         self.assertEqual(len(xes_utility.get_column_names(trace)) + 1, len(xes_utility.get_column_names(trace_prepared)))

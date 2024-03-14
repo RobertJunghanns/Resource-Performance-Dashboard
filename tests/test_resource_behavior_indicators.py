@@ -21,8 +21,8 @@ class TestCaseLevelSampling(unittest.TestCase):
         warnings.simplefilter("ignore", category=ResourceWarning)
         warnings.simplefilter("ignore", category=UserWarning)
         #import xes file(s)
-        event_log_simple_mt_path = 'tests/data/test_simple_more_traces.xes'  
-        cls.event_log_simple_mt = pm4py.read_xes(event_log_simple_mt_path)
+        log_path_synth_long = 'tests/data/synthetic_log_long.xes'  
+        cls.event_log_synth = pm4py.read_xes(log_path_synth_long)
         cls.t_start = pd.Timestamp("2010-12-31T23:30:00.000+02:00")
         cls.t_end = pd.Timestamp("2011-01-07T06:30:00.000+02:00")
         cls.resource_id = '1'
@@ -44,7 +44,7 @@ class TestCaseLevelSampling(unittest.TestCase):
                 WHERE [org:resource] = '{r}') AS all_activities
         ) AS count"""
 
-        result = resource_behavior_indicators.sql_to_rbi(self.event_log_simple_mt, self.t_start, self.t_end, self.resource_id, sql_query=rbi_sql)
+        result = resource_behavior_indicators.sql_to_rbi(self.event_log_synth, self.t_start, self.t_end, self.resource_id, sql_query=rbi_sql)
         self.assertIsNotNone(result)
         self.assertIsInstance(result, float)
         self.assertGreaterEqual(result, 0)
@@ -58,62 +58,88 @@ class TestCaseLevelSampling(unittest.TestCase):
                 AND [concept:name] = 'invalid'"""
 
         with self.assertRaises(ValueError) as context:
-            resource_behavior_indicators.sql_to_rbi(self.event_log_simple_mt, self.t_start, self.t_end, self.resource_id, sql_query=rbi_sql)
+            resource_behavior_indicators.sql_to_rbi(self.event_log_synth, self.t_start, self.t_end, self.resource_id, sql_query=rbi_sql)
 
         self.assertTrue("SQL query result is not numeric." in str(context.exception))
     
+    def test_rbi_sql_no_return_2(self):
+        
+        rbi_sql="""
+        SELECT [concept:name]
+            FROM event_log
+            WHERE [org:resource] = '{r}'
+            AND [concept:name] = 'invalid'"""
+
+        with self.assertRaises(ValueError) as context:
+            resource_behavior_indicators.sql_to_rbi(self.event_log_synth, self.t_start, self.t_end, self.resource_id, sql_query=rbi_sql)
+
+        self.assertTrue("SQL query result is empty. This is likely due to a missing aggregation function to return a numeric value.")
+    
+    def test_rbi_sql_no_return_3(self):
+        
+        rbi_sql="""
+        SELECT DISTINCT([concept:name])
+            FROM event_log
+            WHERE [org:resource] = '{r}'
+            AND [concept:name] = 'A'"""
+
+        with self.assertRaises(ValueError) as context:
+            resource_behavior_indicators.sql_to_rbi(self.event_log_synth, self.t_start, self.t_end, self.resource_id, sql_query=rbi_sql)
+
+        self.assertTrue("SQL query result is not numeric.")
+    
     def test_rbi_distinct_activities(self):
-        result = resource_behavior_indicators.rbi_distinct_activities(self.event_log_simple_mt, self.t_start, self.t_end, self.resource_id)
+        result = resource_behavior_indicators.rbi_distinct_activities(self.event_log_synth, self.t_start, self.t_end, self.resource_id)
         self.assertIsNotNone(result)
         self.assertGreaterEqual(result, 0)
 
     def test_rbi_activity_completions(self):
-        result = resource_behavior_indicators.rbi_activity_completions(self.event_log_simple_mt, self.t_start, self.t_end, self.resource_id)
+        result = resource_behavior_indicators.rbi_activity_completions(self.event_log_synth, self.t_start, self.t_end, self.resource_id)
         self.assertIsNotNone(result)
         self.assertGreaterEqual(result, 0)
 
     def test_rbi_activity_frequency(self):
-        result = resource_behavior_indicators.rbi_activity_fequency(self.event_log_simple_mt, self.t_start, self.t_end, self.resource_id, self.concept_name)
+        result = resource_behavior_indicators.rbi_activity_fequency(self.event_log_synth, self.t_start, self.t_end, self.resource_id, self.concept_name)
         self.assertIsNotNone(result)
         self.assertGreaterEqual(result, 0)
     
     def test_rbi_average_workload(self):
-        result = resource_behavior_indicators.rbi_average_workload(self.event_log_simple_mt, self.t_start, self.t_end, self.resource_id)
+        result = resource_behavior_indicators.rbi_average_workload(self.event_log_synth, self.t_start, self.t_end, self.resource_id)
         self.assertIsNotNone(result)
         self.assertGreaterEqual(result, 0)
 
     def test_rbi_multitasking(self):
-        result = resource_behavior_indicators.rbi_multitasking(self.event_log_simple_mt, self.t_start, self.t_end, self.resource_id)
+        result = resource_behavior_indicators.rbi_multitasking(self.event_log_synth, self.t_start, self.t_end, self.resource_id)
         self.assertIsNotNone(result)
         self.assertGreaterEqual(result, 0)
 
     def test_rbi_average_duration_activity(self):
-        result = resource_behavior_indicators.rbi_average_duration_activity(self.event_log_simple_mt, self.t_start, self.t_end, self.resource_id, self.concept_name)
+        result = resource_behavior_indicators.rbi_average_duration_activity(self.event_log_synth, self.t_start, self.t_end, self.resource_id, self.concept_name)
         self.assertIsNotNone(result)
         self.assertGreaterEqual(result, 0)
     
     def test_rbi_case_completions(self):
-        result = resource_behavior_indicators.rbi_case_completions(self.event_log_simple_mt, self.t_start, self.t_end, self.resource_id)
+        result = resource_behavior_indicators.rbi_case_completions(self.event_log_synth, self.t_start, self.t_end, self.resource_id)
         self.assertIsNotNone(result)
         self.assertGreaterEqual(result, 0)
 
     def test_rbi_average_duration_activity(self):
-        result = resource_behavior_indicators.rbi_average_duration_activity(self.event_log_simple_mt, self.t_start, self.t_end, self.resource_id, self.concept_name)
+        result = resource_behavior_indicators.rbi_average_duration_activity(self.event_log_synth, self.t_start, self.t_end, self.resource_id, self.concept_name)
         self.assertIsNotNone(result)
         self.assertGreaterEqual(result, 0)
 
     def test_rbi_interaction_two_resources(self):
-        result = resource_behavior_indicators.rbi_interaction_two_resources(self.event_log_simple_mt, self.t_start, self.t_end, self.resource_id, self.interaction_resource_id)
+        result = resource_behavior_indicators.rbi_interaction_two_resources(self.event_log_synth, self.t_start, self.t_end, self.resource_id, self.interaction_resource_id)
         self.assertIsNotNone(result)
         self.assertGreaterEqual(result, 0)
 
     def test_rbi_social_position(self):
-        result = resource_behavior_indicators.rbi_social_position(self.event_log_simple_mt, self.t_start, self.t_end, self.resource_id)
+        result = resource_behavior_indicators.rbi_social_position(self.event_log_synth, self.t_start, self.t_end, self.resource_id)
         self.assertIsNotNone(result)
         self.assertGreaterEqual(result, 0)
 
     def test_rbi_fraction_case_completions(self):
-        result = resource_behavior_indicators.rbi_fraction_case_completions(self.event_log_simple_mt, self.t_start, self.t_end, self.resource_id)
+        result = resource_behavior_indicators.rbi_fraction_case_completions(self.event_log_synth, self.t_start, self.t_end, self.resource_id)
         self.assertIsNotNone(result)
         self.assertGreaterEqual(result, 0)
 
