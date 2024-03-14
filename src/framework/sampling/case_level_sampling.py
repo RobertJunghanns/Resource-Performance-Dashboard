@@ -37,7 +37,7 @@ def get_caseids_in_time_frame(event_log: pd.DataFrame, t_start: pd.Timestamp, t_
 
     return np.array(list(cases_ids_in_time_frame - cases_ids_not_in_time_frame))
 
-# extra filter for targeted sub-sampling of cases (e.g. trace variants of BPIC'12)
+# Only in Dashboard: extra filter for specific filter function to drill down into cases (e.g. trace variants of BPIC'12)
 def get_filtered_caseids(event_log: pd.DataFrame, case_ids_tf, filter_function: callable) -> pd.DataFrame:
     event_log = event_log[event_log['case:concept:name'].isin(case_ids_tf)]
     event_log_filtered = filter_function(event_log)
@@ -79,7 +79,7 @@ def get_independent_variable_case(event_log: pd.DataFrame, case_id: str, scope: 
         rbi_value = rbi_function(event_log, t1, t2, resource_id, *args)
         weighted_avg += rbi_value * ps
 
-    participating_resources_str = 'Resources:' + ','.join(resource_ids)
+    participating_resources_str = ','.join(resource_ids)
 
     return weighted_avg, participating_resources_str
 
@@ -114,8 +114,6 @@ def sample_regression_data_case(event_log: pd.DataFrame, t_start: pd.Timestamp, 
 
         rbi_value, participating_resources_str = get_independent_variable_case(event_log, case_id, scope, rbi_function, *additional_rbi_arguments, individual_scope=individual_scope)
         perf_value = get_dependent_variable_case(event_log, case_id, performance_function, *additional_performance_arguments)
-
-        print(case_id, rbi_value, perf_value)
 
         rbi_values = np.append(rbi_values, rbi_value)
         perf_values = np.append(perf_values, perf_value)

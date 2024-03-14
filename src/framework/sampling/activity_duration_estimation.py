@@ -58,8 +58,10 @@ def group_equal_timestamp_events(trace: pd.DataFrame) -> pd.DataFrame:
 def add_activity_durations_to_trace(trace: pd.DataFrame) -> pd.DataFrame:
     # trace copy to delete used START events
     trace_copy = trace.copy()
+    # trace copy for return
+    trace_return = trace.copy()
     # set default activity duration
-    trace['duration'] = pd.Timedelta(0)
+    trace_return.loc[:, 'duration'] = pd.Timedelta(0)
 
     for index, row in trace.iterrows():
         if row['lifecycle:transition'] == 'COMPLETE' or row['lifecycle:transition'] == 'complete':
@@ -68,9 +70,9 @@ def add_activity_durations_to_trace(trace: pd.DataFrame) -> pd.DataFrame:
                                     ((trace_copy['lifecycle:transition'] == 'START') | (trace_copy['lifecycle:transition'] == 'start')) & 
                                     (trace_copy['time:timestamp'] < row['time:timestamp'])]
             # For scenario 2: find any start event even if it is used before
-            start_event = trace[(trace['concept:name'] == row['concept:name']) & 
-                                    ((trace['lifecycle:transition'] == 'START') | (trace['lifecycle:transition'] == 'start')) & 
-                                    (trace['time:timestamp'] < row['time:timestamp'])]
+            start_event = trace_return[(trace_return['concept:name'] == row['concept:name']) & 
+                                    ((trace_return['lifecycle:transition'] == 'START') | (trace_return['lifecycle:transition'] == 'start')) & 
+                                    (trace_return['time:timestamp'] < row['time:timestamp'])]
             
             # scenario 1: Find the FIRST matching START event
             if not start_event_copy.empty:
@@ -86,17 +88,17 @@ def add_activity_durations_to_trace(trace: pd.DataFrame) -> pd.DataFrame:
 
             # scenario 3: Use the previous COMPLETE event's timestamp
             else:
-                prev_complete_event = trace[(trace['time:timestamp'] < row['time:timestamp']) & 
-                            ((trace['lifecycle:transition'] == 'COMPLETE') | (trace['lifecycle:transition'] == 'complete'))].tail(1)
+                prev_complete_event = trace_return[(trace_return['time:timestamp'] < row['time:timestamp']) & 
+                            ((trace_return['lifecycle:transition'] == 'COMPLETE') | (trace_return['lifecycle:transition'] == 'complete'))].tail(1)
                 if not prev_complete_event.empty:
                     start_time = prev_complete_event.iloc[0]['time:timestamp']
                 # If it's the first event of the trace, duration is 0
                 else:
                     start_time = row['time:timestamp']  
 
-            trace.at[index, 'duration'] = row['time:timestamp'] - start_time
+            trace_return.at[index, 'duration'] = row['time:timestamp'] - start_time
 
-    return trace
+    return trace_return
 
 def prepare_trace(trace: pd.DataFrame) -> pd.DataFrame:
     trace_grouped = group_equal_timestamp_events(trace)

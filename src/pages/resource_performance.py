@@ -18,7 +18,7 @@ from framework.sampling.activity_level_sampling import ScopeActivity, sample_reg
 from framework.measures.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_case_completions, rbi_fraction_case_completions, rbi_average_workload, rbi_multitasking, rbi_average_duration_activity, rbi_interaction_two_resources, rbi_social_position
 from framework.measures.case_performance_measures import sql_to_case_performance_metric, case_duration
 from framework.measures.activity_performance_measures import activity_duration
-from framework.regression_analysis import fit_regression
+from framework.significance_analysis import fit_regression, calculate_pearson_correlation
 
 panel_id=0
 
@@ -95,7 +95,7 @@ layout = html.Div([
                                             [
                                                 html.P(
                                                     className='p-option-col',
-                                                    children='Case filter:'
+                                                    children='Case sampling filter:'
                                                 ),
                                                 dcc.Dropdown(
                                                     id='dropdown-filter-case',
@@ -221,7 +221,7 @@ layout = html.Div([
                                             html.Div([
                                                 html.P(
                                                     children=[
-                                                        'Max. number of cases ',
+                                                        'Activity name ',
                                                         html.Span('*', style={'color': 'red'})
                                                     ],
                                                     className='p-option-col'
@@ -595,6 +595,7 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
         return no_update, no_update, 'Filter results in 0 selected cases/activities, change the inputs!', True
     
     _, _, r_squared, rpi_p_value, rpi_t_stat = fit_regression(rbi_values, perf_values)
+    r_pearson = calculate_pearson_correlation(rbi_values, perf_values)
     if sampling_strategy_value == 'case_level':
         fig = px.scatter(
             df,
@@ -669,6 +670,12 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
                 style={'font-size': '20px'} if thesis_large_font else {}
             ),
             dcc.Graph(figure=fig),
+            
+            dcc.Markdown(
+                className='',
+                children='**r-Pearson:** ' + str(round(r_pearson, 8)),
+                style={'font-size': '20px'} if thesis_large_font else {}
+            ),
             dcc.Markdown(
                 className='',
                 children='**R-squared:** ' + str(round(r_squared, 8)),
