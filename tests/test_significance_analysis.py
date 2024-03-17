@@ -27,6 +27,15 @@ class TestCaseLevelSampling(unittest.TestCase):
         log_path_synth_long = 'tests/data/synthetic_log_long.xes'  
         cls.event_log_synth = pm4py.read_xes(log_path_synth_long)
 
+    def test_pearson(self): 
+        t_start = pd.Timestamp("2010-12-31T23:30:00.000+02:00")
+        t_end = pd.Timestamp("2011-01-07T06:30:00.000+02:00")
+        regression_data_cs = case_level_sampling.sample_regression_data_case(self.event_log_synth, t_start, t_end, case_limit=100, seed=999, scope=case_level_sampling.ScopeCase.CASE, rbi_function=rbi_activity_completions, performance_function=case_duration)
+
+        correlation_coefficient = significance_analysis.calculate_pearson_correlation(regression_data_cs[0], regression_data_cs[1])
+
+        assert -1 <= correlation_coefficient <= 1
+
 
     def test_regression(self): 
         t_start = pd.Timestamp("2010-12-31T23:30:00.000+02:00")
