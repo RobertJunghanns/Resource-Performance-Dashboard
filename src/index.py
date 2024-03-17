@@ -128,10 +128,9 @@ def set_global_variable(selected_filename):
 
         df_event_log = pm4py.read_xes(file_path)
 
-        activity_counts = df_event_log['concept:name'].value_counts()
+        # activity_counts = df_event_log['concept:name'].value_counts()
 
         # Display the activities with the highest count
-        print(activity_counts)
 
         # Ensure timestamps are datetime objects
         # df_event_log['time:timestamp'] = pd.to_datetime(df_event_log['time:timestamp'])

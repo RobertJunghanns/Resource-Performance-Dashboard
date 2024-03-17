@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 
 from enum import Enum
-from datetime import timedelta
 from typing import Callable, List, Any
 from framework.sampling.activity_duration_estimation import get_trace, prepare_trace, get_n_case_ids
 from framework.utility.xes_utility import get_earliest_timestamp, get_latest_timestamp
