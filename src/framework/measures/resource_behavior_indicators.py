@@ -1,3 +1,4 @@
+import config
 import pandas as pd
 from pandasql import sqldf
 from pm4py.algo.organizational_mining.resource_profiles import algorithm
@@ -13,8 +14,8 @@ def pysqldf(q, local_vars):
 def sql_to_rbi(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, resource_id: str, sql_query: str) -> float:
 
     event_log = event_log[
-        (event_log['time:timestamp'] >= t_start) &
-        (event_log['time:timestamp'] < t_end)
+        (event_log[config.timestamp_col] >= t_start) &
+        (event_log[config.timestamp_col] < t_end)
     ]
 
     # time_delta = t_end - t_start

@@ -142,7 +142,7 @@
 .div-sidebar{
         display: flex;
         flex-direction: column;
-        width: 25%;   /*CHANGE: 35%*/
+        width: 35%;
 }
 .div-div-sidebar{
         background: #f3f3f1;
@@ -281,7 +281,7 @@
         text-align: center;
 }
 #div-relationship-panels{
-        width: 75%; /*CHANGE: 65%*/
+        width: 65%;
         align-items: center;
         justify-content: center;
 }

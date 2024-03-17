@@ -1,3 +1,4 @@
+import config
 import pandas as pd
 import uuid
 import json
@@ -621,9 +622,7 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
     fig.update_xaxes(title_text=rbi_label)
     fig.update_yaxes(title_text=performance_label)
 
-    # to take screenshot for the thesis with larger fonts, set this to True
-    thesis_large_font = True
-    if thesis_large_font:
+    if config.thesis_view:
         axis_title_font_size = 20
         fig.update_layout(
             xaxis_title_font=dict(size=axis_title_font_size),
@@ -639,57 +638,57 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
         children=[
             dcc.Markdown(
                 children='**File:** ' + xes_select_value + '.xes',
-                style={'font-size': '20px'} if thesis_large_font else {}
+                style={'font-size': '20px'} if config.thesis_view else {}
             ),
             dcc.Markdown(
                 children='**Filter:** ' + filter_label,
-                style={'display': 'none'} if not filter_activated else ({'font-size': '20px'} if thesis_large_font else {})
+                style={'display': 'none'} if not filter_activated else ({'font-size': '20px'} if config.thesis_view else {})
             ),
             dcc.Markdown(
                 children='**SS:** ' + sampling_strategy_label,
-                style={'font-size': '20px'} if thesis_large_font else {}
+                style={'font-size': '20px'} if config.thesis_view else {}
             ),
             dcc.Markdown(
                 children='**Num/Max:** ' + count_str + ' (Seed: ' + str(seed_value) + ')',
-                style={'font-size': '20px'} if thesis_large_font else {}
+                style={'font-size': '20px'} if config.thesis_view else {}
             ),
             dcc.Markdown(
                 children='**IV:** ' + rbi_label + arguments_str,
-                style={'font-size': '20px'} if thesis_large_font else {}
+                style={'font-size': '20px'} if config.thesis_view else {}
             ),
             dcc.Markdown(
                 children='**DV:** ' + performance_label,
-                style={'font-size': '20px'} if thesis_large_font else {}
+                style={'font-size': '20px'} if config.thesis_view else {}
             ),
             dcc.Markdown(
                 children='**Date:** ' + f"{timestamp_from.strftime('%m/%d/%Y')} - {timestamp_to.strftime('%m/%d/%Y')}",
-                style={'font-size': '20px'} if thesis_large_font else {}
+                style={'font-size': '20px'} if config.thesis_view else {}
             ),
             dcc.Markdown(
                 children='**BS:** ' + backwards_scope_label,
-                style={'font-size': '20px'} if thesis_large_font else {}
+                style={'font-size': '20px'} if config.thesis_view else {}
             ),
             dcc.Graph(figure=fig),
             
             dcc.Markdown(
                 className='',
                 children='**r-Pearson:** ' + str(round(r_pearson, 8)),
-                style={'font-size': '20px'} if thesis_large_font else {}
+                style={'font-size': '20px'} if config.thesis_view else {}
             ),
             dcc.Markdown(
                 className='',
                 children='**R-squared:** ' + str(round(r_squared, 8)),
-                style={'font-size': '20px'} if thesis_large_font else {}
+                style={'font-size': '20px'} if config.thesis_view else {}
             ),
             dcc.Markdown(
                 className='',
                 children='**p-value:** ' + str(format(rpi_p_value, '.8e')),
-                style={'font-size': '20px'} if thesis_large_font else {}
+                style={'font-size': '20px'} if config.thesis_view else {}
             ),
             dcc.Markdown(
                 className='',
                 children='**t-statistics:** ' + str(round(rpi_t_stat, 8)),
-                style={'font-size': '20px'} if thesis_large_font else {}
+                style={'font-size': '20px'} if config.thesis_view else {}
             ),
             html.Button('Delete', id={'type': 'delete-button', 'id': new_panel_id}, className='button-default margin-top', n_clicks=0)
         ]

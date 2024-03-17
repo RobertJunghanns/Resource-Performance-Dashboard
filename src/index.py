@@ -1,3 +1,4 @@
+import config
 from app import app
 from pages import resource_behavior
 from pages import resource_performance
@@ -30,7 +31,7 @@ app.layout = html.Div([
             ),
             html.H2(
                 id='header-title',
-                children="Resource-Performance Analysis for Event Logs", 
+                children="Resource Performance Analysis for Event Logs", 
             ),
             html.A(
                 id='box-github',
@@ -127,26 +128,6 @@ def set_global_variable(selected_filename):
         file_path = str(current_file_path / 'data' / (selected_filename + '.xes'))
 
         df_event_log = pm4py.read_xes(file_path)
-
-        # activity_counts = df_event_log['concept:name'].value_counts()
-
-        # Display the activities with the highest count
-
-        # Ensure timestamps are datetime objects
-        # df_event_log['time:timestamp'] = pd.to_datetime(df_event_log['time:timestamp'])
-
-        # # Calculate durations
-        # df_event_log['case_duration'] = df_event_log.groupby('case:concept:name')['time:timestamp'].transform(lambda x: x.max() - x.min())
-
-        # # Calculate average duration
-        # average_duration = df_event_log.drop_duplicates('case:concept:name')['case_duration'].dt.total_seconds().mean() / 60
-
-        # # Calculate median duration
-        # median_duration = df_event_log.drop_duplicates('case:concept:name')['case_duration'].dt.total_seconds().median() / 60
-
-        # print("Average Case Duration:", average_duration)
-        # print("Median Case Duration:", median_duration)
-
         save_as_pickle(df_event_log, selected_filename)
 
         return selected_filename, None
@@ -252,4 +233,4 @@ def update_button_classes(pathname, *args):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, port=config.dash_port)

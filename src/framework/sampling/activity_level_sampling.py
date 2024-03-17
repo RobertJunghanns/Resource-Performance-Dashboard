@@ -1,3 +1,4 @@
+import config
 import time
 import pandas as pd
 import numpy as np
@@ -17,9 +18,9 @@ class ScopeActivity(Enum):
 # E_{TA}(t_{1}, t_{2}, [a, v])
 def get_included_events(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, filter_event_attribute: str = None, filter_event_value = None):
     event_log = event_log[
-        (event_log['lifecycle:transition'].isin(['complete', 'COMPLETE'])) &
-        (event_log['time:timestamp'] >= t_start) &
-        (event_log['time:timestamp'] < t_end)
+        (event_log[config.lifecycle_col].isin(['complete', 'COMPLETE'])) &
+        (event_log[config.timestamp_col] >= t_start) &
+        (event_log[config.timestamp_col] < t_end)
     ]
     if filter_event_attribute is not None and filter_event_value is not None and filter_event_attribute in event_log.columns:
         event_log = event_log[event_log[filter_event_attribute] == filter_event_value]
@@ -29,17 +30,17 @@ def get_included_events(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: p
 # IV(c)
 def get_independent_variable_activity(event_log: pd.DataFrame, event: pd.Series, activity_duration: pd.Timedelta, scope: ScopeActivity, rbi_function: Callable, *args, individual_scope = pd.Timedelta(0)):    
     # add millisecond to t2 to use pm4py RBIs with <=t2 not <t2
-    t2 = event['time:timestamp'] #+ timedelta(milliseconds=1)
+    t2 = event[config.timestamp_col] #+ timedelta(milliseconds=1)
     if scope == ScopeActivity.ACTIVITY:
-        t1 = event['time:timestamp'] - activity_duration
+        t1 = event[config.timestamp_col] - activity_duration
     elif scope == ScopeActivity.INDIVIDUAL:
-        t1 = event['time:timestamp'] - individual_scope
+        t1 = event[config.timestamp_col] - individual_scope
     elif scope == ScopeActivity.TOTAL:
         t1 = get_earliest_timestamp(event_log)
     else:
         raise ValueError(f"ScopeActivity not found.")
 
-    activity_resource_id = event['org:resource']
+    activity_resource_id = event[config.resource_col]
     rbi_value = rbi_function(event_log, t1, t2, activity_resource_id, *args)
 
     return rbi_value
@@ -69,21 +70,21 @@ def sample_regression_data_activity(event_log: pd.DataFrame, t_start: pd.Timesta
         start_time = time.time()
 
         # get the trace for an activity duration analysis (prepare_trace)
-        trace = get_trace(event_log, event['case:concept:name'])
+        trace = get_trace(event_log, event[config.case_col])
         trace_prepared = prepare_trace(trace)
         activity_duration = pd.Timedelta(0)
 
          # find the prepared event in the trace and extract duration
-        matching_events_prepared = trace_prepared[trace_prepared['concept:name'].str.contains(event['concept:name']) & (trace_prepared['time:timestamp'] == event['time:timestamp'])]
+        matching_events_prepared = trace_prepared[trace_prepared[config.activity_col].str.contains(event[config.activity_col]) & (trace_prepared[config.timestamp_col] == event[config.timestamp_col])]
         activity_duration = matching_events_prepared.iloc[0]['duration']
 
         rbi_values = np.append(rbi_values, get_independent_variable_activity(event_log, event, activity_duration, scope, rbi_function, *additional_rbi_arguments, individual_scope=individual_scope))
         perf_values = np.append(perf_values, get_dependent_variable_activity(event, performance_function, activity_duration, *additional_performance_arguments))
 
         # information for lookup
-        case_id_info = np.append(case_id_info, event['case:concept:name'])
-        activity_info = np.append(activity_info, event['concept:name'])
-        resource_info = np.append(resource_info, event['org:resource'])
+        case_id_info = np.append(case_id_info, event[config.case_col])
+        activity_info = np.append(activity_info, event[config.activity_col])
+        resource_info = np.append(resource_info, event[config.resource_col])
 
         # information for runtime
         end_time = time.time()

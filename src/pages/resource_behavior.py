@@ -1,3 +1,4 @@
+import config
 import datetime as dt
 import pandas as pd
 import plotly.graph_objs as go
@@ -392,8 +393,8 @@ def get_rbi_time_series(n_clicks, pickle_df_name, rbi, selected_resources, date_
             yaxis_title=rbi_label,
             title="RBI Time Series"
         )
-        thesis_large_font = True
-        if thesis_large_font:
+        
+        if config.thesis_view:
             axis_title_font_size = 20
             tick_label_font_size = 15
             legend_font_size = 15  # Adjust this value as needed for legend item text

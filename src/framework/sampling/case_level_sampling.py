@@ -1,3 +1,4 @@
+import config
 import time
 import pandas as pd
 import numpy as np
@@ -15,15 +16,15 @@ class ScopeCase(Enum):
 # E_{T}(t_{1},t_{2})
 def get_events_in_time_frame(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp) -> pd.DataFrame:
     return event_log[
-        (event_log['time:timestamp'] >= t_start) &
-        (event_log['time:timestamp'] <= t_end)
+        (event_log[config.timestamp_col] >= t_start) &
+        (event_log[config.timestamp_col] <= t_end)
     ]
 
 # E_{¬T}(t_{1},t_{2})
 def get_events_not_in_time_frame(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp) -> pd.DataFrame:
     return event_log[
-        (event_log['time:timestamp'] < t_start) |
-        (event_log['time:timestamp'] > t_end)
+        (event_log[config.timestamp_col] < t_start) |
+        (event_log[config.timestamp_col] > t_end)
     ]
 
 # C_{T}(t_{1},t_{2}) = ids of fully contained cases
@@ -31,26 +32,26 @@ def get_caseids_in_time_frame(event_log: pd.DataFrame, t_start: pd.Timestamp, t_
     events_in_time_frame = get_events_in_time_frame(event_log, t_start, t_end)
     events_not_in_time_frame = get_events_not_in_time_frame(event_log, t_start, t_end)
 
-    cases_ids_in_time_frame = set(events_in_time_frame['case:concept:name'])
-    cases_ids_not_in_time_frame = set(events_not_in_time_frame['case:concept:name'])
+    cases_ids_in_time_frame = set(events_in_time_frame[config.case_col])
+    cases_ids_not_in_time_frame = set(events_not_in_time_frame[config.case_col])
 
     return np.array(list(cases_ids_in_time_frame - cases_ids_not_in_time_frame))
 
 # Only in Dashboard: extra filter for specific filter function to drill down into cases (e.g. trace variants of BPIC'12)
 def get_filtered_caseids(event_log: pd.DataFrame, case_ids_tf, filter_function: callable) -> pd.DataFrame:
-    event_log = event_log[event_log['case:concept:name'].isin(case_ids_tf)]
+    event_log = event_log[event_log[config.case_col].isin(case_ids_tf)]
     event_log_filtered = filter_function(event_log)
-    case_ids_filtered = event_log_filtered['case:concept:name'].unique()
+    case_ids_filtered = event_log_filtered[config.case_col].unique()
     return case_ids_filtered
 
 # R_{C}(c)
 def get_participating_resources(trace: pd.DataFrame) -> np.ndarray:
-    return trace['org:resource'].dropna().unique()
+    return trace[config.resource_col].dropna().unique()
 
 # PS(c,r)
 def participation_share(trace_prepared: pd.DataFrame, resource_id: str) -> float:
     duration_sum = trace_prepared['duration'].sum()
-    resource_duration_sum = trace_prepared[trace_prepared['org:resource'] == resource_id]['duration'].sum()
+    resource_duration_sum = trace_prepared[trace_prepared[config.resource_col] == resource_id]['duration'].sum()
 
     return resource_duration_sum/duration_sum
 
@@ -120,7 +121,7 @@ def sample_regression_data_case(event_log: pd.DataFrame, t_start: pd.Timestamp, 
         # information for lookup
         case_id_info = np.append(case_id_info, case_id)
         resource_info = np.append(resource_info, participating_resources_str)
-        activities = event_log[event_log['case:concept:name'] == case_id]['concept:name'].tolist()
+        activities = event_log[event_log[config.case_col] == case_id]['concept:name'].tolist()
         if len(activities) > 7:
             # Show first 3 activities, placeholder for the skipped ones, and the last 3 activities
             skipped_activities = len(activities) - 6
