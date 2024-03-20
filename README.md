@@ -1,4 +1,4 @@
-# Resource-Performance Analysis Dashbaord - A Framework Instantiation
+# Resource Performance Analysis Dashbaord - A Framework Instantiation
 
 ## Commands
 ### Run Dashboard
