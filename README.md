@@ -13,7 +13,7 @@ $ cd project_folder_path
 ```
 $ make shell
 ```
-3. Start the Dash application "Resource-Performance Analysis Dashbaord" inside the shell. This implicitly installs all necessary dependancies if not already satisfied.
+3. Start the Dash application "Resource Performance Analysis Dashbaord" inside the shell. This implicitly installs all necessary dependancies if not already satisfied.
 ```
 $ make run-dashboard
 ```
