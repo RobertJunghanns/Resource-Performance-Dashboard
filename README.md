@@ -91,7 +91,8 @@ FROM (
     GROUP BY [case:concept:name]
 ) AS case_activities
 ```
-### Custom: Average number of activities executed in a case where the resource participated
+#### Custom: Average number of activities executed in a case where the resource participated
+```
 SELECT AVG(completed_activities) AS avg_completed_activities
 FROM (
     SELECT e.[case:concept:name], 
@@ -105,7 +106,7 @@ FROM (
     WHERE e.[lifecycle:transition] = 'complete'
     GROUP BY e.[case:concept:name]
 ) AS completed_activities_per_case;
-
+```
 #### Case Duration in Minutes
 ```
 SELECT
