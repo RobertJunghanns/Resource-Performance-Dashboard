@@ -3,6 +3,7 @@
 ## Commands
 ### Run Dashboard
 The following steps have do be performed to start and access the Dashboard. The project uses a makefile to wrap all important commands.
+0. (Optional) Set the Dash application port and the XES attribute names in the `src/config.py` file.
 1. Navigate to project folder.
 ```
 $ cd project_folder_path
