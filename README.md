@@ -1,32 +1,41 @@
 # Resource Performance Analysis Dashbaord - A Framework Instantiation
 
-## Commands
-### Run Dashboard
-The following steps have do be performed to start and access the Dashboard. The project uses a makefile to wrap all important commands.
+## Requirements
+The dashboard requires the following to run on **macOS**:
 
-0. (Optional) Set the Dash application port and the XES attribute names in the `src/config.py` file.
-1. Navigate to project folder.
+- Python 3.12.2 installed (e.g. with [Homebrew](https://brew.sh/#install) using [this guide](https://docs.python-guide.org/starting/install3/osx/))
+- pipenv installed (e.g. using [[Homebrew for pipenv](https://formulae.brew.sh/formula/pipenv)])
+
+## Run Dashboard
+The following steps have do be performed to access and start the Dashboard. The project uses a `makefile` to wrap all important commands.
+
+1. Clone project from GitHub
+```
+$ git clone https://github.com/RobertJunghanns/Resource-Performance-Dashboard.git
+```
+2. (Optional) Set the Dash application port and the XES attribute names in the `src/config.py` file.
+3. Navigate to project folder.
 ```
 $ cd project_folder_path
 ```
-2. Create/enter pipenv shell.
+4. Create/enter pipenv shell.
 ```
 $ make shell
 ```
-3. Start the Dash application "Resource Performance Analysis Dashbaord" inside the shell. This implicitly installs all necessary dependancies if not already satisfied.
+5. Start the Dash application "Resource Performance Analysis Dashbaord" inside the shell. This implicitly installs all necessary dependancies if not already satisfied. Please note that the initial startup of the Dash application may take longer.
 ```
 $ make run-dashboard
 ```
-4. Open the Dash application.
+6. Open the Dash application.
 ```
 $ open http://127.0.0.1:8050/
 ```
-5. (Optional) Terminate the Dash application (CTRL + C) and exit the shell.
+7. (Optional) Terminate the Dash application (CTRL + C) and exit the shell.
 ```
 $ make exit
 ```
 
-### Package Management
+## Package Management
 - Show all requirements of the application.
 ```
 $ make show-requirements
@@ -40,7 +49,7 @@ $ make update-requirements
 $ make install-requirements
 ```
 
-### Tests
+## Tests
 - Run all tests of the framework instance module.
 ```
 $ make run-tests
@@ -51,20 +60,19 @@ $ make run-coverage-tests
 ```
 
 ## Example SQL queries for the use in the Dashboard
-### Custom RBI
-#### Distinct Activities
+### Distinct Activities
 ```
 SELECT COUNT(DISTINCT [concept:name])
         FROM event_log
         WHERE [org:resource] = '{r}'
 ```
-#### Activity Completions
+### Activity Completions
 ```
 SELECT COUNT([concept:name])
         FROM event_log
         WHERE [org:resource] = '{r}'
 ```
-#### Activity Frequency
+### Activity Frequency
 ```
 SELECT CAST(count.activity AS FLOAT) / CAST(count.all_activities AS FLOAT)
 FROM (
@@ -79,7 +87,7 @@ FROM (
 ) AS count
 ```
 
-#### Custom: Average number of activities executed in a case by the participating resource
+### Custom: Average number of activities executed in a case by the participating resource
 ```
 SELECT AVG(completed_activities) AS avg_completed_activities
 FROM (
@@ -91,7 +99,7 @@ FROM (
     GROUP BY [case:concept:name]
 ) AS case_activities
 ```
-#### Custom: Average number of activities executed in a case where the resource participated
+### Custom: Average number of activities executed in a case where the resource participated
 ```
 SELECT AVG(completed_activities) AS avg_completed_activities
 FROM (
@@ -107,7 +115,7 @@ FROM (
     GROUP BY e.[case:concept:name]
 ) AS completed_activities_per_case;
 ```
-#### Case Duration in Minutes
+### Case Duration in Minutes
 ```
 SELECT
     (CAST(strftime('%s', MAX([time:timestamp])) AS FLOAT) - 
@@ -116,7 +124,7 @@ FROM
     trace
 ```
 
-#### Cost of application (case level) for BPIC'15
+### Cost of application (case level) for BPIC'15
 ```
 SELECT DISTINCT([case:SUMleges])
 FROM trace

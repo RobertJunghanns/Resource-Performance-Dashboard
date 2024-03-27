@@ -1,7 +1,7 @@
 # Dash Application Port
 dash_port = 8050
 
-# Thesis view for larger fonts
+# Thesis view for larger fonts (better for taking screenshots)
 thesis_view = False
 
 # XES attributes settings
