@@ -10,3 +10,4 @@ lifecycle_col = 'lifecycle:transition'
 activity_col = 'concept:name'
 case_col = 'case:concept:name'
 resource_col = 'org:resource'
+
