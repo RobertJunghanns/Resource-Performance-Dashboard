@@ -551,8 +551,6 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
         filter_label = ''
         filter_activated = False
     
-    print(filter_label, filter_activated)
-    
     # trigger case level sampling
     if sampling_strategy_value == 'case_level':
         if case_limit_value is None:
