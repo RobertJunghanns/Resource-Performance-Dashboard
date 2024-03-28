@@ -62,7 +62,7 @@ def sample_regression_data_activity(event_log: pd.DataFrame, t_start: pd.Timesta
 
     # information runtime
     iteration_times = np.array([])
-    total_events = included_events.shape[0]
+    total_events = n_Events.shape[0]
     iteration_count = 0
     
     for _, event in n_Events.iterrows():
