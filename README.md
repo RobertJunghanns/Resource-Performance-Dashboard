@@ -5,6 +5,7 @@ The dashboard requires the following to run on **macOS**:
 
 - Python 3.12.2 installed (e.g. with [Homebrew](https://brew.sh/#install) using [this guide](https://docs.python-guide.org/starting/install3/osx/))
 - pipenv installed (e.g. using [Homebrew for pipenv](https://formulae.brew.sh/formula/pipenv))
+- all other dependancies for the dashboard are specified in the `requirements.txt` and installed upon the first statup of the dashboard
 
 ## Run Dashboard
 The following steps have do be performed to access and start the Dashboard. The project uses a `makefile` to wrap all important commands.
