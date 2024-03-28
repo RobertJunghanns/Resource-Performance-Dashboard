@@ -3,11 +3,6 @@ import pandas as pd
 from pandasql import sqldf
 from pm4py.algo.organizational_mining.resource_profiles import algorithm
 
-
-# SELECT Count([concept:name]) / {t_delta}
-# FROM event_log
-# WHERE [org:resource] = '{r}
-
 def pysqldf(q, local_vars):
     return sqldf(q, local_vars)
 
@@ -17,14 +12,7 @@ def sql_to_rbi(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timesta
         (event_log[config.timestamp_col] >= t_start) &
         (event_log[config.timestamp_col] < t_end)
     ]
-
-    # time_delta = t_end - t_start
-    # delta_in_minutes = time_delta.total_seconds() / 60
-
-    # print(delta_in_minutes)
-
-    # sql_query = sql_query.replace('{t_delta}', str(delta_in_minutes))
-    sql_query = sql_query.replace('{r}', resource_id) #r_id
+    sql_query = sql_query.replace('{r}', resource_id)
 
     result = pysqldf(sql_query, {'event_log': event_log})
 
