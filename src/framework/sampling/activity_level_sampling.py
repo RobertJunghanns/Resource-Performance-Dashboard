@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 
 from enum import Enum
-from datetime import timedelta
 from typing import Callable, List, Any
 from framework.sampling.activity_duration_estimation import get_trace, get_n_events, prepare_trace
 from framework.utility.xes_utility import get_earliest_timestamp
@@ -16,7 +15,7 @@ class ScopeActivity(Enum):
 
 
 # E_{TA}(t_{1}, t_{2}, [a, v])
-def get_included_events(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, filter_event_attribute: str = None, filter_event_value = None):
+def filter_event_log(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, filter_event_attribute: str = None, filter_event_value = None):
     event_log = event_log[
         (event_log[config.lifecycle_col].isin(['complete', 'COMPLETE'])) &
         (event_log[config.timestamp_col] >= t_start) &
@@ -27,7 +26,7 @@ def get_included_events(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: p
     
     return event_log
     
-# IV(c)
+# IV(c, [p_1...p_n])
 def get_independent_variable_activity(event_log: pd.DataFrame, event: pd.Series, activity_duration: pd.Timedelta, scope: ScopeActivity, rbi_function: Callable, *args, individual_scope = pd.Timedelta(0)):    
     # add millisecond to t2 to use pm4py RBIs with <=t2 not <t2
     t2 = event[config.timestamp_col] #+ timedelta(milliseconds=1)
@@ -50,8 +49,8 @@ def get_dependent_variable_activity(event: pd.Series, performance_function: Call
 
 # [(IV, DV)] for all c element C_{T}(t_{1},t_{2})
 def sample_regression_data_activity(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, filter_event_attribute: str, filter_event_value: str, activity_limit: int, seed: int, scope: ScopeActivity, rbi_function: Callable, performance_function: Callable, additional_rbi_arguments: List[Any] = [], additional_performance_arguments: List[Any] = [], individual_scope = pd.Timedelta(0)):
-    included_events = get_included_events(event_log, t_start, t_end, filter_event_attribute, filter_event_value)
-    included_events = get_n_events(included_events, activity_limit, seed)
+    included_events = filter_event_log(event_log, t_start, t_end, filter_event_attribute, filter_event_value)
+    n_Events = get_n_events(included_events, activity_limit, seed)
 
     rbi_values = np.array([])
     perf_values = np.array([])
@@ -66,15 +65,16 @@ def sample_regression_data_activity(event_log: pd.DataFrame, t_start: pd.Timesta
     total_events = included_events.shape[0]
     iteration_count = 0
     
-    for _, event in included_events.iterrows():
+    for _, event in n_Events.iterrows():
+        # information for runtime
         start_time = time.time()
 
         # get the trace for an activity duration analysis (prepare_trace)
         trace = get_trace(event_log, event[config.case_col])
         trace_prepared = prepare_trace(trace)
-        activity_duration = pd.Timedelta(0)
 
          # find the prepared event in the trace and extract duration
+        activity_duration = pd.Timedelta(0)
         matching_events_prepared = trace_prepared[trace_prepared[config.activity_col].str.contains(event[config.activity_col]) & (trace_prepared[config.timestamp_col] == event[config.timestamp_col])]
         activity_duration = matching_events_prepared.iloc[0]['duration']
 
@@ -91,6 +91,8 @@ def sample_regression_data_activity(event_log: pd.DataFrame, t_start: pd.Timesta
         iteration_time = end_time - start_time
         iteration_times = np.append(iteration_times, iteration_time)
         iteration_count += 1
+
+        # print progress
         if iteration_count % 10 == 0:
             print(f"Progress: {iteration_count}/{total_events}. Average time per iteration: {(np.average(iteration_times)):.4f} seconds.")
 

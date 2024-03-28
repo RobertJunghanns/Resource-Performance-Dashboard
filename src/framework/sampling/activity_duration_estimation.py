@@ -2,27 +2,6 @@ import config
 import pandas as pd
 import numpy as np
 
-# get a lower number of ids to reduce case sampling time
-def get_n_case_ids(case_ids, n_cases, seed=999):
-    np.random.seed(seed)
-    if len(case_ids) > n_cases:
-        return np.random.choice(case_ids, size=n_cases, replace=False)
-    else:
-        return case_ids
-    
-# get a lower number of activities to reduce activity sampling time
-def get_n_events(event_log, n_events, seed=999):
-    # Filter out rows where config.resource_col is None or NaN
-    filtered_event_log = event_log.dropna(subset=[config.resource_col])
-    
-    if len(filtered_event_log) > n_events:
-        # Sample n_events from the filtered DataFrame
-        return filtered_event_log.sample(n=n_events, random_state=seed)
-    else:
-        # If there aren't enough events after filtering, return the filtered DataFrame
-        return filtered_event_log
-
-
 def get_trace(event_log: pd.DataFrame, case_id: str) -> pd.DataFrame:
     trace = event_log.loc[event_log[config.case_col] == case_id]
     return trace
@@ -45,7 +24,7 @@ def group_equal_timestamp_events(trace: pd.DataFrame) -> pd.DataFrame:
             if (len(group) - len(concept_names_with_start)) > 1 :
                 # delete events if they have the same resource and timestamp exept they have a corresponting start event
                 trace = trace[~((trace[config.resource_col] == resource) & (trace[config.timestamp_col] == timestamp)) | trace[config.activity_col].isin(concept_names_with_start)]
-                # create new event for all events that have the same resource and timestamp exept they have a start event
+                # create new aggregate event for all events that have the same resource and timestamp exept they have a start event
                 aggregated_name = ' + '.join([name for name in group[config.activity_col].unique() if name not in concept_names_with_start])
                 aggregated_event = group.iloc[0].copy()  # Take the first row as base for aggregated event
                 aggregated_event[config.activity_col] = aggregated_name
@@ -107,3 +86,24 @@ def prepare_trace(trace: pd.DataFrame) -> pd.DataFrame:
     trace_grouped_duration_complete = trace_grouped_duration[(trace_grouped_duration[config.lifecycle_col] == 'COMPLETE') | (trace_grouped_duration[config.lifecycle_col] == 'complete')]
     trace_grouped_duration_complete_cleaned = trace_grouped_duration_complete.dropna(subset=[config.resource_col])
     return trace_grouped_duration_complete_cleaned
+
+
+# get a lower number of ids to reduce case sampling time
+def get_n_case_ids(case_ids, n_cases, seed=999):
+    np.random.seed(seed)
+    if len(case_ids) > n_cases:
+        return np.random.choice(case_ids, size=n_cases, replace=False)
+    else:
+        return case_ids
+    
+# get a lower number of activities to reduce activity sampling time
+def get_n_events(event_log, n_events, seed=999):
+    # Filter out rows where config.resource_col is None or NaN
+    filtered_event_log = event_log.dropna(subset=[config.resource_col])
+    
+    if len(filtered_event_log) > n_events:
+        # Sample n_events from the filtered DataFrame
+        return filtered_event_log.sample(n=n_events, random_state=seed)
+    else:
+        # If there aren't enough events after filtering, return the filtered DataFrame
+        return filtered_event_log

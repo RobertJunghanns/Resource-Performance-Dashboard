@@ -1,15 +1,15 @@
 import config
-import pandas as pd
 import uuid
 import json
+import pandas as pd
 import datetime as dt
-
-from app import app
-from dash import html, Input, Output, State, dcc, no_update, ALL, callback_context
 import dash_mantine_components as dmc
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 import plotly.express as px
+
+from app import app
+from dash import html, Input, Output, State, dcc, no_update, ALL, callback_context
 
 from framework.utility.pickle_utility import load_from_pickle
 from framework.utility.xes_utility import get_earliest_timestamp, get_latest_timestamp, get_column_names, count_unique_cases, count_completed_events
@@ -427,6 +427,7 @@ layout = html.Div([
     ])
 ])
 
+# add panel witch includes triggering the sampling strategy with all necessary inputs
 @app.callback(
     Output('div-relationship-panels', 'children', allow_duplicate=True),
     Output('button-add-relationship', 'children'),
@@ -458,7 +459,6 @@ layout = html.Div([
      prevent_initial_call=True
 )
 def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sampling_strategy_value, case_limit_value, activity_limit_value, filter_event_attribute, filter_event_value, case_filter_value, seed_value, independent_variable_value, dependent_variable_value, date_from_str, time_from_str, date_to_str, time_to_str, backwards_scope_value, backwards_scope_individual, iv_sql, iv_concept_name, iv_resource_name, dv_sql):
-
     # check for None values
     if pickle_df_name is None:
         return no_update, no_update, 'Select XES file before adding a new resource-performance relationship!', True
@@ -473,11 +473,12 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
     if dependent_variable_value == 'perf_sql'  and (dv_sql == '' or dv_sql is None):
         return no_update, no_update, 'Input a custom sql statement for the DV before adding a resource-performance relationship!', True
     
+    # get event log from Pickle Event Log Store
     df_event_log = load_from_pickle(pickle_df_name)
     
+    # convert time inputs
     timestamp_from_str = date_from_str + 'T' + time_from_str.split('T')[1] + '+00:00'
     timestamp_to_str = date_to_str + 'T' + time_to_str.split('T')[1] + '+00:00'
-
     timestamp_from = pd.Timestamp(timestamp_from_str)
     timestamp_to = pd.Timestamp(timestamp_to_str)
 
@@ -532,6 +533,7 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
     else:
         individual_scope_value = pd.Timedelta(minutes=backwards_scope_individual)
 
+    # Add string of individual scope to backwards_scope_label
     if backwards_scope_label == 'Individual scope':
         backwards_scope_label = backwards_scope_label + ' (' + str(individual_scope_value.total_seconds()/60) + ' minutes)'
 
@@ -551,7 +553,7 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
     
     print(filter_label, filter_activated)
     
-
+    # trigger case level sampling
     if sampling_strategy_value == 'case_level':
         if case_limit_value is None:
             return no_update, no_update, 'Input Max. number of cases before generating!', True
@@ -576,6 +578,7 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
         })
         count_str = str(len(rbi_values)) + '/' + str(case_limit_value) + ' cases'
 
+    # trigger activity level sampling
     elif sampling_strategy_value == 'activity_level':
         if activity_limit_value is None:
             return no_update, no_update, 'Input Max. number of activities before generating!', True
@@ -595,8 +598,11 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
     if len(rbi_values) == 0:
         return no_update, no_update, 'Filter results in 0 selected cases/activities, change the inputs!', True
     
+    # get statistic parameters 
     _, _, r_squared, rpi_p_value, rpi_t_stat = fit_regression(rbi_values, perf_values)
     r_pearson = calculate_pearson_correlation(rbi_values, perf_values)
+
+    # create plots for dashboard
     if sampling_strategy_value == 'case_level':
         fig = px.scatter(
             df,
@@ -617,11 +623,11 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
             trendline_color_override="red",
             opacity=0.7
         )
-
     fig.update_layout(margin=dict(l=30, r=30, t=50, b=70))
     fig.update_xaxes(title_text=rbi_label)
     fig.update_yaxes(title_text=performance_label)
 
+    # increase font size for thesis screenshots
     if config.thesis_view:
         axis_title_font_size = 20
         fig.update_layout(
@@ -631,7 +637,8 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
         tick_label_font_size = 12
         fig.update_xaxes(tickfont=dict(size=tick_label_font_size))
         fig.update_yaxes(tickfont=dict(size=tick_label_font_size))
-    
+
+    # create panel with input, output, and plot
     new_panel_id = str(uuid.uuid4())
     new_panel = html.Div(
         id=new_panel_id,
@@ -693,10 +700,9 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
             html.Button('Delete', id={'type': 'delete-button', 'id': new_panel_id}, className='button-default margin-top', n_clicks=0)
         ]
     )
-
-    
     # delete placeholder panel if present
     old_panel_children = [child for child in old_panel_children if child.get('props', {}).get('id') != 'placeholder-chart']
+
     # set new panels
     if len(old_panel_children) == 0:
         new_panel = html.Div(className='div-rbi-relationship-panel width-95 flex-col', id=new_panel.id, children=new_panel.children)
@@ -715,7 +721,7 @@ def add_panel(n_clicks, old_panel_children, pickle_df_name, xes_select_value, sa
             new_panel_children += [old_panel_child]
         return new_panel_children[:3], no_update, no_update, no_update
 
-# Delete a resource-performance analysis panel
+# delete a resource-performance analysis panel
 @app.callback(
     Output('div-relationship-panels', 'children', allow_duplicate=True),
     [Input({'type': 'delete-button', 'id': ALL}, 'n_clicks')],

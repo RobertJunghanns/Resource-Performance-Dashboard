@@ -55,7 +55,7 @@ def participation_share(trace_prepared: pd.DataFrame, resource_id: str) -> float
 
     return resource_duration_sum/duration_sum
 
-# IV(c)
+# IV(c, [p_1...p_n])
 def get_independent_variable_case(event_log: pd.DataFrame, case_id: str, scope: ScopeCase, rbi_function: Callable, *args, individual_scope = pd.Timedelta(0)):
     trace = get_trace(event_log, case_id)
     trace_prepared = prepare_trace(trace)
@@ -92,10 +92,10 @@ def get_dependent_variable_case(event_log: pd.DataFrame, case_id: str, performan
 def sample_regression_data_case(event_log: pd.DataFrame, t_start: pd.Timestamp, t_end: pd.Timestamp, case_limit: int, seed: int, scope: ScopeCase, rbi_function: Callable, performance_function: Callable, additional_rbi_arguments: List[Any] = [], additional_performance_arguments: List[Any] = [], individual_scope = pd.Timedelta(0), filter_function: callable = lambda log: log):
     # filter by time frame
     case_ids_tf = get_caseids_in_time_frame(event_log, t_start, t_end)
-    # filter by case ids in time frame by custom case filter function
-    case_ids_filtered = get_filtered_caseids(event_log, case_ids_tf, filter_function)
+    # filter by case ids in time frame by one of the pre-implemented case filter functions
+    case_ids_filtered = get_filtered_caseids(event_log, case_ids_tf, filter_function) # only in dashboard
     # get max n case ids
-    case_ids = get_n_case_ids(case_ids_filtered, case_limit, seed)
+    n_case_ids = get_n_case_ids(case_ids_filtered, case_limit, seed)
 
     rbi_values = np.array([])
     perf_values = np.array([])
@@ -107,11 +107,12 @@ def sample_regression_data_case(event_log: pd.DataFrame, t_start: pd.Timestamp, 
 
     # information runtime
     iteration_times = np.array([])
+    total_cases = len(n_case_ids)
 
-    total_cases = len(case_ids)
-    for index, case_id in enumerate(case_ids): 
+    for index, case_id in enumerate(n_case_ids): 
         start_time = time.time()
 
+        # get IV and DV
         rbi_value, participating_resources_str = get_independent_variable_case(event_log, case_id, scope, rbi_function, *additional_rbi_arguments, individual_scope=individual_scope)
         perf_value = get_dependent_variable_case(event_log, case_id, performance_function, *additional_performance_arguments)
 
@@ -135,6 +136,7 @@ def sample_regression_data_case(event_log: pd.DataFrame, t_start: pd.Timestamp, 
         iteration_time = end_time - start_time
         iteration_times = np.append(iteration_times, iteration_time)
         
+        # print progress
         if (index + 1) % 10 == 0:
             print(f"Progress: {index + 1}/{total_cases}. Average time per iteration: {(np.average(iteration_times)):.4f} seconds.")
     

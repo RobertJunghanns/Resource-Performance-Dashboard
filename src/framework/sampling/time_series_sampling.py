@@ -2,6 +2,7 @@ import pandas as pd
 
 from datetime import timedelta
 
+# Align(TS_start,TS_slotsize)
 def align_date_to_period(date, period, next_period=False):
     period_logic = {
         'day': {'align': lambda d: d.replace(hour=0, minute=0, second=0, microsecond=0),
@@ -24,6 +25,7 @@ def align_date_to_period(date, period, next_period=False):
 
     return aligned_date
 
+# (T_1(t) = t) generate time periods for RBI time series sampling
 def generate_time_period_intervals(timestamp_from, timestamp_to, period):
     intervals = []
     current_start = timestamp_from
@@ -37,16 +39,17 @@ def generate_time_period_intervals(timestamp_from, timestamp_to, period):
         intervals.append((current_start, current_end))
         current_start = current_end
 
-    # Remove the first interval if it's shorter than the others
+    # Remove the first interval if it's shorter than the other intervals
     if len(intervals) > 1 and (intervals[0][1] - intervals[0][0]) != (intervals[1][1] - intervals[1][0]):
         intervals.pop(0)
 
-    # Remove the last interval if it's shorter than the others
+    # Remove the last interval if it's shorter than the other intervals
     if len(intervals) > 1 and (intervals[-1][1] - intervals[-1][0]) != (intervals[-2][1] - intervals[-2][0]):
         intervals.pop()
 
     return intervals
 
+# (T_1 = TS_start) generate time periods for RBI time series sampling
 def generate_until_end_period_intervals(timestamp_from, timestamp_to, period):
     intervals = []
     current_start = timestamp_from
@@ -62,6 +65,7 @@ def generate_until_end_period_intervals(timestamp_from, timestamp_to, period):
 
     return intervals
 
+# get name for each period for display in time series diagram
 def get_period_name(date, period):
     if period == 'day':
         return date.strftime("%b. %d, %Y")

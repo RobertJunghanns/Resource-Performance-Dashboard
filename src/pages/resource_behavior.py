@@ -13,6 +13,7 @@ from framework.utility.xes_utility import get_unique_resources, get_earliest_tim
 from framework.sampling.time_series_sampling import get_period_name, generate_time_period_intervals, generate_until_end_period_intervals
 from framework.measures.resource_behavior_indicators import sql_to_rbi, rbi_distinct_activities, rbi_activity_fequency, rbi_activity_completions, rbi_case_completions, rbi_fraction_case_completions, rbi_average_workload, rbi_multitasking, rbi_average_duration_activity, rbi_interaction_two_resources, rbi_social_position
 
+# Define the page layout
 layout = html.Div([
     dbc.Alert(id='input-alert', className='margin-top', duration=40000, color="warning", dismissable=True, is_open=False),
     html.Div(
@@ -230,7 +231,7 @@ layout = html.Div([
     ])
 ])
 
-# Initialize possible options dependent on XES file
+# Initialize possible input options dependent on XES file
 @app.callback(
     [Output('dropdown-resource-select', 'options'),
      Output('date-from', 'min_date_allowed'),
@@ -268,6 +269,25 @@ def update_resource_options(pickle_df_name):
     else:
         # Return an empty list if no file is selected
         return [no_update] * 11
+    
+# toggle the visibility of input fields
+@app.callback(
+    [Output('sql-input-container', 'style'),
+     Output('concept-name-input-container', 'style'),
+     Output('resource-id-input-container', 'style')],
+    Input('dropdown-rbi-select', 'value')
+)
+def toggle_input_fields_visibility(selected_rbi):
+    inputs_visibility = [{'display': 'none'}] * 3 # set to number of input containers
+
+    if selected_rbi == 'rbi_sql':
+        inputs_visibility[0] = {'display': 'block'} 
+    elif selected_rbi == 'rbi_activity_frequency' or selected_rbi =='rbi_average_duration_activity':
+        inputs_visibility[1] = {'display': 'block'}
+    elif selected_rbi == 'rbi_interaction_two_resources':
+        inputs_visibility[2] = {'display': 'block'}
+
+    return inputs_visibility
 
 # sample and display time series
 @app.callback(
@@ -330,7 +350,6 @@ def get_rbi_time_series(n_clicks, pickle_df_name, rbi, selected_resources, date_
         resource_scatters = []
 
         for resource in selected_resources:
-
             rbi_time_series_names = []
             rbi_time_series_values = []
             for interval in time_intervals:
@@ -413,22 +432,3 @@ def get_rbi_time_series(n_clicks, pickle_df_name, rbi, selected_resources, date_
         return fig, no_update, no_update
     else:
         return no_figure, 'Fill out all required fields (*) before generating!', True
-    
-# toggle the visibility of input fields
-@app.callback(
-    [Output('sql-input-container', 'style'),
-     Output('concept-name-input-container', 'style'),
-     Output('resource-id-input-container', 'style')],
-    Input('dropdown-rbi-select', 'value')
-)
-def toggle_input_fields_visibility(selected_rbi):
-    inputs_visibility = [{'display': 'none'}] * 3 # set to number of input containers
-
-    if selected_rbi == 'rbi_sql':
-        inputs_visibility[0] = {'display': 'block'} 
-    elif selected_rbi == 'rbi_activity_frequency' or selected_rbi =='rbi_average_duration_activity':
-        inputs_visibility[1] = {'display': 'block'}
-    elif selected_rbi == 'rbi_interaction_two_resources':
-        inputs_visibility[2] = {'display': 'block'}
-
-    return inputs_visibility
