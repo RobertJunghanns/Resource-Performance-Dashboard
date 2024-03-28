@@ -29,12 +29,12 @@ class TestCaseLevelSampling(unittest.TestCase):
         log_path_synth_extra_long = 'tests/data/synthetic_log_extra_long.xes'  
         cls.event_log_synth_extra_long = pm4py.read_xes(log_path_synth_extra_long)
 
-    def test_get_included_events(self):
+    def test_filter_event_log(self):
         t_start = pd.Timestamp("2011-01-02T08:00:00.000+02:00")
         t_end = pd.Timestamp("2011-01-07T06:30:00.000+02:00")
 
-        complete_events_included_1 = activity_level_sampling.get_included_events(self.event_log_synth_long, t_start, t_end, filter_event_attribute='org:resource', filter_event_value='1')
-        complete_events_included_2 = activity_level_sampling.get_included_events(self.event_log_synth_long, t_start, t_end)
+        complete_events_included_1 = activity_level_sampling.filter_event_log(self.event_log_synth_long, t_start, t_end, filter_event_attribute='org:resource', filter_event_value='1')
+        complete_events_included_2 = activity_level_sampling.filter_event_log(self.event_log_synth_long, t_start, t_end)
 
         self.assertEqual(len(complete_events_included_1), 4)
         self.assertEqual(len(complete_events_included_2), 5)
