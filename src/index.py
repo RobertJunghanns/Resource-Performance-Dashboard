@@ -110,7 +110,7 @@ app.layout = html.Div([
                     id='div-buttons',
                     children=[
                         html.Button('Resource Behavior Analysis', id={'type': 'dynamic-button', 'index': 1}, className='button-default width-45 button-selected', style={'margin-right': '15px'}),
-                        html.Button('Resource-Performance Analysis', id={'type': 'dynamic-button', 'index': 2}, className='button-default width-45'),
+                        html.Button('Resource Performance Analysis', id={'type': 'dynamic-button', 'index': 2}, className='button-default width-45'),
                 ])
             ]),
     ]),
