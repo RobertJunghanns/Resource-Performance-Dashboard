@@ -391,7 +391,7 @@ layout = html.Div([
                                     type="circle",
                                     children=[
                                         html.Button(
-                                            'Add Resource-Performance Relationship',
+                                            'Add Resource Performance Relationship',
                                             id='button-add-relationship',
                                             className='button-generate',
                                         )
